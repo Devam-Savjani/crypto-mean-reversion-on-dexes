@@ -9,3 +9,4 @@
 *.out
 *.toc
 title/logo-eps-converted-to.pdf
+*.synctex.gz
