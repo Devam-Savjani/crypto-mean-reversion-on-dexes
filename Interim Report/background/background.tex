@@ -1,8 +1,29 @@
 \chapter{Background}
 
 \section{Cryptocurrencies}
+Before going delving into the financial side of the project, it is important to understand the underlying assets and the technology that drive them.
+
 \subsection{Blockchain}
+The building blocks of cryptocurrencies comes from blockchain. Blockchain is a distributed ledger that stores data, in blocks, in a chain, comprising the data itself as well has a full transaction history \cite{nofer2017blockchain}. Below shows a diagram of blocks in a blockchain.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/The-structure-of-a-Blockchain.png}
+    \caption{Blockchain Diagram \cite{inbookBlockchain}}
+\end{figure}
+
+\subsubsection{Header, Hash of Previous Block and Timestamp}
+The timestamp and hashes of the block and its' predecessing block are all used to ensure the ordering of blocks within a chain. By hashing the data to a fixed size, and storing in its succeeding block makes the tampering of chains difficult as it would mean the chain deviates from its old state. In addition to this, by hashing and using Nonce, blockchain employs the Proof-of-Work algorithm to ensure correctness. The Proof-of-Work algorithm is used to confirm and add new transaction to the chain.
+
+\subsubsection{Nonce}
+A nonce, `Number Only used Once', is a number that is added to a hashed block to make the transaction more secure. It is randomly generated which miners use to validate a transaction. A miner first guesses a nonce, appends the guess to the hash of the current header. The miner then rehashes the value and compares this to the target hash. If the guess was correct, the miner is granted the block \cite{noauthor_components_2021}. 
+
+\subsubsection{Merkle root}
+A merkle root is also stored in each block to validate transactions in an efficient manner, in terms of storage and searching. A merkle tree is a a tree of hashes where each leaf node is it's data hash and it's parent node, the hash of their children's hashes. In storing the merkle root, we do not need to directly store each transaction in each block, and also allows a quick search for any malicious alterations in differing blocks\cite{noauthor_merkle_nodate}.
+
 \subsection{Decentralised Finance}
+One of the first application of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash' \cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer to peer approach to verify and track transactions without a centralized institution.
+
 \subsection{Exchanges}
 
 \section{Arbitrage}
@@ -44,5 +65,9 @@ Sources have shown that the word ``\textit{Arbitrage}'' has been used as early a
     \item \cite{businessinsightsblog_2021} - %https://online.hbs.edu/blog/post/what-is-arbitrage
     \item \cite{10.2307/1828075} - %
     \item \cite{noauthor_law_nodate} - %https://www.investopedia.com/terms/l/law-one-price.asp
-    \item \cite{} - %
+    \item \cite{nakamoto2009bitcoin} - %Nakamoto bitcoin
+    \item \cite{nofer2017blockchain} - %Blockchain
+    \item \cite{inbookBlockchain} - % Blockchain diagram
+    \item \cite{noauthor_components_2021} - % Blockchain
+    \item \cite{noauthor_merkle_nodate} - % Merkle Tree
 \end{enumerate}
