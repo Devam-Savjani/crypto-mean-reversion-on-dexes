@@ -4,36 +4,59 @@
 Before going delving into the financial side of the project, it is important to understand the underlying assets and the technology that drive them.
 
 \subsection{Blockchain}
-The building blocks of cryptocurrencies comes from blockchain. Blockchain is a distributed ledger that stores data, in blocks, in a chain, comprising the data itself as well has a full transaction history \cite{nofer2017blockchain}. Below shows a diagram of blocks in a blockchain.
+The building blocks of cryptocurrencies comes from blockchain. Blockchain is a distributed ledger that stores data, in blocks, in a chain, comprising the data itself as well has a full transaction history~\cite{nofer2017blockchain}. Below shows a diagram of blocks in a blockchain.
 
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.8\textwidth]{background/Images/The-structure-of-a-Blockchain.png}
-    \caption{Blockchain Diagram \cite{inbookBlockchain}}
+    \caption{Blockchain Diagram~\cite{inbookBlockchain}}
 \end{figure}
 
 \subsubsection{Header, Hash of Previous Block and Timestamp}
 The timestamp and hashes of the block and its' predecessing block are all used to ensure the ordering of blocks within a chain. By hashing the data to a fixed size, and storing in its succeeding block makes the tampering of chains difficult as it would mean the chain deviates from its old state. In addition to this, by hashing and using Nonce, blockchain employs the Proof-of-Work algorithm to ensure correctness. The Proof-of-Work algorithm is used to confirm and add new transaction to the chain.
 
 \subsubsection{Nonce}
-A nonce, `Number Only used Once', is a number that is added to a hashed block to make the transaction more secure. It is randomly generated which miners use to validate a transaction. A miner first guesses a nonce, appends the guess to the hash of the current header. The miner then rehashes the value and compares this to the target hash. If the guess was correct, the miner is granted the block \cite{noauthor_components_2021}. 
+A nonce, `Number Only used Once', is a number that is added to a hashed block to make the transaction more secure. It is randomly generated which miners use to validate a transaction. A miner first guesses a nonce, appends the guess to the hash of the current header. The miner then rehashes the value and compares this to the target hash. If the guess was correct, the miner is granted the block~\cite{noauthor_components_2021}.
 
 \subsubsection{Merkle root}
-A merkle root is also stored in each block to validate transactions in an efficient manner, in terms of storage and searching. A merkle tree is a a tree of hashes where each leaf node is it's data hash and it's parent node, the hash of their children's hashes. In storing the merkle root, we do not need to directly store each transaction in each block, and also allows a quick search for any malicious alterations in differing blocks\cite{noauthor_merkle_nodate}.
+A merkle root is also stored in each block to validate transactions in an efficient manner, in terms of storage and searching. A merkle tree is a a tree of hashes where each leaf node is it's data hash and it's parent node, the hash of their children's hashes. In storing the merkle root, we do not need to directly store each transaction in each block, and also allows a quick search for any malicious alterations in differing blocks~\cite{noauthor_merkle_nodate}.
 
 \subsection{Decentralised Finance}
-One of the first application of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash' \cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer to peer approach to verify and track transactions without a centralized institution.
+One of the first application of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash'~\cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer to peer approach to verify and track transactions without a centralized institution.
 
 \subsection{Exchanges}
 
 \section{Arbitrage}
-Arbitrage is the process in which a trader simultaneously buys and sells an asset in order to take advantage of a market inefficiency \cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
+Arbitrage is the process in which a trader simultaneously buys and sells an asset in order to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
 
 
-Sources have shown that the word ``\textit{Arbitrage}'' has been used as early as the Renaissance era wehere surviving documents showed a large amount of bills being exchanged \cite{poitras_2021}. There has also been some evidence to suggest that arbitrage was used as early as the Greek and Roman eras. Objects such as Sumerian cuneiform tablets show trade of ancient bills however we cannot come to strong conclusions of this. Early forms of arbitrage would likely to have been purchasing a commodity then transporting them to a foreign land and selling them at a higher price. This is type of arbitrage is called commodity arbitrage and is still is applicable today. With the example above, transporting the goods takes a significant amount of to the merchant, trader, which could cause variations in the price, however in the modern day this has been reduced and with electronic exchanges this time to buy and sell is very small. This means inefficiencies in the market, where a trader can profit purely by buying and selling, should not exist. This is called the ``Law of One Price''. The ``Law of One Price'' states that every identical commidty or asset should have the same price regardless of exchange or location, given there are no transaction costs, no transportation costs, no legal restrictions, the exchange rates are the same and no market manipulation occurs \cite{noauthor_law_nodate}. This is because if this were not the case, an arbitrage opportunity would arise and someone would take advantage of the scenario causing the prices on both markets to converge due to the market forces. In the real world arbitrage opportunities are tremendously common, thus allowing a risk-free investment \cite{10.2307/1828075, RICHARDSON1978341}. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
+Sources have shown that the word ``\textit{Arbitrage}'' has been used as early as the Renaissance era wehere surviving documents showed a large amount of bills being exchanged~\cite{poitras_2021}. There has also been some evidence to suggest that arbitrage was used as early as the Greek and Roman eras. Objects such as Sumerian cuneiform tablets show trade of ancient bills however we cannot come to strong conclusions of this. Early forms of arbitrage would likely to have been purchasing a commodity then transporting them to a foreign land and selling them at a higher price. This is type of arbitrage is called commodity arbitrage and is still is applicable today. With the example above, transporting the goods takes a significant amount of to the merchant, trader, which could cause variations in the price, however in the modern day this has been reduced and with electronic exchanges this time to buy and sell is very small. This means inefficiencies in the market, where a trader can profit purely by buying and selling, should not exist. This is called the ``Law of One Price''. The ``Law of One Price'' states that every identical commidty or asset should have the same price regardless of exchange or location, given there are no transaction costs, no transportation costs, no legal restrictions, the exchange rates are the same and no market manipulation occurs~\cite{noauthor_law_nodate}. This is because if this were not the case, an arbitrage opportunity would arise and someone would take advantage of the scenario causing the prices on both markets to converge due to the market forces. In the real world arbitrage opportunities are tremendously common, thus allowing a risk-free investment~\cite{10.2307/1828075, RICHARDSON1978341}. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
 
 \section{State of Art}
+To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading. CITE THIS FROM~\cite{wang_cyclic_2022}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage.
+
 \subsection{Pure Arbitrage Techniques}
+As I am using pure arbitrage as a baseline, thus choosing the most optimal stategy is most ideal to better understand the impacts of the optimizations and the statistical stategies themselves. There has been some research on pure arbitrage strategies by finding cyclic opportunities on both centralized and decentralised exchanges, which I go further into in this section.
+
+
+As previously mentioned, research into this topic is still in its infancy thus which means a very thin slice of exploration on the subject matter. Majority of the research has been into the arbitrage on centralized exchanges,~\cite{MakarovIgor2020Taai, crepelliere_arbitrage_2022}..... MUST ADD MORE. These all find massive inefficiencies within these exchanges by finding arbitrage opportunities. One of the more in depth pieces of research, Igor Makarov's and Antoinette Schoar's Trading and arbitrage in cryptocurrency markets~\cite{MakarovIgor2020Taai} finds a large violation in the Law of One Price by finding price discrepencies between the same cryptocurrencies depending on different geolocations. The paper uses 34 exchanges in 19 differing countries, each exchange is grouped accordingly to its location and base currencies, leaving China, Japan, Korea, US, Europe and another group for that uses the Tether, USDT. Within each group the arbitrage index is calculated to compare the maximum difference in prices between exchanges within the same exchange group. This is done by calculating the volume-weighted average price at each exchange, then dividing the maximum price by the minimum price thus if the arbitrage index is 1, then there does not exist an arbitrage opportunity. It is shown that the arbitrage index is over 1 most of the time in all regions thus show a large amount of arbitrage opportunities across different exchanges, with opportunities lasting for as long as several weeks. It is also shown that the arbitrage spreads are consistent and correlated between regions and countries. Although the paper goes into some detail about how one can go about implementing such strategies and it's complications, it didn;t implement them thus provides a simply theoretical hypothesis that may or may not work in practice. 
+
+
+% Things to consider:
+% \begin{itemize}
+%     \itemsep0em
+%     \item Decentralised Exchanges vs Centralized exchanges
+%     \item Apparently DEXes aren't as efficient - maybe better to investigate into this?? \cite{wang_cyclic_2022}
+% WowSwap, dydx, gmx, ... https://defiprime.com/margin-trading
+% https://corporatefinanceinstitute.com/resources/cryptocurrency/cryptocurrency-exchanges/
+% https://wowswap-io.medium.com/the-big-short-introducing-decentralized-leveraged-short-swaps-a81eb9d1c36f 
+% https://defiprime.com/margin-trading
+% https://github.com/evbots/dex-protocols
+% 
+% https://medium.com/defi-saver/how-to-long-or-short-any-asset-using-defi-lending-protocols-812300c9a640
+% https://defiprime.com/exchanges
+% \end{itemize}
+
 \subsection{Statistical Arbitrage Techniques}
 
 \begin{enumerate}
@@ -70,4 +93,6 @@ Sources have shown that the word ``\textit{Arbitrage}'' has been used as early a
     \item \cite{inbookBlockchain} - % Blockchain diagram
     \item \cite{noauthor_components_2021} - % Blockchain
     \item \cite{noauthor_merkle_nodate} - % Merkle Tree
+    \item \cite{KRISTOUFEK2023103332} - % Exploring sources of statistical arbitrage opportunities among Bitcoin exchanges
+    \item \cite{boonpeam2021arbitrage} - %The arbitrage system on decentralized exchanges
 \end{enumerate}
