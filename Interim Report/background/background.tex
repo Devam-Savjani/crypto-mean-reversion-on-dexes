@@ -24,23 +24,59 @@ A merkle root is also stored in each block to validate transactions in an effici
 \subsection{Decentralised Finance}
 One of the first application of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash'~\cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer to peer approach to verify and track transactions without a centralized institution.
 
-\subsection{Exchanges}
 
 \section{Arbitrage}
 Arbitrage is the process in which a trader simultaneously buys and sells an asset in order to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
 
 
-Sources have shown that the word ``\textit{Arbitrage}'' has been used as early as the Renaissance era wehere surviving documents showed a large amount of bills being exchanged~\cite{poitras_2021}. There has also been some evidence to suggest that arbitrage was used as early as the Greek and Roman eras. Objects such as Sumerian cuneiform tablets show trade of ancient bills however we cannot come to strong conclusions of this. Early forms of arbitrage would likely to have been purchasing a commodity then transporting them to a foreign land and selling them at a higher price. This is type of arbitrage is called commodity arbitrage and is still is applicable today. With the example above, transporting the goods takes a significant amount of to the merchant, trader, which could cause variations in the price, however in the modern day this has been reduced and with electronic exchanges this time to buy and sell is very small. This means inefficiencies in the market, where a trader can profit purely by buying and selling, should not exist. This is called the ``Law of One Price''. The ``Law of One Price'' states that every identical commidty or asset should have the same price regardless of exchange or location, given there are no transaction costs, no transportation costs, no legal restrictions, the exchange rates are the same and no market manipulation occurs~\cite{noauthor_law_nodate}. This is because if this were not the case, an arbitrage opportunity would arise and someone would take advantage of the scenario causing the prices on both markets to converge due to the market forces. In the real world arbitrage opportunities are tremendously common, thus allowing a risk-free investment~\cite{10.2307/1828075, RICHARDSON1978341}. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
+Sources have shown that the word ``\textit{Arbitrage}'' has been used as early as the Renaissance era wehere surviving documents showed a large amount of bills being exchanged~\cite{poitras_2021}. There has also been some evidence to suggest that arbitrage was used as early as the Greek and Roman eras. Objects such as Sumerian cuneiform tablets show trade of ancient bills however we cannot come to strong conclusions of this. Early forms of arbitrage would likely to have been purchasing a commodity then transporting them to a foreign land and selling them at a higher price. This is type of arbitrage is called commodity arbitrage and is still is applicable today. With the example above, transporting the goods takes a significant amount of to the merchant, trader, which could cause variations in the price, however in the modern day this has been reduced and with electronic exchanges this time to buy and sell is very small. This means inefficiencies in the market, where a trader can profit purely by buying and selling, should not exist. This is called the ``Law of One Price''. The ``Law of One Price'' states that every identical commidty or asset should have the same price regardless of exchange or location, given there are no transaction costs, no transportation costs, no legal restrictions, the exchange rates are the same and no market manipulation occurs~\cite{noauthor_law_nodate}. This is because if this were not the case, an arbitrage opportunity would arise and someone would take advantage of the scenario causing the prices on both markets to converge due to the market forces. In the real world arbitrage opportunities are tremendously common, thus allowing a risk-free investment~\cite{10.2307/1828075, RICHARDSON1978341}.
+
+There are countless types of arbitrage such as spatial arbitrage, which profits off of different prices on exchanges in different locations, temporal arbitrage, which takes advantage of price differences at different times, risk arbitrage, which proifts from perceived discrepancies in their risk-return profiles and finally market arbitrage which takes advantages of different prices on different exchanges/markets. Statistical methods include pairs trading, which involves buying and selling assets that are believed to be mispriced relative to one another, mean reversion, which uses historical means to analyse if assets have deviated from the mean to then hope that the prices will converge to its mean, momentum trading, which identifies if assets have a strong momentum (either up or down) and profiting off of that, and finally algorithmic trading which uses algorithms to analyze data and trades based on statistical analysis. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
 
 \section{State of Art}
-To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading. CITE THIS FROM~\cite{wang_cyclic_2022}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage.
+To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading. CITE THIS FROM~\cite{wang_cyclic_2022}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage of cryptocurrencies. Despite this, there has been plentiful research on arbitrage as a whole as it is immensly profitable, as a result of this people/institutions tend to keep their newly found research secret. Of the published research, I have looked into the arbitrage techniques that are used. As arbitrage can is highly profitable, it can be found in countless types or assets, such as options, stocks, bonds and many other types of products. Research into all types of products exist going into the theory and practical aspects of each \cite{mo_theoretical_nodate, 8957853}. The most similar type of asset class to cryptocurrencies is fiat currencies, such as the US Dollar and the Great British Pound Sterling. The research in arbitrage in foreign exchanges show that using a triangular/cyclic arbitrage is highly profitable and effective~\cite{akram2008arbitrage, aiba2002triangular, ito2012free}. 
 
 \subsection{Pure Arbitrage Techniques}
 As I am using pure arbitrage as a baseline, thus choosing the most optimal stategy is most ideal to better understand the impacts of the optimizations and the statistical stategies themselves. There has been some research on pure arbitrage strategies by finding cyclic opportunities on both centralized and decentralised exchanges, which I go further into in this section.
 
+As previously mentioned, research into this topic is still in its infancy thus which means a very thin slice of exploration on the subject matter. Majority of the research has been into the arbitrage on centralized exchanges,~\cite{MakarovIgor2020Taai, crepelliere_arbitrage_2022, PAUNACristian2018ATSf}..... MUST ADD MORE. These all find massive inefficiencies within these exchanges by finding arbitrage opportunities. One of the more in depth pieces of research, Igor Makarov's and Antoinette Schoar's Trading and arbitrage in cryptocurrency markets~\cite{MakarovIgor2020Taai} finds a large violation in the Law of One Price by finding price discrepencies between the same cryptocurrencies depending on different geolocations. The paper uses 34 exchanges in 19 differing countries, each exchange is grouped accordingly to its location and base currencies, leaving China, Japan, Korea, US, Europe and another group for that uses the Tether, USDT. Within each group the arbitrage index is calculated to compare the maximum difference in prices between exchanges within the same exchange group. This is done by calculating the volume-weighted average price at each exchange, then dividing the maximum price by the minimum price thus if the arbitrage index is 1, then there does not exist an arbitrage opportunity. It is shown that the arbitrage index is over 1 most of the time in all regions thus show a large amount of arbitrage opportunities across different exchanges, with opportunities lasting for as long as several weeks. It is also shown that the arbitrage spreads are consistent and correlated between regions and countries. Although the paper goes into some detail about how one can go about implementing such strategies and it's complications, it didn't implement them thus provides a simply theoretical hypothesis that may or may not work in practice.
 
-As previously mentioned, research into this topic is still in its infancy thus which means a very thin slice of exploration on the subject matter. Majority of the research has been into the arbitrage on centralized exchanges,~\cite{MakarovIgor2020Taai, crepelliere_arbitrage_2022}..... MUST ADD MORE. These all find massive inefficiencies within these exchanges by finding arbitrage opportunities. One of the more in depth pieces of research, Igor Makarov's and Antoinette Schoar's Trading and arbitrage in cryptocurrency markets~\cite{MakarovIgor2020Taai} finds a large violation in the Law of One Price by finding price discrepencies between the same cryptocurrencies depending on different geolocations. The paper uses 34 exchanges in 19 differing countries, each exchange is grouped accordingly to its location and base currencies, leaving China, Japan, Korea, US, Europe and another group for that uses the Tether, USDT. Within each group the arbitrage index is calculated to compare the maximum difference in prices between exchanges within the same exchange group. This is done by calculating the volume-weighted average price at each exchange, then dividing the maximum price by the minimum price thus if the arbitrage index is 1, then there does not exist an arbitrage opportunity. It is shown that the arbitrage index is over 1 most of the time in all regions thus show a large amount of arbitrage opportunities across different exchanges, with opportunities lasting for as long as several weeks. It is also shown that the arbitrage spreads are consistent and correlated between regions and countries. Although the paper goes into some detail about how one can go about implementing such strategies and it's complications, it didn;t implement them thus provides a simply theoretical hypothesis that may or may not work in practice. 
 
+Cristian Pauna implements an arbitrage strategy in~\cite{PAUNACristian2018ATSf}. The paper details the technical details of arbitrage trading from the data and the system architecture used. Pauna finds complications such as requesting data from multiple exchanges, converting the data such that it is homogeneous and also managing server load. Pauna presents the architecture such that the servers request data from the necessary exchanges, stores them in a relational database which then triggers a server that is used to generate trading signals.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.35\textwidth]{background/Images/Arbitrage-Architecture.png}
+    \caption{Arbitrage system architecture~\cite{PAUNACristian2018ATSf}}
+\end{figure}
+
+Now looking at DEXs, research done by Stephen Bryne in his paper, \cite{byrneexploration} introduces other methods that are commonly used however, not been academically been explored. Methods using properties of ethereum such as using smart contracts for flash loans and buying and selling the same asset in large volumes within the same block in the chain, leading to large profits. The paper details into the technical implementations and issues such as security and reliablity, however it fails to provide analysis and quantitative results on the different methods used to exploit arbitrage opportunities and their differences.
+
+
+As previously mentioned triangular and cyclic arbitrage is one of the most used and purest forms of arbitrage to implement and analyse, \cite{boonpeam2021arbitrage} explores triangular arbitrage on decentralised exchanges. Algorithm \ref{alg:arb_sys_on_dex} is the algorithm used to find the most profitable arbitrage route on a particular platform, once this is calculated, it is compared with other routes on other platforms. Initially, the system converts the base token into another token and converts it back into the base token, using only one token is used as a middle route, then using the algorithm below, increases the number of middle tokens.
+
+\begin{algorithm}
+    \caption{Maximum Profit Route Searching (R)}\label{alg:arb_sys_on_dex}
+    \textbf{Input}: $T$ (token list), $P$ (price graph), $n$ (current route)
+    \begin{algorithmic}
+    \For{$i = 1, ..., T$}
+        \State $r = get\_profit(n+i)$
+        \For{$j = 1,...,P[i]$}
+            \State $p = max(r, R(T, P, n_j))$
+        \EndFor
+    \EndFor
+    \State \textbf{return} $p$
+    \end{algorithmic}
+\end{algorithm}
+
+On evaluating the performance of the strategy on differing platforms depended on three main features of each exchange:
+\begin{enumerate}
+    \item Portion size - Depending on how much the ``trader'' invested revenues differed and infact the larger protion size the revenue decreases as the token pair prices are adjusted based on supply/demand.
+    \item Transaction fees - Each exchange has their own transaction fee.
+    \item Other considerations such as price slippage - Exchanges have different liquidity levels which depends on the usage and liquidity providers that the exchange employs.
+\end{enumerate}
+
+It is found that using this strategy out of the exchanges; Uniswap, 1inch, KyberSwap and Bancor. 1inch was the only exchange that generated a profit.
 
 % Things to consider:
 % \begin{itemize}
@@ -55,25 +91,23 @@ As previously mentioned, research into this topic is still in its infancy thus w
 % 
 % https://medium.com/defi-saver/how-to-long-or-short-any-asset-using-defi-lending-protocols-812300c9a640
 % https://defiprime.com/exchanges
+
+% https://www.youtube.com/watch?v=zABaCh3yAho - video on markovian auto regressive methods
 % \end{itemize}
+
+% https://medium.com/@rachita.pateria/an-introduction-to-markov-switching-model-for-time-series-b279e9e26125
 
 \subsection{Statistical Arbitrage Techniques}
 
 \begin{enumerate}
-    \item \cite{PAUNACristian2018ATSf} - % http://revistaie.ase.ro/content/86/04%20-%20pauna.pdf
-    \item \cite{MakarovIgor2020Taai} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_2352592018
     \item \cite{HuangJianfeng2022Taaf} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_informaworld_taylorfrancis_310_1080_13504851_2021_1930998
     \item \cite{alma991000411969901591} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000411969901591
-    \item \cite{byrneexploration} - %https://www.scss.tcd.ie/Donal.OMahony/bfg/202021/StephenByrneDissertation.pdf
     \item \cite{6974093} - %
     \item \cite{https://doi.org/10.1111/joes.12153} - % https://onlinelibrary.wiley.com/doi/epdf/10.1111/joes.12153?saml_referrer
     \item \cite{KRAUSS2017689} - % https://www.sciencedirect.com/science/article/pii/S0377221716308657
     \item \cite{2019} - %https://www.mdpi.com/1911-8074/12/1/31 
     \item \cite{dempsey_market_2017} - %http://www.hedempsey.com/papers/Pairs%20Trading%20with%20a%20Kalman%20Filter.pdf
-    \item \cite{mo_theoretical_nodate} - %https://w4.stern.nyu.edu/finance/docs/pdfs/PhD/mo-job-market.pdf
-    \item \cite{crepelliere_arbitrage_2022} - %https://papers.ssrn.com/abstract=3606053
     \item \cite{wang_cyclic_2022} - %https://arxiv.org/pdf/2105.02784v3.pdf
-    \item \cite{8957853} - %https://ieeexplore.ieee.org/document/8957853
     \item \cite{8450775} - %https://ieeexplore.ieee.org/document/8450775
     \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000343762601591
     \item \cite{alma991000607977501591} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000607977501591
@@ -83,16 +117,6 @@ As previously mentioned, research into this topic is still in its infancy thus w
     \item \cite{GoncuAhmet2016SAwP} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_1792704856
     \item \cite{ZipingZhao2019OMPW} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_2180047502
     \item \cite{Figa-TalamancaGianna2021Cdff} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_2610095214
-    \item \cite{RICHARDSON1978341} - %https://www.sciencedirect.com/science/article/pii/0022199678900272
-    \item \cite{poitras_2021} - %https://www.cambridge.org/core/journals/financial-history-review/article/origins-of-arbitrage/FD1A30E926696989376EDF449F9797BF
-    \item \cite{businessinsightsblog_2021} - %https://online.hbs.edu/blog/post/what-is-arbitrage
-    \item \cite{10.2307/1828075} - %
-    \item \cite{noauthor_law_nodate} - %https://www.investopedia.com/terms/l/law-one-price.asp
-    \item \cite{nakamoto2009bitcoin} - %Nakamoto bitcoin
-    \item \cite{nofer2017blockchain} - %Blockchain
-    \item \cite{inbookBlockchain} - % Blockchain diagram
-    \item \cite{noauthor_components_2021} - % Blockchain
-    \item \cite{noauthor_merkle_nodate} - % Merkle Tree
     \item \cite{KRISTOUFEK2023103332} - % Exploring sources of statistical arbitrage opportunities among Bitcoin exchanges
     \item \cite{boonpeam2021arbitrage} - %The arbitrage system on decentralized exchanges
 \end{enumerate}
