@@ -27,33 +27,30 @@ One of the first application of blockchain was by Satoshi Nakamoto to create the
 
 \section{Arbitrage}
 Arbitrage is the process in which a trader simultaneously buys and sells an asset in order to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
-
-
+\\[5mm]
 Sources have shown that the word ``\textit{Arbitrage}'' has been used as early as the Renaissance era wehere surviving documents showed a large amount of bills being exchanged~\cite{poitras_2021}. There has also been some evidence to suggest that arbitrage was used as early as the Greek and Roman eras. Objects such as Sumerian cuneiform tablets show trade of ancient bills however we cannot come to strong conclusions of this. Early forms of arbitrage would likely to have been purchasing a commodity then transporting them to a foreign land and selling them at a higher price. This is type of arbitrage is called commodity arbitrage and is still is applicable today. With the example above, transporting the goods takes a significant amount of to the merchant, trader, which could cause variations in the price, however in the modern day this has been reduced and with electronic exchanges this time to buy and sell is very small. This means inefficiencies in the market, where a trader can profit purely by buying and selling, should not exist. This is called the ``Law of One Price''. The ``Law of One Price'' states that every identical commidty or asset should have the same price regardless of exchange or location, given there are no transaction costs, no transportation costs, no legal restrictions, the exchange rates are the same and no market manipulation occurs~\cite{noauthor_law_nodate}. This is because if this were not the case, an arbitrage opportunity would arise and someone would take advantage of the scenario causing the prices on both markets to converge due to the market forces. In the real world arbitrage opportunities are tremendously common, thus allowing a risk-free investment~\cite{10.2307/1828075, RICHARDSON1978341}.
-
+\\[5mm]
 There are countless types of arbitrage such as spatial arbitrage, which profits off of different prices on exchanges in different locations, temporal arbitrage, which takes advantage of price differences at different times, risk arbitrage, which proifts from perceived discrepancies in their risk-return profiles and finally market arbitrage which takes advantages of different prices on different exchanges/markets. Statistical methods include pairs trading, which involves buying and selling assets that are believed to be mispriced relative to one another, mean reversion, which uses historical means to analyse if assets have deviated from the mean to then hope that the prices will converge to its mean, momentum trading, which identifies if assets have a strong momentum (either up or down) and profiting off of that, and finally algorithmic trading which uses algorithms to analyze data and trades based on statistical analysis. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
 
 \section{State of Art}
-To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading. CITE THIS FROM~\cite{wang_cyclic_2022}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage of cryptocurrencies. Despite this, there has been plentiful research on arbitrage as a whole as it is immensly profitable, as a result of this people/institutions tend to keep their newly found research secret. Of the published research, I have looked into the arbitrage techniques that are used. As arbitrage can is highly profitable, it can be found in countless types or assets, such as options, stocks, bonds and many other types of products. Research into all types of products exist going into the theory and practical aspects of each \cite{mo_theoretical_nodate, 8957853}. The most similar type of asset class to cryptocurrencies is fiat currencies, such as the US Dollar and the Great British Pound Sterling. The research in arbitrage in foreign exchanges show that using a triangular/cyclic arbitrage is highly profitable and effective~\cite{akram2008arbitrage, aiba2002triangular, ito2012free}. 
+To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading~\cite{eyal2015miner, avarikioti2020ride, huberman2021monopoly, athey2016bitcoin, easley2019mining, harvey2016cryptofinance, pagnotta2018equilibrium}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage of cryptocurrencies. Despite this, there has been plentiful research on arbitrage as a whole as it is immensly profitable, as a result of this people/institutions tend to keep their newly found research secret. Of the published research, I have looked into the arbitrage techniques that are used. As arbitrage can is highly profitable, it can be found in countless types or assets, such as options, stocks, bonds and many other types of products. Research into all types of products exist going into the theory and practical aspects of each \cite{mo_theoretical_nodate, 8957853}. The most similar type of asset class to cryptocurrencies is fiat currencies, such as the US Dollar and the Great British Pound Sterling. The research in arbitrage in foreign exchanges show that using a triangular/cyclic arbitrage is highly profitable and effective~\cite{akram2008arbitrage, aiba2002triangular, ito2012free}. 
 
 \subsection{Pure Arbitrage Techniques}
 As I am using pure arbitrage as a baseline, thus choosing the most optimal stategy is most ideal to better understand the impacts of the optimizations and the statistical stategies themselves. There has been some research on pure arbitrage strategies by finding cyclic opportunities on both centralized and decentralised exchanges, which I go further into in this section.
-
-As previously mentioned, research into this topic is still in its infancy thus which means a very thin slice of exploration on the subject matter. Majority of the research has been into the arbitrage on centralized exchanges,~\cite{MakarovIgor2020Taai, crepelliere_arbitrage_2022, PAUNACristian2018ATSf}..... MUST ADD MORE. These all find massive inefficiencies within these exchanges by finding arbitrage opportunities. One of the more in depth pieces of research, Igor Makarov's and Antoinette Schoar's Trading and arbitrage in cryptocurrency markets~\cite{MakarovIgor2020Taai} finds a large violation in the Law of One Price by finding price discrepencies between the same cryptocurrencies depending on different geolocations. The paper uses 34 exchanges in 19 differing countries, each exchange is grouped accordingly to its location and base currencies, leaving China, Japan, Korea, US, Europe and another group for that uses the Tether, USDT. Within each group the arbitrage index is calculated to compare the maximum difference in prices between exchanges within the same exchange group. This is done by calculating the volume-weighted average price at each exchange, then dividing the maximum price by the minimum price thus if the arbitrage index is 1, then there does not exist an arbitrage opportunity. It is shown that the arbitrage index is over 1 most of the time in all regions thus show a large amount of arbitrage opportunities across different exchanges, with opportunities lasting for as long as several weeks. It is also shown that the arbitrage spreads are consistent and correlated between regions and countries. Although the paper goes into some detail about how one can go about implementing such strategies and it's complications, it didn't implement them thus provides a simply theoretical hypothesis that may or may not work in practice.
-
-
+\\[5mm]
+As previously mentioned, research into this topic is still in its infancy thus which means a very thin slice of exploration on the subject matter. Majority of the research has been into the arbitrage on centralized exchanges,~\cite{MakarovIgor2020Taai, crepelliere_arbitrage_2022, PAUNACristian2018ATSf}. These all find massive inefficiencies within these exchanges by finding arbitrage opportunities. One of the more in depth pieces of research, Igor Makarov's and Antoinette Schoar's Trading and arbitrage in cryptocurrency markets~\cite{MakarovIgor2020Taai} finds a large violation in the Law of One Price by finding price discrepencies between the same cryptocurrencies depending on different geolocations. The paper uses 34 exchanges in 19 differing countries, each exchange is grouped accordingly to its location and base currencies, leaving China, Japan, Korea, US, Europe and another group for that uses the Tether, USDT. Within each group the arbitrage index is calculated to compare the maximum difference in prices between exchanges within the same exchange group. This is done by calculating the volume-weighted average price at each exchange, then dividing the maximum price by the minimum price thus if the arbitrage index is 1, then there does not exist an arbitrage opportunity. It is shown that the arbitrage index is over 1 most of the time in all regions thus show a large amount of arbitrage opportunities across different exchanges, with opportunities lasting for as long as several weeks. It is also shown that the arbitrage spreads are consistent and correlated between regions and countries. Although the paper goes into some detail about how one can go about implementing such strategies and it's complications, it didn't implement them thus provides a simply theoretical hypothesis that may or may not work in practice.
+\\[5mm]
 Cristian Pauna implements an arbitrage strategy in~\cite{PAUNACristian2018ATSf}. The paper details the technical details of arbitrage trading from the data and the system architecture used. Pauna finds complications such as requesting data from multiple exchanges, converting the data such that it is homogeneous and also managing server load. Pauna presents the architecture such that the servers request data from the necessary exchanges, stores them in a relational database which then triggers a server that is used to generate trading signals.
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.35\textwidth]{background/Images/Arbitrage-Architecture.png}
+    \includegraphics[width=0.28\textwidth]{background/Images/Arbitrage-Architecture.png}
     \caption{Arbitrage system architecture~\cite{PAUNACristian2018ATSf}}
 \end{figure}
 
-Now looking at DEXs, research done by Stephen Bryne in his paper, \cite{byrneexploration} introduces other methods that are commonly used however, not been academically been explored. Methods using properties of ethereum such as using smart contracts for flash loans and buying and selling the same asset in large volumes within the same block in the chain, leading to large profits. The paper details into the technical implementations and issues such as security and reliablity, however it fails to provide analysis and quantitative results on the different methods used to exploit arbitrage opportunities and their differences.
-
-
-As previously mentioned triangular and cyclic arbitrage is one of the most used and purest forms of arbitrage to implement and analyse, \cite{boonpeam2021arbitrage} explores triangular arbitrage on decentralised exchanges. Algorithm \ref{alg:arb_sys_on_dex} is the algorithm used to find the most profitable arbitrage route on a particular platform, once this is calculated, it is compared with other routes on other platforms. Initially, the system converts the base token into another token and converts it back into the base token, using only one token is used as a middle route, then using the algorithm below, increases the number of middle tokens.
+Now looking at DEXs, research done by Stephen Bryne in his paper,~\cite{byrneexploration} introduces other methods that are commonly used however, not been academically been explored. Methods using properties of ethereum such as using smart contracts for flash loans and buying and selling the same asset in large volumes within the same block in the chain, leading to large profits. The paper details into the technical implementations and issues such as security and reliablity, however it fails to provide analysis and quantitative results on the different methods used to exploit arbitrage opportunities and their differences.
+\\[5mm]
+As previously mentioned triangular and cyclic arbitrage is one of the most used and purest forms of arbitrage to implement and analyse,~\cite{boonpeam2021arbitrage} explores triangular arbitrage on decentralised exchanges. Algorithm \ref{alg:arb_sys_on_dex} is the algorithm used to find the most profitable arbitrage route on a particular platform, once this is calculated, it is compared with other routes on other platforms. Initially, the system converts the base token into another token and converts it back into the base token, using only one token is used as a middle route, then using the algorithm below, increases the number of middle tokens.
 
 \begin{algorithm}
     \caption{Maximum Profit Route Searching (R)}\label{alg:arb_sys_on_dex}
@@ -76,7 +73,52 @@ On evaluating the performance of the strategy on differing platforms depended on
     \item Other considerations such as price slippage - Exchanges have different liquidity levels which depends on the usage and liquidity providers that the exchange employs.
 \end{enumerate}
 
-It is found that using this strategy out of the exchanges; Uniswap, 1inch, KyberSwap and Bancor. 1inch was the only exchange that generated a profit.
+It is found that using this strategy out of the exchanges; Uniswap, 1inch, Kyberswap and Bancor. 1inch was the only exchange that generated a profit whereas the others lose money. The results are shown below on the revenues recieved on each platform experimented on.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.5\textwidth]{background/Images/DEXArb_results.png}
+    \caption{Trading revenues same token routes within different exchange~\cite{boonpeam2021arbitrage}}
+\end{figure}
+
+Another paper that implemented and evaluated a cyclic arbitrage opportunity is~\cite{wang_cyclic_2022}. The research consists of proposing a theoretical arbitrage model and further evaluation on real transactional data. The arbitrage model used is simple to understand, as it searches for a cyclic transaction between $n$ tokens, $A_1, A_2, ..., A_n$ is a sequence of $n$ trades:
+\begin{center}
+    \begin{minipage}[c]{0.4\linewidth}
+    \begin{itemize}
+        \item[\textit{Trade 1:}] Exchange $\delta_1$ of $A_1$ to $\delta_2$ of $A_2$
+        \item[\textit{Trade 2:}] Exchange $\delta_2$ of $A_2$ to $\delta_3$ of $A_3$
+        \item[] $\dotsc$
+        \item[\textit{Trade n:}] Exchange $\delta_n$ of $A_n$ to $\delta_1'$ of $A_1$
+    \end{itemize}
+    \end{minipage}
+\end{center}
+
+It is important to note that $\delta_i = \delta_{i+1}$ where $i \in [1..n)$ and when $i = n$, $\delta_n = \delta_{1}'$, i.e. the output of a trade is equivelent to the input of the next. The revenues within a cycle are defined as $\delta_{i+1} - \delta_i$, and the overall profit is $\delta_{1}' - \delta_1$. This is not as simple as the revenues obviously depend on how liquid the exchange is, thus the liquidity pools of each possible trading pair is hugely important. Therefore, the paper proposes a theorem, below:
+
+\begin{theorem}
+    For a given cycle $A_1 \rightarrow A_2 \rightarrow \cdots \rightarrow A_n \rightarrow A_1$ with $n$ tockens, there exists an arbitrage opportunity for the cyclic transaction if the product of exchange rates $\frac{a_{2,1}a_{3,2}\cdots a_{1,n}}{a_{1,2}a_{2,3}\cdots a_{n, 1}} > \frac{1}{r_1^n r_2^n}$ where $a_{i,j}$ denotes the liquidity of token $A_i$ in the liquidity pool with token $A_j$.~\cite{wang_cyclic_2022}
+\end{theorem}
+
+In addition to the theorem, to obtain an optimal strategy we need to compute the optimal trading volume of a cycle, $A_1 \rightarrow A_2 \rightarrow \cdots \rightarrow A_n \rightarrow A_1$. The paper proposes the optimal trading volume to be $\delta^{op}_a = \frac{\sqrt{r_1 r_2 a' a} - a}{r_1}$ where $a = \frac{a_{1,n}'a_{n,1}}{a_{n,1}+r_1 r_2 a_{n,1}'}$ and $a' = \frac{r_1 r_2 a_{1,n}'a_{n,1}}{a_{n,1}+r_1 r_2 a_{n,1}'}$. Thus in order to calculate such arbitrage opportunities knowing the liquidity of tokens in other tokens' liquidity pools, algorithm \ref{alg:liquidity_alg} infers the direction and volumes to trade to get the optimal revenue.
+
+\begin{algorithm}
+    \caption{Computing the equivelent liquidity of the cycle}\label{alg:liquidity_alg}
+    \begin{algorithmic}
+        \State $a_{1, n}' \leftarrow a_{1,2}$
+        \State $a_{n, 1}' \leftarrow a_{2,1}$
+        \For{$i$ from $2$ to $n-1$}
+            \State $a_{1, n}' \leftarrow \frac{a_{1,n}'a_{i,i+1}}{a_{i,i+1}+r_1 r_2 a_{n,1}'}$
+            \State $a_{n, 1}' \leftarrow \frac{r_1 r_2 a_{1,n}'a_{i+1, i}}{a_{i,i+1}+r_1 r_2 a_{n,1}'}$
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
+
+After analysis, it is found that between 4th May 2020 to 15th April 2021, there were countless exploitable arbitrage opportunities and in fact grew to 1,750 in the 11 months that it was tested on. Only cycles with length 3 were experimented with and only cycles including ETH as 80\% of the liquidity pools on Uniswap include ETH and another cryptocurrency~\cite{heimbach2021behavior}. Furthermore, it is found that 287,241 of the 292,606 arbitrages executed started with ETH, 85\% of the arbitrages used a cycle of length 3. The total revenue of the cyclic arbitrage was 34,429 ETH. However, gas fees accounts for 24.6\% of the total revenue leaving an approximate 25,971 ETH profit.
+\\[5mm]
+% \vspace{5mm}
+The paper then delves into the implementation of the smart contract, the paper explored how both \textit{sequential} and \textit{atomic} implementations would affect the revenue and execution of the contracts. It was found that 52.3\% of the arbitrages that were executed sequentially generated a loss, likely due to the fact when one submits $n$ orders, the $n$ blockchain transactions are executed sequentially, meaning some external transactions can be inserted between these transactions. Thus using atomic transactions avoids this issue of external transactions do not effect the market price that may effect the outcome of the arbitrage.
+\\[5mm]
+Furthermore, the authors of the paper also investigated the performance differences of using private smart contracts and public contracts. Deploying a smart contract that calls Uniswap functions, i.e. a private smart contract, is intuitively better and achieves a higher success rate of a lower bound of 52\% and a higher bound of 90\% in comparison to calling a public Uniswap smart contract which has success rate of 27.3\%. Overall the paper provides an insightful look into cyclic arbitrage in DEXs and highlights important decisions made such as liquidity calculations and smart contracts, while comparing the performance of differing options available.
 
 % Things to consider:
 % \begin{itemize}
@@ -107,7 +149,6 @@ It is found that using this strategy out of the exchanges; Uniswap, 1inch, Kyber
     \item \cite{KRAUSS2017689} - % https://www.sciencedirect.com/science/article/pii/S0377221716308657
     \item \cite{2019} - %https://www.mdpi.com/1911-8074/12/1/31 
     \item \cite{dempsey_market_2017} - %http://www.hedempsey.com/papers/Pairs%20Trading%20with%20a%20Kalman%20Filter.pdf
-    \item \cite{wang_cyclic_2022} - %https://arxiv.org/pdf/2105.02784v3.pdf
     \item \cite{8450775} - %https://ieeexplore.ieee.org/document/8450775
     \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000343762601591
     \item \cite{alma991000607977501591} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000607977501591
@@ -118,5 +159,4 @@ It is found that using this strategy out of the exchanges; Uniswap, 1inch, Kyber
     \item \cite{ZipingZhao2019OMPW} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_2180047502
     \item \cite{Figa-TalamancaGianna2021Cdff} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_2610095214
     \item \cite{KRISTOUFEK2023103332} - % Exploring sources of statistical arbitrage opportunities among Bitcoin exchanges
-    \item \cite{boonpeam2021arbitrage} - %The arbitrage system on decentralized exchanges
 \end{enumerate}
