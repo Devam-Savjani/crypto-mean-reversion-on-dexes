@@ -22,8 +22,22 @@ A nonce, `Number Only used Once', is a number that is added to a hashed block to
 A merkle root is also stored in each block to validate transactions in an efficient manner, in terms of storage and searching. A merkle tree is a a tree of hashes where each leaf node is it's data hash and it's parent node, the hash of their children's hashes. In storing the merkle root, we do not need to directly store each transaction in each block, and also allows a quick search for any malicious alterations in differing blocks~\cite{noauthor_merkle_nodate}.
 
 \subsection{Decentralised Finance}
-One of the first application of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash'~\cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer to peer approach to verify and track transactions without a centralized institution.
+One of the first application of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash'~\cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer to peer approach to verify and track transactions without a centralized institution. Since then, many other technologies derived from using blockchain as its underlying technology. One of them was proposed by Vitalik Buterin, the co-founder of Ethereum, in a whitepaper that proposed the idea of using smart contracts to create financial products and services that could operate independently of traditional financial institutions, hence decentralised finance was birthed~\cite{buterin2014next}.
+\\[5mm]
+Ethereum's architecture is similar to bitcoin's but has a few differences, one of which is the blockchain contains a copy of the transaction list and the most recent state. The process of how transactions are validated is below:
+\begin{enumerate}
+    \itemsep0em
+    \item Validate the parent block
+    \item Validate that the current timestamp is greater that the previous timestamp
+    \item Check that the Ethereum concepts are valid
+    \item Perform Proof of Work on the block
+    \item Check for errors and gas
+    \item Validate the final state
+\end{enumerate}
 
+Proof-of-Work (PoW) is a consensus protocol that is used by Ethereum and Bitcoin for the entire network to agree on the state of the blockchain. This provides security from malicious users to attempt to altering, adding/removing transactions or maintaining a second chain, the blockchain as it requires for 51\% of the network to agree on the alteration. One of the main problems of PoW is that is uses a lot of energy, ethereum miners were collectively consuming about 70 TWh/yr~\cite{noauthor_proof--work_nodate}.
+\\[5mm]
+To measure how much computational effort is required to execute operations on the ethereum network, gas is used~\cite{noauthor_proof--work_nodate}. Every block has a base fee, derived from the demand for the block space, which is burnt. Therefore, users of the network are expected to set a tip (priority fee) to reimburse miners for adding their transaction in blocks, thus the higher the tip, the greater the incentive for miners to validate the transaction. Using gas means that the ethereum network is tolerant to spam and also has a maximum gas fee to make ethereum tolerant to malicious code that would be used to waste resources.
 
 \section{Arbitrage}
 Arbitrage is the process in which a trader simultaneously buys and sells an asset in order to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
@@ -141,6 +155,18 @@ Furthermore, the authors of the paper also investigated the performance differen
 
 \subsection{Statistical Arbitrage Techniques}
 
+% - pairs trading
+% - mean reversion
+% - momentum trading
+% - algorithmic trading
+
+
+
+
+
+
+
+
 \begin{enumerate}
     \item \cite{HuangJianfeng2022Taaf} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_informaworld_taylorfrancis_310_1080_13504851_2021_1930998
     \item \cite{alma991000411969901591} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000411969901591
@@ -160,3 +186,15 @@ Furthermore, the authors of the paper also investigated the performance differen
     \item \cite{Figa-TalamancaGianna2021Cdff} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_2610095214
     \item \cite{KRISTOUFEK2023103332} - % Exploring sources of statistical arbitrage opportunities among Bitcoin exchanges
 \end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
