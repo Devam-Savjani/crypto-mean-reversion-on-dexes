@@ -23,7 +23,8 @@ A merkle root is also stored in each block to validate transactions in an effici
 
 \subsection{Decentralised Finance}
 One of the first application of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash'~\cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer to peer approach to verify and track transactions without a centralized institution. Since then, many other technologies derived from using blockchain as its underlying technology. One of them was proposed by Vitalik Buterin, the co-founder of Ethereum, in a whitepaper that proposed the idea of using smart contracts to create financial products and services that could operate independently of traditional financial institutions, hence decentralised finance was birthed~\cite{buterin2014next}.
-\\[5mm]
+
+\subsubsection{Ethereum}
 Ethereum's architecture is similar to bitcoin's but has a few differences, one of which is the blockchain contains a copy of the transaction list and the most recent state. The process of how transactions are validated is below:
 \begin{enumerate}
     \itemsep0em
@@ -35,9 +36,20 @@ Ethereum's architecture is similar to bitcoin's but has a few differences, one o
     \item Validate the final state
 \end{enumerate}
 
-Proof-of-Work (PoW) is a consensus protocol that is used by Ethereum and Bitcoin for the entire network to agree on the state of the blockchain. This provides security from malicious users to attempt to altering, adding/removing transactions or maintaining a second chain, the blockchain as it requires for 51\% of the network to agree on the alteration. One of the main problems of PoW is that is uses a lot of energy, ethereum miners were collectively consuming about 70 TWh/yr~\cite{noauthor_proof--work_nodate}.
+\noindent Proof-of-Work (PoW) is a consensus protocol that is used by Ethereum and Bitcoin for the entire network to agree on the state of the blockchain. This provides security from malicious users to attempt to altering, adding/removing transactions or maintaining a second chain, the blockchain as it requires for 51\% of the network to agree on the alteration. One of the main problems of PoW is that is uses a lot of energy, ethereum miners were collectively consuming about 70 TWh/yr~\cite{noauthor_proof--work_nodate}.
 \\[5mm]
-To measure how much computational effort is required to execute operations on the ethereum network, gas is used~\cite{noauthor_proof--work_nodate}. Every block has a base fee, derived from the demand for the block space, which is burnt. Therefore, users of the network are expected to set a tip (priority fee) to reimburse miners for adding their transaction in blocks, thus the higher the tip, the greater the incentive for miners to validate the transaction. Using gas means that the ethereum network is tolerant to spam and also has a maximum gas fee to make ethereum tolerant to malicious code that would be used to waste resources.
+To measure how much computational effort is required to execute operations on the ethereum network, gas is used~\cite{noauthor_gas_nodate}. Every block has a base fee, derived from the demand for the block space, which is burnt. Therefore, users of the network are expected to set a tip (priority fee) to reimburse miners for adding their transaction in blocks, thus the higher the tip, the greater the incentive for miners to validate the transaction. Using gas means that the ethereum network is tolerant to spam and also has a maximum gas fee to make ethereum tolerant to malicious code that would be used to waste resources.
+\\[5mm]
+Another difference between Ethereum and other cryptocurrencies is that rather than managing a distributed ledger, it uses a distributed state machine. The Ethereum Virtual Machine (EVM) defines the rules of changing states from block to block. Each node on the Ethereum blockchain contains an immutable instance of the EVM~\cite{noauthor_ethereum_nodate}.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/evm.png}
+    \caption{EVM components~\cite{noauthor_ethereum_nodate}}
+\end{figure}
+
+\subsubsection{Smart Contracts}
+Smart contracts are programs that are self-executing contracts between buyers and sellers that deploy on the ethereum network. It allows for the automation of a contract's execution, and can be used to facilitate, verify, and enforce the negotiation or performance of a contract~\cite{noauthor_introduction_nodate, noauthor_smart_nodate}.
 
 \section{Arbitrage}
 Arbitrage is the process in which a trader simultaneously buys and sells an asset in order to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
@@ -80,7 +92,7 @@ As previously mentioned triangular and cyclic arbitrage is one of the most used 
     \end{algorithmic}
 \end{algorithm}
 
-On evaluating the performance of the strategy on differing platforms depended on three main features of each exchange:
+\noindent On evaluating the performance of the strategy on differing platforms depended on three main features of each exchange:
 \begin{enumerate}
     \item Portion size - Depending on how much the ``trader'' invested revenues differed and infact the larger protion size the revenue decreases as the token pair prices are adjusted based on supply/demand.
     \item Transaction fees - Each exchange has their own transaction fee.
