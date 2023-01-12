@@ -56,7 +56,7 @@ Arbitrage is the process in which a trader simultaneously buys and sells an asse
 \\[5mm]
 Sources have shown that the word ``\textit{Arbitrage}'' has been used as early as the Renaissance era wehere surviving documents showed a large amount of bills being exchanged~\cite{poitras_2021}. There has also been some evidence to suggest that arbitrage was used as early as the Greek and Roman eras. Objects such as Sumerian cuneiform tablets show trade of ancient bills however we cannot come to strong conclusions of this. Early forms of arbitrage would likely to have been purchasing a commodity then transporting them to a foreign land and selling them at a higher price. This is type of arbitrage is called commodity arbitrage and is still is applicable today. With the example above, transporting the goods takes a significant amount of to the merchant, trader, which could cause variations in the price, however in the modern day this has been reduced and with electronic exchanges this time to buy and sell is very small. This means inefficiencies in the market, where a trader can profit purely by buying and selling, should not exist. This is called the ``Law of One Price''. The ``Law of One Price'' states that every identical commidty or asset should have the same price regardless of exchange or location, given there are no transaction costs, no transportation costs, no legal restrictions, the exchange rates are the same and no market manipulation occurs~\cite{noauthor_law_nodate}. This is because if this were not the case, an arbitrage opportunity would arise and someone would take advantage of the scenario causing the prices on both markets to converge due to the market forces. In the real world arbitrage opportunities are tremendously common, thus allowing a risk-free investment~\cite{10.2307/1828075, RICHARDSON1978341}.
 \\[5mm]
-There are countless types of arbitrage such as spatial arbitrage, which profits off of different prices on exchanges in different locations, temporal arbitrage, which takes advantage of price differences at different times, risk arbitrage, which proifts from perceived discrepancies in their risk-return profiles and finally market arbitrage which takes advantages of different prices on different exchanges/markets. Statistical methods include pairs trading, which involves buying and selling assets that are believed to be mispriced relative to one another, mean reversion, which uses historical means to analyse if assets have deviated from the mean to then hope that the prices will converge to its mean, momentum trading, which identifies if assets have a strong momentum (either up or down) and profiting off of that, and finally algorithmic trading which uses algorithms to analyze data and trades based on statistical analysis. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
+There are countless types of arbitrage such as spatial arbitrage, which profits off of different prices on exchanges in different locations, temporal arbitrage, which takes advantage of price differences at different times, risk arbitrage, which proifts from perceived discrepancies in their risk-return profiles and finally market arbitrage which takes advantages of different prices on different exchanges/markets. Statistical methods include pairs trading, which involves buying and selling assets that are believed to be mispriced relative to one another, momentum trading, which identifies if assets have a strong momentum (either up or down) and profiting off of that, and finally algorithmic trading which uses algorithms to analyze data and trades based on statistical analysis. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
 
 \section{State of Art}
 To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading~\cite{eyal2015miner, avarikioti2020ride, huberman2021monopoly, athey2016bitcoin, easley2019mining, harvey2016cryptofinance, pagnotta2018equilibrium}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage of cryptocurrencies. Despite this, there has been plentiful research on arbitrage as a whole as it is immensly profitable, as a result of this people/institutions tend to keep their newly found research secret. Of the published research, I have looked into the arbitrage techniques that are used. As arbitrage can is highly profitable, it can be found in countless types or assets, such as options, stocks, bonds and many other types of products. Research into all types of products exist going into the theory and practical aspects of each \cite{mo_theoretical_nodate, 8957853}. The most similar type of asset class to cryptocurrencies is fiat currencies, such as the US Dollar and the Great British Pound Sterling. The research in arbitrage in foreign exchanges show that using a triangular/cyclic arbitrage is highly profitable and effective~\cite{akram2008arbitrage, aiba2002triangular, ito2012free}. 
@@ -119,7 +119,7 @@ Another paper that implemented and evaluated a cyclic arbitrage opportunity is~\
     \end{minipage}
 \end{center}
 
-It is important to note that $\delta_i = \delta_{i+1}$ where $i \in [1..n)$ and when $i = n$, $\delta_n = \delta_{1}'$, i.e. the output of a trade is equivelent to the input of the next. The revenues within a cycle are defined as $\delta_{i+1} - \delta_i$, and the overall profit is $\delta_{1}' - \delta_1$. This is not as simple as the revenues obviously depend on how liquid the exchange is, thus the liquidity pools of each possible trading pair is hugely important. Therefore, the paper proposes a theorem, below:
+It is important to note that $\delta_i = \delta_{i+1}$, i.e. the output of a trade is equivelent to the input of the next. The revenues within a cycle are defined as $\delta_{i+1} - \delta_i$, and the overall profit is $\delta_{1}' - \delta_1$. This is not as simple as the revenues obviously depend on how liquid the exchange is, thus the liquidity pools of each possible trading pair is hugely important. Therefore, the paper proposes a theorem, below:
 
 \begin{theorem}
     For a given cycle $A_1 \rightarrow A_2 \rightarrow \cdots \rightarrow A_n \rightarrow A_1$ with $n$ tockens, there exists an arbitrage opportunity for the cyclic transaction if the product of exchange rates $\frac{a_{2,1}a_{3,2}\cdots a_{1,n}}{a_{1,2}a_{2,3}\cdots a_{n, 1}} > \frac{1}{r_1^n r_2^n}$ where $a_{i,j}$ denotes the liquidity of token $A_i$ in the liquidity pool with token $A_j$.~\cite{wang_cyclic_2022}
@@ -146,11 +146,98 @@ The paper then delves into the implementation of the smart contract, the paper e
 \\[5mm]
 Furthermore, the authors of the paper also investigated the performance differences of using private smart contracts and public contracts. Deploying a smart contract that calls Uniswap functions, i.e. a private smart contract, is intuitively better and achieves a higher success rate of a lower bound of 52\% and a higher bound of 90\% in comparison to calling a public Uniswap smart contract which has success rate of 27.3\%. Overall the paper provides an insightful look into cyclic arbitrage in DEXs and highlights important decisions made such as liquidity calculations and smart contracts, while comparing the performance of differing options available.
 
-% Things to consider:
+\subsection{Statistical Arbitrage Techniques}
+
+As mentioned previously mentioned and the subject of the project is to optimize statistical arbitrage methods to be able to compete with a more purer form of arbitrage, i.e. cyclic arbitrage. As previously mentioned there are many methods of stat arb, pairs trading, momentum trading and algorithmic trading. Within these methods there are countless strategies to adopt and profit off of, thus to limit the scope, this project I will be investigating strategies within pair trading. Research within Pair trading has been vast with many streams of approaches emerging; distance approach, cointegration approach, time-series approach, stochastic approach and some others, including using machine learning~\cite{https://doi.org/10.1111/joes.12153}. 
+\\[5mm]
+The distance approach is easy to understand; using the euclidian squared difference of combinations historical normalized prices of assets from a selected time period and selecting the top 20 pairs of assets with the least historical distance. Once pairs are selected, monitor the prices and if the prices diverge by over 2 standard deviations, buy the undervalued asset and sell the overvalues asset and when the prices converge, close the position~\cite{RadLowFaff}. This is called Mean reversion and is fundemental technique used in pairs trading.
+\\[5mm]
+The cointegration approach follows three key steps. The first being selection of pairs based on similarity measures, the next being assessing the tradability and finally thresholds are set for trading. The spread is defined as $$\varepsilon_{i j,t} = P_{i,t} + \gamma P_{j,t}$$ where $P_{i,t}$ and $P_{j,t}$ denote the $I(1)$ non-stationary price processes of the assets $i$ and $j$, $\gamma$ is the cointegration coefficient, also refered to in literature as the hedge ratio. $\varepsilon_{i j,t}$ is the linear combination of the non-stationary prices and is $I(0)$ stationary and hence mean-reverting, note that stationary processes are those of which have a constant mean. Rad's implementation of this approach on stocks result in a 0.83\% return before considering transaction costs~\cite{RadLowFaff}. Another paper, \cite{lossProtection}, looked into setting the thresholds and setting a minimum profit, $MP_{ij,t_c}$: $$MP_{ij,t_c} = \frac{n(\varepsilon_{i j,t_0} - \varepsilon_{i j,t_c})}{ \mid \gamma \mid}$$ Where $t_0$ and $t_c$ are the opening and closing times, $n$ is the volume longed of asset $j$.
+\\[5mm]
+There has been further research into optimizing mean reversion, one of which was to use the successive convex approximation method on the mean reverting portfolio design ~\cite{ZipingZhao2019OMPW}. The paper initially proposes the mean reversion portfolio:
+\begin{itemize}
+    \itemsep0em
+    \item For each asset, the price at time $t$ is denoted as $p_t$ and its correspondeing log-price $y_t \triangleq log(p_t)$, its vector form of $M$ assets $\mathbf{y}_t \triangleq \big[ y_{1,t}, \dots ,w_{M,t} \big]^T$.
+    \item The log-price spread is given by $y_t \triangleq \mathbf{\beta}^T\mathbf{y}_t$, where $\mathbf{\beta} \triangleq \big[ \beta_1, \dots ,\beta_M \big]^T$ denotes the hedge ratios.
+    \item The cointegration space with $N$ relations is defined by $\mathbf{B} \triangleq \big[ \beta_1, \dots ,\beta_N \big]$, thus the $N$ spreads are $s_t \triangleq \mathbf{B}^T\mathbf{y}_t$.
+    \item For these $N$ spreads, the portfolio weight matrix is denoted as $\mathbf{w} \triangleq \big[ w_1, \dots ,w_N \big]^T$.
+    \item The auto-covariance matrix for the spreads $s_t$ is defined as \\ ${M_i \triangleq Cov(s_t, s_{t+i}) = \mathop{\mathbb{E}} \big[ \big( s_t - \mathop{\mathbb{E}} \big[ s_t \big]\big) \big( s_{t+i} - \mathop{\mathbb{E}} \big[ s_{t+i} \big]\big)^T \big]}$
+\end{itemize}
+
+Now that we have defined everything required, we can now formulize the problem. The general problem of mean reversion portfolio design problem is formalized by:
+\begin{equation*}
+    \begin{aligned}
+        & \underset{\mathbf{w}}{\text{minimize}}
+        & & F(\mathbf{w}) \triangleq U(\mathbf{w}) + \mu V(\mathbf{w}) + \gamma S(\mathbf{w})\\
+        & \text{subject to}
+        & & \mathbf{w} \in \biggl\{ \mathbf{w} \mid \big\| \mathbf{B} \mathbf{w}\big\|_0 \leq L \biggr\}, \qquad \text{where $L$ is the total leveraged investment}
+    \end{aligned}
+\end{equation*}
+
+\noindent Where the Mean Reversion term: $$U(\mathbf{w}) \triangleq \xi \frac{\mathbf{w}^T \mathbf{H}\mathbf{w}}{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} + \zeta \biggl( \frac{\mathbf{w}^T \mathbf{M}_1\mathbf{w}}{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} \biggr) ^2 + \eta \sum_{i=2}^{p} \biggl( \frac{\mathbf{w}^T \mathbf{M}_i\mathbf{w}}{\mathbf{w}^T \mathbf{M}_0\mathbf{w}}\biggr)^2$$ And the variance term: $$V(\mathbf{w}) \triangleq \begin{cases}
+    1/\mathbf{w}^T \mathbf{M}_0\mathbf{w} & \text{VarInv(\textbf{w})}\\
+    1/\sqrt{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} & \text{StdInv(\textbf{w})}\\
+    -\mathbf{w}^T \mathbf{M}_0\mathbf{w} & \text{VarNeg(\textbf{w})}\\
+    -\sqrt{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} & \text{StdNeg(\textbf{w})}
+ \end{cases}$$ 
+ The variance term can be represented in any of the four forms.
+ \\[5mm] 
+ And the asset selection term: $$S(\mathbf{w}) \triangleq \big\| \mathbf{B} \mathbf{w}\big\|_0 = \sum_{m=1}^{M} sgn(\mid \bigl[ \mathbf{B} \mathbf{w} \bigr]_m \mid)$$ This asset selection critorian is not necessary however as trading incur a cost, selecting all of the asset is costly, thus selecting a subset of assets to trade is more profitable. To formulize this goal, we would like to minimize the cointegration space thus we use the $\ell_0$ norm.
+ 
+ Where \begin{itemize}
+    \item $\mu$ defines the trade-off between the mean reversion measure and the variance preference.
+    \item $\gamma$ defines the regularization parameter of how sparse we would like the cointegration space to be.
+ \end{itemize}
+
+
+
+\textbf{Ones that use Cointegration/Correlation:}
+\begin{itemize}
+    \item OPTIMAL PORTFOLIO DESIGN FOR STATISTICAL ARBITRAGE IN FINANCE \cite{8450775} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Optimal_Portfolio_Design_for_Statistical_Arbitrage_in_Finance.pdf
+    % \item Optimal Mean-Reverting Portfolio With Leverage Constraint for Statistical Arbitrage in Finance \cite{ZipingZhao2019OMPW} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Optimal_Mean-Reverting_Portfolio_With_Leverage_Constraint_for_Statistical_Arbitrage_in_Finance.pdf
+    \item Exploring sources of statistical arbitrage opportunities among Bitcoin exchanges \cite{KRISTOUFEK2023103332} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Exploring_sources_of_statistical_arbitrage_opportunities_among_bitcoin_exchanges.pdf
+    \item Common dynamic factors for cryptocurrencies and multiple pair-trading statistical arbitrages \cite{Figa-TalamancaGianna2021Cdff} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Common%20dynamic%20factors%20for%20cryptocurrencies%20and%20multiple%20pair-trading%20statistical%20arbitrages.pdf
+\end{itemize}
+
+
+\textbf{Ones that use Kalman Filter:}
+\begin{itemize}
+    \item A Combination Forecasting Model Using Machine Learning and Kalman Filter for Statistical Arbitrage \cite{6974093} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/A_combination_forecasting_model_using_machine_learning_and_Kalman_filter_for_statistical_arbitrage.pdf
+    \item Pairs Trading with a Kalman Filter \cite{dempsey_market_2017} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Pairs%20Trading%20with%20a%20Kalman%20Filter.pdf
+\end{itemize}
+
+
+
+
+
+% \newpage
+% \textbf{Broader Picture}
 % \begin{itemize}
-%     \itemsep0em
-%     \item Decentralised Exchanges vs Centralized exchanges
-%     \item Apparently DEXes aren't as efficient - maybe better to investigate into this?? \cite{wang_cyclic_2022}
+%     \item STATISTICAL ARBITRAGE PAIRS TRADING STRATEGIES: REVIEW AND OUTLOOK \cite{https://doi.org/10.1111/joes.12153} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Journal%20of%20Economic%20Surveys%20-%202016%20-%20Krauss%20-%20STATISTICAL%20ARBITRAGE%20PAIRS%20TRADING%20STRATEGIES%20REVIEW%20AND%20OUTLOOK.pdf
+%     \item Statistical Arbitrage: Algorithmic Trading Insights and Techniques \cite{alma991000607977501591} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Statistical%20arbitrage%20:%20algorithmic%20trading%20insights%20and%20techniques.pdf
+% \end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\textbf{Ones that use Stochastics:}
+\begin{itemize}
+    \item Statistical Arbitrage with Pairs Trading \cite{GoncuAhmet2016SAwP} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Statistical%20Arbitrage%20with%20Pairs%20Trading.pdf
+\end{itemize}
+
+
+\textbf{Ones that use ML:}
+\begin{itemize}
+    \item Statistical Arbitrage in Cryptocurrency Markets \cite{jrfm12010031} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Statistical%20Arbitrage%20in%20Cryptocurrency%20Markets%20.pdf
+    \item Deep neural networks, gradient-boosted trees, random forests: Statistical arbitrage on the S\&P 500 \cite{KRAUSS2017689} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Deep_neural_networks,gradient-boosted_trees,random_forests:_Statistical_arbitrage_on_the_S&P_500.pdf
+    \item A Machine Learning based Pairs Trading Investment Strategy \cite{alma991000475380901591} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/A%20Machine%20Learning%20based%20Pairs%20Trading%20Investment%20Strategy%20.pdf
+\end{itemize}
+
+
+
+
 % WowSwap, dydx, gmx, ... https://defiprime.com/margin-trading
 % https://corporatefinanceinstitute.com/resources/cryptocurrency/cryptocurrency-exchanges/
 % https://wowswap-io.medium.com/the-big-short-introducing-decentralized-leveraged-short-swaps-a81eb9d1c36f 
@@ -161,43 +248,15 @@ Furthermore, the authors of the paper also investigated the performance differen
 % https://defiprime.com/exchanges
 
 % https://www.youtube.com/watch?v=zABaCh3yAho - video on markovian auto regressive methods
-% \end{itemize}
-
 % https://medium.com/@rachita.pateria/an-introduction-to-markov-switching-model-for-time-series-b279e9e26125
 
-\subsection{Statistical Arbitrage Techniques}
-
-% - pairs trading
-% - mean reversion
-% - momentum trading
-% - algorithmic trading
-
-
-
-
-
-
-
-
-\begin{enumerate}
-    \item \cite{HuangJianfeng2022Taaf} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_informaworld_taylorfrancis_310_1080_13504851_2021_1930998
-    \item \cite{alma991000411969901591} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000411969901591
-    \item \cite{6974093} - %
-    \item \cite{https://doi.org/10.1111/joes.12153} - % https://onlinelibrary.wiley.com/doi/epdf/10.1111/joes.12153?saml_referrer
-    \item \cite{KRAUSS2017689} - % https://www.sciencedirect.com/science/article/pii/S0377221716308657
-    \item \cite{2019} - %https://www.mdpi.com/1911-8074/12/1/31 
-    \item \cite{dempsey_market_2017} - %http://www.hedempsey.com/papers/Pairs%20Trading%20with%20a%20Kalman%20Filter.pdf
-    \item \cite{8450775} - %https://ieeexplore.ieee.org/document/8450775
-    \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000343762601591
-    \item \cite{alma991000607977501591} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000607977501591
-    \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma996037714401591
-    \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000617323401591
-    \item \cite{alma991000475380901591} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000475380901591
-    \item \cite{GoncuAhmet2016SAwP} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_1792704856
-    \item \cite{ZipingZhao2019OMPW} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_2180047502
-    \item \cite{Figa-TalamancaGianna2021Cdff} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_proquest_journals_2610095214
-    \item \cite{KRISTOUFEK2023103332} - % Exploring sources of statistical arbitrage opportunities among Bitcoin exchanges
-\end{enumerate}
+% \begin{enumerate}
+%     \item \cite{HuangJianfeng2022Taaf} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/fv0fdm/cdi_informaworld_taylorfrancis_310_1080_13504851_2021_1930998
+%     \item \cite{alma991000411969901591} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000411969901591
+%     \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000343762601591
+%     \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma996037714401591
+%     \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000617323401591
+% \end{enumerate}
 
 
 
