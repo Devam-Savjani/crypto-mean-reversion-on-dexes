@@ -164,7 +164,7 @@ There has been further research into optimizing mean reversion, one of which was
     \item The auto-covariance matrix for the spreads $s_t$ is defined as \\ ${M_i \triangleq Cov(s_t, s_{t+i}) = \mathop{\mathbb{E}} \big[ \big( s_t - \mathop{\mathbb{E}} \big[ s_t \big]\big) \big( s_{t+i} - \mathop{\mathbb{E}} \big[ s_{t+i} \big]\big)^T \big]}$
 \end{itemize}
 
-Now that we have defined everything required, we can now formulize the problem. The general problem of mean reversion portfolio design problem is formalized by:
+\noindent Now that we have defined everything required, we can now formulize the problem. The general problem of mean reversion portfolio design problem is formalized by:
 \begin{equation*}
     \begin{aligned}
         & \underset{\mathbf{w}}{\text{minimize}}
@@ -253,24 +253,72 @@ The first step is to generate a descent direction and then update the variable w
 \end{figure}
 
 \noindent Overall, this research succesfully formulizes, solves the optimization problem mathematically, and goes further to implement the algorithms to solve the problem programmatically. In addtion, the author compares the implementation with other benchmark algorithms, showing that it results in a greater P\&L and sharpe ratio. 
+\\[5mm]
+Although, the research in the papers previously mentioned do not investigate the cointegration approach on cryptocurrencies, the takeaways are the mathematical fundementals that are used in statistical arbitrage. Kristoufek and Bouri researched into the sources of stat. arb. of bitcoin in multiple centralized exchanges. The Grey correlation is built on top of the Grey system theory~\cite{JULONG1982288}, and is able to capture non-linear correlations without assuming a Gaussian distribution, thus using Grey correlation provides a more robust metric to understand correlations between series'. The Grey correlation $\gamma(X_0, X_i)$ is defined with two steps:
+\begin{enumerate}
+    \item $\gamma(x_0(k), x_i(k)) = \frac{min_i min_k \mid x_0(k) - x_i(k) \mid + \varepsilon max_i max_k \mid x_0(k) - x_i(k) \mid}{\mid x_0(k) - x_i(k) \mid + \varepsilon max_i max_k \mid x_0(k) - x_i(k) \mid}$
+    \item $\gamma(X_0, X_i) = \frac{1}{n} \sum_{i=1}^{n} \gamma(x_0(k), x_i(k))$
+\end{enumerate}
+\noindent With $\varepsilon \in [0,1]$, the standard is set to $\varepsilon = 0.5$.
+\\[5mm]
+The DCC-GARCH(1,1), \cite{engle2002dynamic}, model also used to obtain conditional correlations for Bitcoin exchanges. The model was designed to used a combination of parameters such as the standard deviation of Bitcoin returns, traded volume, volume of on-chain transactions, fees paid to miners, ratio of current price and recent price history and internet hype/trends. 
+\\[5mm]
+Upon analysis of Grey and DCC-GARCH(1,1) correlations, it is found that the DCC correlations show a little variability whereas the Grey correlations being a lot more variable ranging from 0.29 to 1. In addition, the paper then further investigates these sources and finds that these opportunities are introduced when there is a large number of inter-exchange tranfer requests, i.e. the network is congester, and high price volitility. In contrast, high volume of exchanges and on-chain activity cause the arbitrage opportunities to decrease. This paper finds and explains these sources of statistical arbitrage however does not implement or devise an algorithm that uses statistical arbitrage to generate a profit from price discrepancies of Bitcoin on different exchanges.
+\\[5mm]
+A paper that investigates statistical arbitrage on multiple cryptocurrencies is \cite{Figa-TalamancaGianna2021Cdff}. The authors of this paper analysed co-movements and cointegration of different cryptocurrencies on a centralized exchange using Augmented Dickey Fuller (ADF) and  Kwiatkowsky-Phillips-Schmidt-Shin (KPSS), Ljung-Box autocorrelation tests on both stationary form ($I(0)$) and the original form ($I(1)$). The paper then develops a dynamic factor model based on the assumption that the price dynamics of cryptocurrencies is driven by Bitcoin~\cite{blau2020comovement}, this is then evidenced by similar paths found in cryptocurrencies shown in Figure \ref{fig:pricebehaviour}.
+\newpage
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/price_behaviour.png}
+    \caption{Price behaviour of Bitcoin, Ethereum, Litecoin, Monero~\cite{Figa-TalamancaGianna2021Cdff}}
+    \label{fig:pricebehaviour}
+\end{figure}
 
-\textbf{Ones that use Cointegration/Correlation:}
+\noindent For simplicity the authors set the number of hidden factors to 2 and upon analysis $f_1$ is a $I(1)$ process and the second factor $f_2$ is a stationary process that is independent from $f_1$. It is also found after overlaying $f_1$ with the price of Bitcoin, that the first factor strongly correlates with the price of Bitcoin.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/hidden_factors.png}
+    \caption{Hidden factors $f_1$ and $f_2$ from Jan 2016 to Dec 2018~\cite{Figa-TalamancaGianna2021Cdff}}
+    \label{fig:hiddenfactors}
+\end{figure}
+
+\noindent The paper then uses this model to build an investment strategy, using forecasting using the estimated parameters:
+$$\hat{p}_{i, \tau + 1} = \mathbb{E}_{\tau}(p_{i, \tau + 1}) = \hat{\alpha_i} + \hat{\beta}_{i 1} \mathbb{E}_{\tau}(f_{1, \tau + 1}) + \hat{\beta}_{i 2} \mathbb{E}_{\tau}(f_{2, \tau + 1}) $$
+Where
+$$f_{1, t} = \lambda_1 f_{1, t-1} + \eta_{1,t}$$
+$$f_{2, t} = \lambda_2 f_{2, t-1} + \eta_{2,t}$$
+The expected gains one day ahead is given by:
+$$g_{\tau + 1} =  \mathbb{E}_{\tau}[v_{\tau + 1}] = \sum_{i=1}^{\lfloor I / 2 \rfloor} \hat{p}_{\tau + 1}^{(i)} - \sum_{i=\lceil I / 2 \rceil + 1}^{I} \hat{p}_{\tau + 1}^{(i)} $$
+
+\noindent Using this and a thresholds which are calculated by the combination of the current price and standard deviation of the trading position value:
 \begin{itemize}
-    % \item OPTIMAL PORTFOLIO DESIGN FOR STATISTICAL ARBITRAGE IN FINANCE \cite{8450775} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Optimal_Portfolio_Design_for_Statistical_Arbitrage_in_Finance.pdf
-    % \item Optimal Mean-Reverting Portfolio With Leverage Constraint for Statistical Arbitrage in Finance \cite{ZipingZhao2019OMPW} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Optimal_Mean-Reverting_Portfolio_With_Leverage_Constraint_for_Statistical_Arbitrage_in_Finance.pdf
-    \item Exploring sources of statistical arbitrage opportunities among Bitcoin exchanges \cite{KRISTOUFEK2023103332} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Exploring_sources_of_statistical_arbitrage_opportunities_among_bitcoin_exchanges.pdf
-    \item Common dynamic factors for cryptocurrencies and multiple pair-trading statistical arbitrages \cite{Figa-TalamancaGianna2021Cdff} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Common%20dynamic%20factors%20for%20cryptocurrencies%20and%20multiple%20pair-trading%20statistical%20arbitrages.pdf
+    \itemsep0em
+    \item if $g_{\tau + 1} > v_{\tau} + c \sigma_{\tau}^v$, go long
+    \item if $g_{\tau + 1} < v_{\tau} - c \sigma_{\tau}^v$, go short
+    \item if $v_{\tau} - c \sigma_{\tau}^v \leq g_{\tau + 1} \geq v_{\tau} + c \sigma_{\tau}^v$, no trade
 \end{itemize}
+
+\noindent The researchers of the paper evaluated their trading strategy for 334 days and a moving window of 3 years, 1096 observations, every day to estimate the parameters for the dynamic factor model. We can see in Figure \ref{fig:gains} that the strategy was able to consistently generate a profit even when considering transaction costs.
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/gains.png}
+    \caption{Net gains taking transaction fees into account~\cite{Figa-TalamancaGianna2021Cdff}}
+    \label{fig:gains}
+\end{figure}
+
+\noindent Another method that is used in statistical arbitrage is using the Kalman Filter. Recall the equation for spread:
+$$\varepsilon_{i j,t} = P_{i,t} + \gamma P_{j,t}$$
+\noindent The Kalman filter is a recursive algorithm for estimating the sate of data that is usually very noisy and thus needs to be filtered~\cite{ALSADIK2019299}. This makes it very useful to estimate the hedge ratio $\gamma$. 
+
 
 
 \textbf{Ones that use Kalman Filter:}
 \begin{itemize}
-    \item A Combination Forecasting Model Using Machine Learning and Kalman Filter for Statistical Arbitrage \cite{6974093} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/A_combination_forecasting_model_using_machine_learning_and_Kalman_filter_for_statistical_arbitrage.pdf
     \item Pairs Trading with a Kalman Filter \cite{dempsey_market_2017} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Pairs%20Trading%20with%20a%20Kalman%20Filter.pdf
+    \item A Combination Forecasting Model Using Machine Learning and Kalman Filter for Statistical Arbitrage \cite{6974093} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/A_combination_forecasting_model_using_machine_learning_and_Kalman_filter_for_statistical_arbitrage.pdf
 \end{itemize}
-
-
-
 
 
 % \newpage
@@ -320,15 +368,4 @@ The first step is to generate a descent direction and then update the variable w
 %     \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma996037714401591
 %     \item \cite{} - %https://library-search.imperial.ac.uk/permalink/44IMP_INST/mek6kh/alma991000617323401591
 % \end{enumerate}
-
-
-
-
-
-
-
-
-
-
-
 
