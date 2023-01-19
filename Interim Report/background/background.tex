@@ -51,6 +51,9 @@ Another difference between Ethereum and other cryptocurrencies is that rather th
 \subsubsection{Smart Contracts}
 Smart contracts are programs that are self-executing contracts between buyers and sellers that deploy on the ethereum network. It allows for the automation of a contract's execution, and can be used to facilitate, verify, and enforce the negotiation or performance of a contract~\cite{noauthor_introduction_nodate, noauthor_smart_nodate}.
 
+\subsection{Decentralised Exchanges}
+
+
 \section{Arbitrage}
 Arbitrage is the process in which a trader simultaneously buys and sells an asset in order to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
 \\[5mm]
@@ -59,7 +62,7 @@ Sources have shown that the word ``\textit{Arbitrage}'' has been used as early a
 There are countless types of arbitrage such as spatial arbitrage, which profits off of different prices on exchanges in different locations, temporal arbitrage, which takes advantage of price differences at different times, risk arbitrage, which proifts from perceived discrepancies in their risk-return profiles and finally market arbitrage which takes advantages of different prices on different exchanges/markets. Statistical methods include pairs trading, which involves buying and selling assets that are believed to be mispriced relative to one another, momentum trading, which identifies if assets have a strong momentum (either up or down) and profiting off of that, and finally algorithmic trading which uses algorithms to analyze data and trades based on statistical analysis. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
 
 \section{State of Art}
-To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading~\cite{eyal2015miner, avarikioti2020ride, huberman2021monopoly, athey2016bitcoin, easley2019mining, harvey2016cryptofinance, pagnotta2018equilibrium}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage of cryptocurrencies. Despite this, there has been plentiful research on arbitrage as a whole as it is immensly profitable, as a result of this people/institutions tend to keep their newly found research secret. Of the published research, I have looked into the arbitrage techniques that are used. As arbitrage can is highly profitable, it can be found in countless types or assets, such as options, stocks, bonds and many other types of products. Research into all types of products exist going into the theory and practical aspects of each \cite{mo_theoretical_nodate, 8957853}. The most similar type of asset class to cryptocurrencies is fiat currencies, such as the US Dollar and the Great British Pound Sterling. The research in arbitrage in foreign exchanges show that using a triangular/cyclic arbitrage is highly profitable and effective~\cite{akram2008arbitrage, aiba2002triangular, ito2012free}. 
+To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading~\cite{eyal2015miner, avarikioti2020ride, huberman2021monopoly, athey2016bitcoin, easley2019mining, harvey2016cryptofinance, pagnotta2018equilibrium}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage of cryptocurrencies. Despite this, there has been plentiful research on arbitrage as a whole as it is immensly profitable, as a result of this people/institutions tend to keep their newly found research secret. Of the published research, I have looked into the arbitrage techniques that are used. As arbitrage can is highly profitable, it can be found in countless types or assets, such as options, stocks, bonds and many other types of products. Research into all types of products exist going into the theory and practical aspects of each \cite{mo_theoretical_nodate, 8957853}. The most similar type of asset class to cryptocurrencies is fiat currencies, such as the US Dollar and the Great British Pound Sterling. The research in arbitrage in foreign exchanges show that using a triangular/cyclic arbitrage is highly profitable and effective~\cite{akram2008arbitrage, aiba2002triangular, ito2012free}.
 
 \subsection{Pure Arbitrage Techniques}
 As I am using pure arbitrage as a baseline, thus choosing the most optimal stategy is most ideal to better understand the impacts of the optimizations and the statistical stategies themselves. There has been some research on pure arbitrage strategies by finding cyclic opportunities on both centralized and decentralised exchanges, which I go further into in this section.
@@ -82,13 +85,13 @@ As previously mentioned triangular and cyclic arbitrage is one of the most used 
     \caption{Maximum Profit Route Searching (R)}\label{alg:arb_sys_on_dex}
     \textbf{Input}: $T$ (token list), $P$ (price graph), $n$ (current route)
     \begin{algorithmic}
-    \For{$i = 1, ..., T$}
+        \For{$i = 1, ..., T$}
         \State $r = get\_profit(n+i)$
         \For{$j = 1,...,P[i]$}
-            \State $p = max(r, R(T, P, n_j))$
+        \State $p = max(r, R(T, P, n_j))$
         \EndFor
-    \EndFor
-    \State \textbf{return} $p$
+        \EndFor
+        \State \textbf{return} $p$
     \end{algorithmic}
 \end{algorithm}
 
@@ -110,12 +113,12 @@ It is found that using this strategy out of the exchanges; Uniswap, 1inch, Kyber
 Another paper that implemented and evaluated a cyclic arbitrage opportunity is~\cite{wang_cyclic_2022}. The research consists of proposing a theoretical arbitrage model and further evaluation on real transactional data. The arbitrage model used is simple to understand, as it searches for a cyclic transaction between $n$ tokens, $A_1, A_2, ..., A_n$ is a sequence of $n$ trades:
 \begin{center}
     \begin{minipage}[c]{0.4\linewidth}
-    \begin{itemize}
-        \item[\textit{Trade 1:}] Exchange $\delta_1$ of $A_1$ to $\delta_2$ of $A_2$
-        \item[\textit{Trade 2:}] Exchange $\delta_2$ of $A_2$ to $\delta_3$ of $A_3$
-        \item[] $\dotsc$
-        \item[\textit{Trade n:}] Exchange $\delta_n$ of $A_n$ to $\delta_1'$ of $A_1$
-    \end{itemize}
+        \begin{itemize}
+            \item[\textit{Trade 1:}] Exchange $\delta_1$ of $A_1$ to $\delta_2$ of $A_2$
+            \item[\textit{Trade 2:}] Exchange $\delta_2$ of $A_2$ to $\delta_3$ of $A_3$
+            \item[] $\dotsc$
+            \item[\textit{Trade n:}] Exchange $\delta_n$ of $A_n$ to $\delta_1'$ of $A_1$
+        \end{itemize}
     \end{minipage}
 \end{center}
 
@@ -133,8 +136,8 @@ In addition to the theorem, to obtain an optimal strategy we need to compute the
         \State $a_{1, n}' \leftarrow a_{1,2}$
         \State $a_{n, 1}' \leftarrow a_{2,1}$
         \For{$i$ from $2$ to $n-1$}
-            \State $a_{1, n}' \leftarrow \frac{a_{1,n}'a_{i,i+1}}{a_{i,i+1}+r_1 r_2 a_{n,1}'}$
-            \State $a_{n, 1}' \leftarrow \frac{r_1 r_2 a_{1,n}'a_{i+1, i}}{a_{i,i+1}+r_1 r_2 a_{n,1}'}$
+        \State $a_{1, n}' \leftarrow \frac{a_{1,n}'a_{i,i+1}}{a_{i,i+1}+r_1 r_2 a_{n,1}'}$
+        \State $a_{n, 1}' \leftarrow \frac{r_1 r_2 a_{1,n}'a_{i+1, i}}{a_{i,i+1}+r_1 r_2 a_{n,1}'}$
         \EndFor
     \end{algorithmic}
 \end{algorithm}
@@ -148,7 +151,7 @@ Furthermore, the authors of the paper also investigated the performance differen
 
 \subsection{Statistical Arbitrage Techniques}
 
-As mentioned previously mentioned and the subject of the project is to optimize statistical arbitrage methods to be able to compete with a more purer form of arbitrage, i.e. cyclic arbitrage. As previously mentioned there are many methods of stat arb, pairs trading, momentum trading and algorithmic trading. Within these methods there are countless strategies to adopt and profit off of, thus to limit the scope, this project I will be investigating strategies within pair trading. Research within Pair trading has been vast with many streams of approaches emerging; distance approach, cointegration approach, time-series approach, stochastic approach and some others, including using machine learning~\cite{https://doi.org/10.1111/joes.12153}. 
+As mentioned previously mentioned and the subject of the project is to optimize statistical arbitrage methods to be able to compete with a more purer form of arbitrage, i.e. cyclic arbitrage. As previously mentioned there are many methods of stat arb, pairs trading, momentum trading and algorithmic trading. Within these methods there are countless strategies to adopt and profit off of, thus to limit the scope, this project I will be investigating strategies within pair trading. Research within Pair trading has been vast with many streams of approaches emerging; distance approach, cointegration approach, time-series approach, stochastic approach and some others, including using machine learning~\cite{https://doi.org/10.1111/joes.12153}.
 \\[5mm]
 The distance approach is easy to understand; using the euclidian squared difference of combinations historical normalized prices of assets from a selected time period and selecting the top 20 pairs of assets with the least historical distance. Once pairs are selected, monitor the prices and if the prices diverge by over 2 standard deviations, buy the undervalued asset and sell the overvalues asset and when the prices converge, close the position~\cite{RadLowFaff}. This is called Mean reversion and is fundemental technique used in pairs trading.
 \\[5mm]
@@ -167,45 +170,45 @@ There has been further research into optimizing mean reversion, one of which was
 \noindent Now that we have defined everything required, we can now formulize the problem. The general problem of mean reversion portfolio design problem is formalized by:
 \begin{equation*}
     \begin{aligned}
-        & \underset{\mathbf{w}}{\text{minimize}}
-        & & F(\mathbf{w}) \triangleq U(\mathbf{w}) + \mu V(\mathbf{w}) + \gamma S(\mathbf{w})\\
-        & \text{subject to}
-        & & \mathbf{w} \in \biggl\{ \mathbf{w} \mid \big\| \mathbf{B} \mathbf{w}\big\|_0 \leq L \biggr\}, \qquad \text{where $L$ is the total leveraged investment}
+         & \underset{\mathbf{w}}{\text{minimize}}
+         &                                        & F(\mathbf{w}) \triangleq U(\mathbf{w}) + \mu V(\mathbf{w}) + \gamma S(\mathbf{w})                                                                       \\
+         & \text{subject to}
+         &                                        & \mathbf{w} \in \biggl\{ \mathbf{w} \mid \big\| \mathbf{B} \mathbf{w}\big\|_0 \leq L \biggr\}, \qquad \text{where $L$ is the total leveraged investment}
     \end{aligned}
 \end{equation*}
 
 \begin{itemize}
     \item $\mu$ defines the trade-off between the mean reversion measure and the variance preference.
     \item $\gamma$ defines the regularization parameter of how sparse we would like the cointegration space to be.
- \end{itemize}
+\end{itemize}
 
 \noindent Where the Mean Reversion term: $$U(\mathbf{w}) \triangleq \xi \frac{\mathbf{w}^T \mathbf{H}\mathbf{w}}{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} + \zeta \biggl( \frac{\mathbf{w}^T \mathbf{M}_1\mathbf{w}}{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} \biggr) ^2 + \eta \sum_{i=2}^{p} \biggl( \frac{\mathbf{w}^T \mathbf{M}_i\mathbf{w}}{\mathbf{w}^T \mathbf{M}_0\mathbf{w}}\biggr)^2$$ And the variance term: $$V(\mathbf{w}) \triangleq \begin{cases}
-    1/\mathbf{w}^T \mathbf{M}_0\mathbf{w} & \text{VarInv(\textbf{w})}\\
-    1/\sqrt{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} & \text{StdInv(\textbf{w})}\\
-    -\mathbf{w}^T \mathbf{M}_0\mathbf{w} & \text{VarNeg(\textbf{w})}\\
-    -\sqrt{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} & \text{StdNeg(\textbf{w})}
- \end{cases}$$ 
+        1/\mathbf{w}^T \mathbf{M}_0\mathbf{w}        & \text{VarInv(\textbf{w})} \\
+        1/\sqrt{\mathbf{w}^T \mathbf{M}_0\mathbf{w}} & \text{StdInv(\textbf{w})} \\
+        -\mathbf{w}^T \mathbf{M}_0\mathbf{w}         & \text{VarNeg(\textbf{w})} \\
+        -\sqrt{\mathbf{w}^T \mathbf{M}_0\mathbf{w}}  & \text{StdNeg(\textbf{w})}
+    \end{cases}$$
 The variance term can be represented in any of the four forms.
-\\[5mm] 
+\\[5mm]
 And the asset selection term: $$S(\mathbf{w}) \triangleq \big\| \mathbf{B} \mathbf{w}\big\|_0 = \sum_{m=1}^{M} sgn(\mid \bigl[ \mathbf{B} \mathbf{w} \bigr]_m \mid)$$ This asset selection critorian is not necessary however as trading incur a cost, selecting all of the asset is costly, thus selecting a subset of assets to trade is more profitable. To formulize this goal, we would like to minimize the cointegration space thus we use the $\ell_0$ norm.
-\\[5mm] 
+\\[5mm]
 The paper then goes on to solve the optimization problem using the successive convex approximation (SCA) method~\cite{scaOptimization}. The SCA method takes an optimization problem in the form of:
 \begin{equation*}
     \begin{aligned}
-        & \underset{\mathbf{x}}{\text{minimize}}
-        & & f(\mathbf{x})\\
-        & \text{subject to}
-        & & \mathbf{x} \in \mathcal{X}
+         & \underset{\mathbf{x}}{\text{minimize}}
+         &                                        & f(\mathbf{x})              \\
+         & \text{subject to}
+         &                                        & \mathbf{x} \in \mathcal{X}
     \end{aligned}
 \end{equation*}
 \noindent Where $\mathcal{X} \subseteq \mathbb{R}^N$ is convex and $f(\mathbf{x})$ is non-convex. The SCA method involves starting at an initial point $\mathbf{x}^{(0)}$ and solving a series of subproblems of surrogate funtions $\tilde{f}(\mathbf{x}; \mathbf{x}^{(k)})$ over the set $\mathcal{X}$. The sequence $\bigl\{ \mathbf{x}^{(k)} \bigr\}$ is generated by: $$\begin{cases}
-    \hat{\mathbf{x}}^{(k+1)} = arg \underset{\mathbf{x} \in \mathcal{X}}{min} \tilde{f}(\mathbf{x}; \mathbf{x}^{(k)})\\
-    \mathbf{x}^{(k+1)} = \mathbf{x}^{(k)} + \gamma^{(k)}(\hat{\mathbf{x}}^{(k+1)} - \mathbf{x}^{(k)})
-\end{cases}$$
+        \hat{\mathbf{x}}^{(k+1)} = arg \underset{\mathbf{x} \in \mathcal{X}}{min} \tilde{f}(\mathbf{x}; \mathbf{x}^{(k)}) \\
+        \mathbf{x}^{(k+1)} = \mathbf{x}^{(k)} + \gamma^{(k)}(\hat{\mathbf{x}}^{(k+1)} - \mathbf{x}^{(k)})
+    \end{cases}$$
 The first step is to generate a descent direction and then update the variable with a step size of $\gamma^{(k)}$. After applying this method to the MRP problem and further analysis the paper, the following algorithm is proposed and used to solve the MRP design problem:
 \begin{algorithm}
     \caption{SCA-Based Algorithm for The Optimal MRP Design Problem}\label{alg:sca_alg}
-    \textbf{Require}: $\mathbf{H}, \mathbf{M}_i, \mu, \gamma, \mathbf{B}, L \text{ and } \tau$ 
+    \textbf{Require}: $\mathbf{H}, \mathbf{M}_i, \mu, \gamma, \mathbf{B}, L \text{ and } \tau$
     \begin{algorithmic}[1]
         \State Set $k=0, \gamma^{(0)}$ and $\mathbf{w}^{(0)}$
         \Repeat
@@ -220,16 +223,16 @@ The first step is to generate a descent direction and then update the variable w
 \noindent However, 4 line is a convex problem and has no closed form solution thus to solve this subproblem using the ADMM method, this is done by introducing an auxilary variable $\mathbf{z = Bw}$.
 \begin{equation*}
     \begin{aligned}
-        & \underset{\mathbf{x, z}}{\text{minimize}}
-        & & \mathbf{w}^{T}\mathbf{A}\mathbf{w} + \mathbf{b}^{T}\mathbf{w}\\
-        & \text{subject to}
-        & & \big\| \mathbf{z} \big\|_1 \leq B, \mathbf{Bw - z=0}
+         & \underset{\mathbf{x, z}}{\text{minimize}}
+         &                                           & \mathbf{w}^{T}\mathbf{A}\mathbf{w} + \mathbf{b}^{T}\mathbf{w} \\
+         & \text{subject to}
+         &                                           & \big\| \mathbf{z} \big\|_1 \leq B, \mathbf{Bw - z=0}
     \end{aligned}
 \end{equation*}
 \noindent This is then summerized into Algorithm \ref{alg:admm_alg}:
 \begin{algorithm}
     \caption{An ADMM-Based Algorithm for Problem on line 4 in Algorithm \ref{alg:sca_alg}}\label{alg:admm_alg}
-    \textbf{Require}: $\mathbf{A}, \mathbf{b}, \mathbf{B}, B, \rho$ 
+    \textbf{Require}: $\mathbf{A}, \mathbf{b}, \mathbf{B}, B, \rho$
     \begin{algorithmic}[1]
         \State Set $\mathbf{w}^{(0)}, \mathbf{z}^{(0)}, \mathbf{u}^{(0)}$ and $k=0$
         \Repeat
@@ -252,7 +255,7 @@ The first step is to generate a descent direction and then update the variable w
     \label{fig:ROIsMRP}
 \end{figure}
 
-\noindent Overall, this research succesfully formulizes, solves the optimization problem mathematically, and goes further to implement the algorithms to solve the problem programmatically. In addtion, the author compares the implementation with other benchmark algorithms, showing that it results in a greater P\&L and sharpe ratio. 
+\noindent Overall, this research succesfully formulizes, solves the optimization problem mathematically, and goes further to implement the algorithms to solve the problem programmatically. In addtion, the author compares the implementation with other benchmark algorithms, showing that it results in a greater P\&L and sharpe ratio.
 \\[5mm]
 Although, the research in the papers previously mentioned do not investigate the cointegration approach on cryptocurrencies, the takeaways are the mathematical fundementals that are used in statistical arbitrage. Kristoufek and Bouri researched into the sources of stat. arb. of bitcoin in multiple centralized exchanges. The Grey correlation is built on top of the Grey system theory~\cite{JULONG1982288}, and is able to capture non-linear correlations without assuming a Gaussian distribution, thus using Grey correlation provides a more robust metric to understand correlations between series'. The Grey correlation $\gamma(X_0, X_i)$ is defined with two steps:
 \begin{enumerate}
@@ -261,7 +264,7 @@ Although, the research in the papers previously mentioned do not investigate the
 \end{enumerate}
 \noindent With $\varepsilon \in [0,1]$, the standard is set to $\varepsilon = 0.5$.
 \\[5mm]
-The DCC-GARCH(1,1), \cite{engle2002dynamic}, model also used to obtain conditional correlations for Bitcoin exchanges. The model was designed to used a combination of parameters such as the standard deviation of Bitcoin returns, traded volume, volume of on-chain transactions, fees paid to miners, ratio of current price and recent price history and internet hype/trends. 
+The DCC-GARCH(1,1), \cite{engle2002dynamic}, model also used to obtain conditional correlations for Bitcoin exchanges. The model was designed to used a combination of parameters such as the standard deviation of Bitcoin returns, traded volume, volume of on-chain transactions, fees paid to miners, ratio of current price and recent price history and internet hype/trends.
 \\[5mm]
 Upon analysis of Grey and DCC-GARCH(1,1) correlations, it is found that the DCC correlations show a little variability whereas the Grey correlations being a lot more variable ranging from 0.29 to 1. In addition, the paper then further investigates these sources and finds that these opportunities are introduced when there is a large number of inter-exchange tranfer requests, i.e. the network is congester, and high price volitility. In contrast, high volume of exchanges and on-chain activity cause the arbitrage opportunities to decrease. This paper finds and explains these sources of statistical arbitrage however does not implement or devise an algorithm that uses statistical arbitrage to generate a profit from price discrepancies of Bitcoin on different exchanges.
 \\[5mm]
@@ -310,34 +313,37 @@ $$g_{\tau + 1} =  \mathbb{E}_{\tau}[v_{\tau + 1}] = \sum_{i=1}^{\lfloor I / 2 \r
 
 \noindent Another method that is used in statistical arbitrage is using the Kalman Filter. Recall the equation for spread:
 $$\varepsilon_{i j,t} = P_{i,t} + \gamma P_{j,t}$$
-\noindent The Kalman filter is a recursive algorithm for estimating the sate of data that is usually very noisy and thus needs to be filtered~\cite{ALSADIK2019299}. This makes it very useful to estimate the hedge ratio $\gamma$. 
+\noindent The Kalman filter is a recursive algorithm for estimating the sate of data that is usually very noisy and thus needs to be filtered~\cite{ALSADIK2019299}. This makes it very useful to estimate the hedge ratio $\gamma$. Initially, a book by Vidyamurthy discusses best practices for choosing cointegrated equities and found that the kalman filter was found optimal when the state-space and observation equations are linear and the noise is Gaussian~\cite{vidyamurthy2004pairs}. Since then there has been many extensions of the filter such as the Extended Kalman Filter (EKF) and Unscented KF aimed to handle when the state-space and observation equations are non-linear and the noise is not Gaussian.
+\\[5mm]
+The Kalman Filter works in 2 phases, prediction and update. The prediction phase is as follows $$\hat{\mathbf{x}}_k = \mathbf{F}_k \hat{\mathbf{x}}_{k-1} + \mathbf{B}_k \overset{\rightarrow}{\mathbf{u}}_k + \mathbf{w}_k$$ $$\mathbf{P}_k = \mathbf{F}_k \mathbf{P}_{k-1} \mathbf{F}_k^T + \mathbf{Q}_k $$ Where $\hat{\mathbf{x}}_k$ is the new best estimate (prediction) that is derived from $\hat{\mathbf{x}}_{k-1}$, the previous estimate and the prediction function $\mathbf{F}_k$. $\overset{\rightarrow}{\mathbf{u}}_k$ is the correction term, called the control vector, that is used when it is known that there are external influences in combination with $\mathbf{B}_k$ which is called the control matrix. In addition to this, the new uncertainty (covariance matrix), $\mathbf{P}_k$, is calculated using the previous uncertainty and additional uncertainty from the environment, $\mathbf{Q}_k $, $\mathbf{w}_k$ is called the state noise. The update is as follows $$\hat{\mathbf{x}}_k' = \hat{\mathbf{x}}_k + \mathbf{K}'(\overset{\rightarrow}{\mathbf{z}}_k - \mathbf{H}_k \hat{\mathbf{x}}_k)$$ $$\mathbf{P}_k' = \mathbf{P}_k - \mathbf{K}'\mathbf{H}_k \mathbf{P}_k$$ $$\mathbf{K}' = \mathbf{P}_k \mathbf{H}_k^T (\mathbf{H}_k \mathbf{P}_k \mathbf{H}_k^T + \mathbf{R}_k)^{-1}$$ Where $\mathbf{K}'$ is defined as the Kalman gain, $\mathbf{H}_k$ is the measurement matrix, $\overset{\rightarrow}{\mathbf{z}}_k$ is mean of the observed values, which is also calculated by $\overset{\rightarrow}{\mathbf{z}}_k = \mathbf{H}_k \hat{\mathbf{x}}_k + \mathbf{v}_k$ where $\mathbf{v}_k$ is the measurement noise, and $\mathbf{R}_k$ is the covariance of the uncertainty of the observed values~\cite{kalman_filter_bzarg}.
+\\[5mm]
+A paper that investigated the use of the Kalman Filter on ETFs found that the strategy it employed worked well for in-sample data points and worse, but still profitable, results of out-of-sample data. The paper adapted the Kalman Filter to be able to use it for pairs trading to the following: $$\mathbf{y}_t = \mathbf{x}_t \mathbf{\beta}_t + \mathbf{\epsilon}_t$$ $$\mathbf{\beta}_t = \mathbf{I} \mathbf{\beta}_{t-1} + \mathbf{\omega}_t$$ Then calculating the Kalman Gain: $$\text{Kalman Gain} = \frac{\text{Error in the estimate}}{\text{Error in the estimate + Error in the measurement}}$$ Then to calculate the estimate: $$\text{Estimate}_t = \text{Estimate}_{t-1} + \text{Kalman Gain} \times (\text{Measurement - }\text{Estimate}_{t-1})$$ And finally, calculating the new error: $$E_{\text{estimate}_t} = \frac{E_{\text{measurement}} \times E_{\text{estimate}_{t-1}}}{E_{\text{measurement}} + E_{\text{estimate}_{t-1}}}$$ $$E_{\text{estimate}_t} = E_{\text{estimate}_{t-1}} \times (1 - \text{Kalman Gain})$$
 
+\noindent The paper later hypothesises the causes for the disappointing results to the ``pairs trading strategies have gained widespread acceptance thus making profitability much more elusive'', however the author fails to find evidence or provide sufficient evidence to justify the claim~\cite{dempsey_market_2017}.
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/insamplevsoutsampleresults.png}
+    \caption{Aggregate average return of using the kalman filter for pairs trading on ETFs~\cite{dempsey_market_2017}}
+    \label{fig:kalman_results}
+\end{figure}
 
-
-\textbf{Ones that use Kalman Filter:}
-\begin{itemize}
-    \item Pairs Trading with a Kalman Filter \cite{dempsey_market_2017} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Pairs%20Trading%20with%20a%20Kalman%20Filter.pdf
-    \item A Combination Forecasting Model Using Machine Learning and Kalman Filter for Statistical Arbitrage \cite{6974093} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/A_combination_forecasting_model_using_machine_learning_and_Kalman_filter_for_statistical_arbitrage.pdf
-\end{itemize}
-
-
-% \newpage
-% \textbf{Broader Picture}
-% \begin{itemize}
-%     \item STATISTICAL ARBITRAGE PAIRS TRADING STRATEGIES: REVIEW AND OUTLOOK \cite{https://doi.org/10.1111/joes.12153} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Journal%20of%20Economic%20Surveys%20-%202016%20-%20Krauss%20-%20STATISTICAL%20ARBITRAGE%20PAIRS%20TRADING%20STRATEGIES%20REVIEW%20AND%20OUTLOOK.pdf
-%     \item Statistical Arbitrage: Algorithmic Trading Insights and Techniques \cite{alma991000607977501591} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Statistical%20arbitrage%20:%20algorithmic%20trading%20insights%20and%20techniques.pdf
-% \end{itemize}
+Another paper used the combination of the Kalman Filter and Machine Learning, more specifically Extreme Learning Machine and Support Vector Regression (SVR) to build a statistical arbitrage strategy on the Brazilian Stock Exchange. The strategies can simply be explained as using SVR and ELM to forcast returns and using the Kalman Filter to improve the forcast.
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/KalmanMLFlowChart.png}
+    \caption{Visualisation of the trading strategy used in \cite{6974093}}
+    \label{fig:kalman_ml_flowchart}
+\end{figure}
+\noindent The paper also compares methods, such as LASSO, BMA, GRR, to benchmark the performance of the Kalman Filter. The research found that using simply ELM and SVR forcasts result in a return of 20.19\% and 21.32\% respectively for out-of-sample data points and by using a combination with the Kalman Filter give a return of 26.13\% for out-of-sample data points. The full results can be seen below in Figure \ref{fig:kalman_ml_results}. In addition to this it can be seen that the volitility of the return also decreases which is ideal for investment managers.
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{background/Images/kalman_ml_results.png}
+    \caption{Econometric results~\cite{6974093}}
+    \label{fig:kalman_ml_results}
+\end{figure}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-\textbf{Ones that use Stochastics:}
-\begin{itemize}
-    \item Statistical Arbitrage with Pairs Trading \cite{GoncuAhmet2016SAwP} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Statistical%20Arbitrage%20with%20Pairs%20Trading.pdf
-\end{itemize}
-
 
 \textbf{Ones that use ML:}
 \begin{itemize}
@@ -346,6 +352,11 @@ $$\varepsilon_{i j,t} = P_{i,t} + \gamma P_{j,t}$$
     \item A Machine Learning based Pairs Trading Investment Strategy \cite{alma991000475380901591} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/A%20Machine%20Learning%20based%20Pairs%20Trading%20Investment%20Strategy%20.pdf
 \end{itemize}
 
+% \textbf{Broader Picture}
+% \begin{itemize}
+%     \item STATISTICAL ARBITRAGE PAIRS TRADING STRATEGIES: REVIEW AND OUTLOOK \cite{https://doi.org/10.1111/joes.12153} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Journal%20of%20Economic%20Surveys%20-%202016%20-%20Krauss%20-%20STATISTICAL%20ARBITRAGE%20PAIRS%20TRADING%20STRATEGIES%20REVIEW%20AND%20OUTLOOK.pdf
+%     \item Statistical Arbitrage: Algorithmic Trading Insights and Techniques \cite{alma991000607977501591} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Statistical%20arbitrage%20:%20algorithmic%20trading%20insights%20and%20techniques.pdf
+% \end{itemize}
 
 
 
