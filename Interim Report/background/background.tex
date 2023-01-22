@@ -21,7 +21,7 @@ A nonce, `Number Only used Once', is a number that is added to a hashed block to
 \subsubsection{Merkle root}
 A merkle root is also stored in each block to validate transactions in an efficient manner, in terms of storage and searching. A merkle tree is a a tree of hashes where each leaf node is it's data hash and it's parent node, the hash of their children's hashes. In storing the merkle root, we do not need to directly store each transaction in each block, and also allows a quick search for any malicious alterations in differing blocks~\cite{noauthor_merkle_nodate}.
 
-\subsection{Decentralised Finance}
+\subsection{Ethereum}
 One of the first application of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash'~\cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer to peer approach to verify and track transactions without a centralized institution. Since then, many other technologies derived from using blockchain as its underlying technology. One of them was proposed by Vitalik Buterin, the co-founder of Ethereum, in a whitepaper that proposed the idea of using smart contracts to create financial products and services that could operate independently of traditional financial institutions, hence decentralised finance was birthed~\cite{buterin2014next}.
 
 \subsubsection{Ethereum}
@@ -31,12 +31,12 @@ Ethereum's architecture is similar to bitcoin's but has a few differences, one o
     \item Validate the parent block
     \item Validate that the current timestamp is greater that the previous timestamp
     \item Check that the Ethereum concepts are valid
-    \item Perform Proof of Work on the block
+    \item Perform Proof of Stake on the block
     \item Check for errors and gas
     \item Validate the final state
 \end{enumerate}
 
-\noindent Proof-of-Work (PoW) is a consensus protocol that is used by Ethereum and Bitcoin for the entire network to agree on the state of the blockchain. This provides security from malicious users to attempt to altering, adding/removing transactions or maintaining a second chain, the blockchain as it requires for 51\% of the network to agree on the alteration. One of the main problems of PoW is that is uses a lot of energy, ethereum miners were collectively consuming about 70 TWh/yr~\cite{noauthor_proof--work_nodate}.
+\noindent Proof-of-Stake (PoS) is a consensus protocol that is used by Ethereum and Bitcoin for the entire network to agree on the state of the blockchain. This provides security from malicious users to attempt to altering, adding/removing transactions or maintaining a second chain, the blockchain as it requires for 51\% of the network to agree on the alteration.
 \\[5mm]
 To measure how much computational effort is required to execute operations on the ethereum network, gas is used~\cite{noauthor_gas_nodate}. Every block has a base fee, derived from the demand for the block space, which is burnt. Therefore, users of the network are expected to set a tip (priority fee) to reimburse miners for adding their transaction in blocks, thus the higher the tip, the greater the incentive for miners to validate the transaction. Using gas means that the ethereum network is tolerant to spam and also has a maximum gas fee to make ethereum tolerant to malicious code that would be used to waste resources.
 \\[5mm]
@@ -51,8 +51,14 @@ Another difference between Ethereum and other cryptocurrencies is that rather th
 \subsubsection{Smart Contracts}
 Smart contracts are programs that are self-executing contracts between buyers and sellers that deploy on the ethereum network. It allows for the automation of a contract's execution, and can be used to facilitate, verify, and enforce the negotiation or performance of a contract~\cite{noauthor_introduction_nodate, noauthor_smart_nodate}.
 
-\subsection{Decentralised Exchanges}
+\subsection{Decentralised Finance}
+One of the main applications of Ethereum and smart contracts are Decentralised Exchanges (DEXes). Before delving into DEXes it is important to understand centralized exchanges.
 
+\subsubsection{Centralized Exchanges}
+Centralized exchanges allow agents to discover and trade assets. CEXs ficilitate trading between buyers and sellers by proving an online platform that manages and maintains an order book. An order book aggregates buy and sell orders and executes matching buy and sell orders. The order book and transactions are typically managed on a database as opposed to interacting with the blockchain. When trading, exchanges charge trading fees for the maker and the taker to operate the exchange and do not charge any gas fees as there is no interaction with the blockchain. 
+
+\subsubsection{Decentralized Exchanges}
+In contrast, DEXes utilize blockchain technology and smart contracts to execute trades thus providing a high level of determinism. These trades are executed on the blockchain via smart contracts and on-chain transactions. There are two types of DEX, order book DEXes and Automated Market Makers (AMMs). An order book DEX is less common and is similar to CEXs however, the orderbook is stored on the blockchain rather than on a central database. This means each order placed requires the order book to be posted on the block chain at each transaction. Automated Market Makers are more common and provide instant liquidity by using liquidity pools so that users can swap their tokens for a price that is determined by the portions within the liquidity pool~\cite{DEXes}. DEXes have multiple pros including lower transaction fees, privacy, diversity and trustless transactions but they also have their drawbacks such as scalability and poor liquidity are a lot of the DEXes are quite new~\cite{DEXvsCEX}.
 
 \section{Arbitrage}
 Arbitrage is the process in which a trader simultaneously buys and sells an asset in order to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
@@ -62,7 +68,7 @@ Sources have shown that the word ``\textit{Arbitrage}'' has been used as early a
 There are countless types of arbitrage such as spatial arbitrage, which profits off of different prices on exchanges in different locations, temporal arbitrage, which takes advantage of price differences at different times, risk arbitrage, which proifts from perceived discrepancies in their risk-return profiles and finally market arbitrage which takes advantages of different prices on different exchanges/markets. Statistical methods include pairs trading, which involves buying and selling assets that are believed to be mispriced relative to one another, momentum trading, which identifies if assets have a strong momentum (either up or down) and profiting off of that, and finally algorithmic trading which uses algorithms to analyze data and trades based on statistical analysis. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
 
 \section{State of Art}
-To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading~\cite{eyal2015miner, avarikioti2020ride, huberman2021monopoly, athey2016bitcoin, easley2019mining, harvey2016cryptofinance, pagnotta2018equilibrium}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage of cryptocurrencies. Despite this, there has been plentiful research on arbitrage as a whole as it is immensly profitable, as a result of this people/institutions tend to keep their newly found research secret. Of the published research, I have looked into the arbitrage techniques that are used. As arbitrage can is highly profitable, it can be found in countless types or assets, such as options, stocks, bonds and many other types of products. Research into all types of products exist going into the theory and practical aspects of each \cite{mo_theoretical_nodate, 8957853}. The most similar type of asset class to cryptocurrencies is fiat currencies, such as the US Dollar and the Great British Pound Sterling. The research in arbitrage in foreign exchanges show that using a triangular/cyclic arbitrage is highly profitable and effective~\cite{akram2008arbitrage, aiba2002triangular, ito2012free}.
+To better understand the project and to be able to research into something new and novel it is important to understand the current state of art, i.e. previous research on the topic. Research into cryptocurrency arbitrage is still in its infancy and previous research has mainly focussed on the economics of cryptocurrencies, i.e. miner/trader behaviour and influence of cryptocurrency trading~\cite{eyal2015miner, avarikioti2020ride, huberman2021monopoly, athey2016bitcoin, easley2019mining, harvey2016cryptofinance, pagnotta2018equilibrium}. Furthermore, there has been very limited research in comparing statistical strategies and pure methods of arbitrage of cryptocurrencies. Despite this, there has been plentiful research on arbitrage as a whole as it is immensly profitable, as a result of this people/institutions tend to keep their newly found research secret. Of the published research, I have looked into the arbitrage techniques that are used. As arbitrage can is highly profitable, it can be found in countless types or assets, such as options, stocks, bonds and many other types of products. Research into all types of products exist going into the theory and practical aspects of each~\cite{mo_theoretical_nodate, 8957853}. The most similar type of asset class to cryptocurrencies is fiat currencies, such as the US Dollar and the Great British Pound Sterling. The research in arbitrage in foreign exchanges show that using a triangular/cyclic arbitrage is highly profitable and effective~\cite{akram2008arbitrage, aiba2002triangular, ito2012free}.
 
 \subsection{Pure Arbitrage Techniques}
 As I am using pure arbitrage as a baseline, thus choosing the most optimal stategy is most ideal to better understand the impacts of the optimizations and the statistical stategies themselves. There has been some research on pure arbitrage strategies by finding cyclic opportunities on both centralized and decentralised exchanges, which I go further into in this section.
@@ -77,7 +83,7 @@ Cristian Pauna implements an arbitrage strategy in~\cite{PAUNACristian2018ATSf}.
     \caption{Arbitrage system architecture~\cite{PAUNACristian2018ATSf}}
 \end{figure}
 
-Now looking at DEXs, research done by Stephen Bryne in his paper,~\cite{byrneexploration} introduces other methods that are commonly used however, not been academically been explored. Methods using properties of ethereum such as using smart contracts for flash loans and buying and selling the same asset in large volumes within the same block in the chain, leading to large profits. The paper details into the technical implementations and issues such as security and reliablity, however it fails to provide analysis and quantitative results on the different methods used to exploit arbitrage opportunities and their differences.
+Now looking at DEXes, research done by Stephen Bryne in his paper,~\cite{byrneexploration} introduces other methods that are commonly used however, not been academically been explored. Methods using properties of ethereum such as using smart contracts for flash loans and buying and selling the same asset in large volumes within the same block in the chain, leading to large profits. The paper details into the technical implementations and issues such as security and reliablity, however it fails to provide analysis and quantitative results on the different methods used to exploit arbitrage opportunities and their differences.
 \\[5mm]
 As previously mentioned triangular and cyclic arbitrage is one of the most used and purest forms of arbitrage to implement and analyse,~\cite{boonpeam2021arbitrage} explores triangular arbitrage on decentralised exchanges. Algorithm \ref{alg:arb_sys_on_dex} is the algorithm used to find the most profitable arbitrage route on a particular platform, once this is calculated, it is compared with other routes on other platforms. Initially, the system converts the base token into another token and converts it back into the base token, using only one token is used as a middle route, then using the algorithm below, increases the number of middle tokens.
 
@@ -147,7 +153,7 @@ After analysis, it is found that between 4th May 2020 to 15th April 2021, there 
 % \vspace{5mm}
 The paper then delves into the implementation of the smart contract, the paper explored how both \textit{sequential} and \textit{atomic} implementations would affect the revenue and execution of the contracts. It was found that 52.3\% of the arbitrages that were executed sequentially generated a loss, likely due to the fact when one submits $n$ orders, the $n$ blockchain transactions are executed sequentially, meaning some external transactions can be inserted between these transactions. Thus using atomic transactions avoids this issue of external transactions do not effect the market price that may effect the outcome of the arbitrage.
 \\[5mm]
-Furthermore, the authors of the paper also investigated the performance differences of using private smart contracts and public contracts. Deploying a smart contract that calls Uniswap functions, i.e. a private smart contract, is intuitively better and achieves a higher success rate of a lower bound of 52\% and a higher bound of 90\% in comparison to calling a public Uniswap smart contract which has success rate of 27.3\%. Overall the paper provides an insightful look into cyclic arbitrage in DEXs and highlights important decisions made such as liquidity calculations and smart contracts, while comparing the performance of differing options available.
+Furthermore, the authors of the paper also investigated the performance differences of using private smart contracts and public contracts. Deploying a smart contract that calls Uniswap functions, i.e. a private smart contract, is intuitively better and achieves a higher success rate of a lower bound of 52\% and a higher bound of 90\% in comparison to calling a public Uniswap smart contract which has success rate of 27.3\%. Overall the paper provides an insightful look into cyclic arbitrage in DEXes and highlights important decisions made such as liquidity calculations and smart contracts, while comparing the performance of differing options available.
 
 \subsection{Statistical Arbitrage Techniques}
 
@@ -155,12 +161,12 @@ As mentioned previously mentioned and the subject of the project is to optimize 
 \\[5mm]
 The distance approach is easy to understand; using the euclidian squared difference of combinations historical normalized prices of assets from a selected time period and selecting the top 20 pairs of assets with the least historical distance. Once pairs are selected, monitor the prices and if the prices diverge by over 2 standard deviations, buy the undervalued asset and sell the overvalues asset and when the prices converge, close the position~\cite{RadLowFaff}. This is called Mean reversion and is fundemental technique used in pairs trading.
 \\[5mm]
-The cointegration approach follows three key steps. The first being selection of pairs based on similarity measures, the next being assessing the tradability and finally thresholds are set for trading. The spread is defined as $$\varepsilon_{i j,t} = P_{i,t} + \gamma P_{j,t}$$ where $P_{i,t}$ and $P_{j,t}$ denote the $I(1)$ non-stationary price processes of the assets $i$ and $j$, $\gamma$ is the cointegration coefficient, also refered to in literature as the hedge ratio. $\varepsilon_{i j,t}$ is the linear combination of the non-stationary prices and is $I(0)$ stationary and hence mean-reverting, note that stationary processes are those of which have a constant mean. Rad's implementation of this approach on stocks result in a 0.83\% return before considering transaction costs~\cite{RadLowFaff}. Another paper, \cite{lossProtection}, looked into setting the thresholds and setting a minimum profit, $MP_{ij,t_c}$: $$MP_{ij,t_c} = \frac{n(\varepsilon_{i j,t_0} - \varepsilon_{i j,t_c})}{ \mid \gamma \mid}$$ Where $t_0$ and $t_c$ are the opening and closing times, $n$ is the volume longed of asset $j$.
+The cointegration approach follows three key steps. The first being selection of pairs based on similarity measures, the next being assessing the tradability and finally thresholds are set for trading. The spread is defined as $$\varepsilon_{i j,t} = P_{i,t} + \gamma P_{j,t}$$ where $P_{i,t}$ and $P_{j,t}$ denote the $I(1)$ non-stationary price processes of the assets $i$ and $j$, $\gamma$ is the cointegration coefficient, also refered to in literature as the hedge ratio. $\varepsilon_{i j,t}$ is the linear combination of the non-stationary prices and is $I(0)$ stationary and hence mean-reverting, note that stationary processes are those of which have a constant mean. Rad's implementation of this approach on stocks result in a 0.83\% return before considering transaction costs~\cite{RadLowFaff}. Another paper,~\cite{lossProtection}, looked into setting the thresholds and setting a minimum profit, $MP_{ij,t_c}$: $$MP_{ij,t_c} = \frac{n(\varepsilon_{i j,t_0} - \varepsilon_{i j,t_c})}{ \mid \gamma \mid}$$ Where $t_0$ and $t_c$ are the opening and closing times, $n$ is the volume longed of asset $j$.
 \\[5mm]
 There has been further research into optimizing mean reversion, one of which was to use the successive convex approximation method on the mean reverting portfolio design ~\cite{ZipingZhao2019OMPW}. The paper initially proposes the mean reversion portfolio:
 \begin{itemize}
     \itemsep0em
-    \item For each asset, the price at time $t$ is denoted as $p_t$ and its correspondeing log-price $y_t \triangleq log(p_t)$, its vector form of $M$ assets $\mathbf{y}_t \triangleq \big[ y_{1,t}, \dots ,w_{M,t} \big]^T$.
+    \item For each asset, the price at time $t$ is denoted as $p_t$ and its correspondeing log-price $y_t \triangleq log(p_t)$, its vector form of $M$ assets $\mathbf{y}_t \triangleq \big[ y_{1,t}, \dots ,y_{M,t} \big]^T$.
     \item The log-price spread is given by $y_t \triangleq \mathbf{\beta}^T\mathbf{y}_t$, where $\mathbf{\beta} \triangleq \big[ \beta_1, \dots ,\beta_M \big]^T$ denotes the hedge ratios.
     \item The cointegration space with $N$ relations is defined by $\mathbf{B} \triangleq \big[ \beta_1, \dots ,\beta_N \big]$, thus the $N$ spreads are $s_t \triangleq \mathbf{B}^T\mathbf{y}_t$.
     \item For these $N$ spreads, the portfolio weight matrix is denoted as $\mathbf{w} \triangleq \big[ w_1, \dots ,w_N \big]^T$.
@@ -269,8 +275,7 @@ The DCC-GARCH(1,1), \cite{engle2002dynamic}, model also used to obtain condition
 Upon analysis of Grey and DCC-GARCH(1,1) correlations, it is found that the DCC correlations show a little variability whereas the Grey correlations being a lot more variable ranging from 0.29 to 1. In addition, the paper then further investigates these sources and finds that these opportunities are introduced when there is a large number of inter-exchange tranfer requests, i.e. the network is congester, and high price volitility. In contrast, high volume of exchanges and on-chain activity cause the arbitrage opportunities to decrease. This paper finds and explains these sources of statistical arbitrage however does not implement or devise an algorithm that uses statistical arbitrage to generate a profit from price discrepancies of Bitcoin on different exchanges.
 \\[5mm]
 A paper that investigates statistical arbitrage on multiple cryptocurrencies is \cite{Figa-TalamancaGianna2021Cdff}. The authors of this paper analysed co-movements and cointegration of different cryptocurrencies on a centralized exchange using Augmented Dickey Fuller (ADF) and  Kwiatkowsky-Phillips-Schmidt-Shin (KPSS), Ljung-Box autocorrelation tests on both stationary form ($I(0)$) and the original form ($I(1)$). The paper then develops a dynamic factor model based on the assumption that the price dynamics of cryptocurrencies is driven by Bitcoin~\cite{blau2020comovement}, this is then evidenced by similar paths found in cryptocurrencies shown in Figure \ref{fig:pricebehaviour}.
-\newpage
-\begin{figure}
+\begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{background/Images/price_behaviour.png}
     \caption{Price behaviour of Bitcoin, Ethereum, Litecoin, Monero~\cite{Figa-TalamancaGianna2021Cdff}}
@@ -326,7 +331,7 @@ A paper that investigated the use of the Kalman Filter on ETFs found that the st
     \caption{Aggregate average return of using the kalman filter for pairs trading on ETFs~\cite{dempsey_market_2017}}
     \label{fig:kalman_results}
 \end{figure}
-
+\\[5mm]
 Another paper used the combination of the Kalman Filter and Machine Learning, more specifically Extreme Learning Machine and Support Vector Regression (SVR) to build a statistical arbitrage strategy on the Brazilian Stock Exchange. The strategies can simply be explained as using SVR and ELM to forcast returns and using the Kalman Filter to improve the forcast.
 \begin{figure}[htb!]
     \centering
@@ -334,23 +339,25 @@ Another paper used the combination of the Kalman Filter and Machine Learning, mo
     \caption{Visualisation of the trading strategy used in \cite{6974093}}
     \label{fig:kalman_ml_flowchart}
 \end{figure}
-\noindent The paper also compares methods, such as LASSO, BMA, GRR, to benchmark the performance of the Kalman Filter. The research found that using simply ELM and SVR forcasts result in a return of 20.19\% and 21.32\% respectively for out-of-sample data points and by using a combination with the Kalman Filter give a return of 26.13\% for out-of-sample data points. The full results can be seen below in Figure \ref{fig:kalman_ml_results}. In addition to this it can be seen that the volitility of the return also decreases which is ideal for investment managers.
+\\[5mm]
+The paper also compares methods, such as LASSO, BMA, GRR, to benchmark the performance of the Kalman Filter. The research found that using simply ELM and SVR forcasts result in a return of 20.19\% and 21.32\% respectively for out-of-sample data points and by using a combination with the Kalman Filter give a return of 26.13\% for out-of-sample data points. The full results can be seen below in Figure \ref{fig:kalman_ml_results}. In addition to this it can be seen that the volitility of the return also decreases which is ideal for investment managers.
 \begin{figure}[htb!]
     \centering
     \includegraphics[width=0.6\textwidth]{background/Images/kalman_ml_results.png}
     \caption{Econometric results~\cite{6974093}}
     \label{fig:kalman_ml_results}
 \end{figure}
-
+\\[5mm]
+Other papers/articles such as \cite{KRAUSS2017689, alma991000475380901591, jrfm12010031} have designed, compared and analysed other statistical arbitrage techniques using Machine Learning algorithms and revealed that some algorithms are profitable. The majority of research on machine learning trading strategies has been on assets such as stocks on centralized exchanges. The little research that has been done on statistical arbitrage on cryptocurrencies has all been on analysing arbitrage on centralized exchanges and not decentralised exchanges. One of the research projects that analysed machine learning methods of statistical arbitrage on cryptocurrencies on a centralized exchange, compared a logistic regression approach with a random forest approach~\cite{jrfm12010031}. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Ones that use ML:}
-\begin{itemize}
-    \item Statistical Arbitrage in Cryptocurrency Markets \cite{jrfm12010031} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Statistical%20Arbitrage%20in%20Cryptocurrency%20Markets%20.pdf
-    \item Deep neural networks, gradient-boosted trees, random forests: Statistical arbitrage on the S\&P 500 \cite{KRAUSS2017689} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Deep_neural_networks,gradient-boosted_trees,random_forests:_Statistical_arbitrage_on_the_S&P_500.pdf
-    \item A Machine Learning based Pairs Trading Investment Strategy \cite{alma991000475380901591} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/A%20Machine%20Learning%20based%20Pairs%20Trading%20Investment%20Strategy%20.pdf
-\end{itemize}
+% \textbf{Ones that use ML:}
+% \begin{itemize}
+%     \item Statistical Arbitrage in Cryptocurrency Markets \cite{jrfm12010031} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Statistical%20Arbitrage%20in%20Cryptocurrency%20Markets%20.pdf
+%     \item Deep neural networks, gradient-boosted trees, random forests: Statistical arbitrage on the S\&P 500 \cite{KRAUSS2017689} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/Deep_neural_networks,gradient-boosted_trees,random_forests:_Statistical_arbitrage_on_the_S&P_500.pdf
+%     \item A Machine Learning based Pairs Trading Investment Strategy \cite{alma991000475380901591} %file:///home/devam/Documents/Imperial/Year_4/Individual%20Project/Interim%20Report/background/Articles/A%20Machine%20Learning%20based%20Pairs%20Trading%20Investment%20Strategy%20.pdf
+% \end{itemize}
 
 % \textbf{Broader Picture}
 % \begin{itemize}
