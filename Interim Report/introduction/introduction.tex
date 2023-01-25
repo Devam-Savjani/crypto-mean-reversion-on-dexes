@@ -14,23 +14,27 @@ However, trading cryptocurrencies was initially very difficult for people withou
 This poses the question that about which trading strategies can exploit arbitrage opportunities on decentralised exchanges. There has been some research on this topic, mainly focussing on triangular and cyclic arbitrage on DEXes such as Uniswap and SushiSwap, however there has been no research into analysing the performance of statistical arbitrage methods on decentralised exchanges.
 
 \section{Objectives}
-\begin{itemize}
-    \item Impelement Statistical arbitrage techiniques on Decentralised exchnages
-    \item \begin{itemize}
-        \item What is Stat Arbitrage
-        \item Give an Example
-    \end{itemize}
-    \item Analyse results
-\end{itemize}
+The objectives for this project is to design, implement and analyse the performance of numerous statistical arbitrage strategies.
+\subsection{Example of Statistical Arbitrage}
+Before outining the objectives, it is important to understand the process of statistical arbitrage. The process in which statistical arbitrage is executes is in 3 steps:
+\begin{enumerate}
+    \item Identify a pair of assets that are cointegrated/correlated, i.e. follow the same trend and have a similar mean
+    \item When the prices diverge, long the undervalued asset and short the overvalued asset.
+    \item When the prices then revert back to it's mean, close the position.
+\end{enumerate}
+An example of the price dynamic of one such pair can be seen in Figure \ref{fig:stat_arb_example}.
 
-\section{Challenges}
-\begin{itemize}
-    \item Shorting
-    \item Smart Contracts
-    \item 
-\end{itemize}
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{introduction/Images/stat_arb_example.png}
+    \caption{Stock Prices of General Motors and Ford Motor Company~\cite{noauthor_statistical_nodate}}
+    \label{fig:stat_arb_example}
+\end{figure}
 
-\section{Contributions}
+\subsection{Objectives and Contributions}
+As previously mentioned, I will be implement and analyse numerous trading strategies:
 \begin{itemize}
-    \item First ever research on stat. arb on crypto pairs on dex
+    \item \textbf{Simple Mean Reversion Strategy}
+    \item \textbf{Mean Reversion Strategy using the Kalman Filter to calculate the hedge ratio}
+    \item \textbf{Machine Learning Forecasting with the Kalman Filter}
 \end{itemize}
