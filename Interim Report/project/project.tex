@@ -1,10 +1,20 @@
 \chapter{Project Plan}
 
 \section{Fetch Historical Data}
+The first step of the project is to collect historical pricing data from UniSwap. As the UniSwap API does not provide this feature of historical prices, I plan to obtain this information by directly scraping every swap log out of each liquidity pool, then simply performing simple arithmetic to calculate the price with the \textit{tick} attribute in the log.
+
 \section{Calculate Cointegrated Pairs}
+For each pair of exchange rate, calculate the sum of squared difference (SSD) and sort the pairs according to their SSD. Once the pairs have been sorted, calculate the cointegrated pairs and their parameters using the 2-step Eagle-Granger approach~\cite{doi:10.1080/14697688.2016.1164337}.
+
 \section{Implement the mean reversion strategy}
-\section{Apply Kalman Filter to update the hedge Ratio}
+Implement the simple mean reversion strategy as per mentioned in the background section. Using the cointegration factor calculated using the Eagle-Granger method as the hedge ratio, which remains constant.
+
+\section{Apply Kalman Filter to update the hedge ratio}
+Building on the strategy above, instead of keeping the hedge ratio constant, the hedge ratio would constantly be updated as the prices change.
+
 \section{Apply ML Forecasting with the Kalman Filter to update the hedge Ratio}
+The final strategy will use a combination of a machine learning learning forcasting algorithm to 
+
 \section{Evaluation}
 \section{Write up}
 \section{Timeline}
