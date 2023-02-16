@@ -1,6 +1,9 @@
 import csv
 from graphql_client import GraphqlClient
 import json
+import os
+import pandas as pd
+
 
 header = ['id', 'periodStartUnix', 'token0Price',
           'token1Price', 'liquidity', 'feesUSD']
@@ -48,9 +51,10 @@ def get_block_data(pool_address, file_name):
     while len(hourlyData) > 0:
         rows = [[hourData[key] for key in header] for hourData in hourlyData]
         writer.writerows(rows)
+        # print(hourlyData)
 
         prev_max_time = hourlyData[-1]['periodStartUnix']
-        print(prev_max_time)
+        # print(prev_max_time)
 
         result = gq_client.execute(
             query="""
@@ -77,5 +81,31 @@ def get_block_data(pool_address, file_name):
     # close the file
     f.close()
 
+def generate_file_path(token0, token1):
+    basepath = f"liquidity_pool_data/{token0}_{token1}_pricing_data"
+    path = basepath
+    if os.path.isfile(f"{path}.csv"):
+        path += '1'
+    
+    count = 2
+    while os.path.isfile(f"{path}.csv"):
+        path = basepath + str(count)
+        count += 1
 
-get_block_data('0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640', 'foo.csv')
+    return f"{path}.csv"
+
+def clear_dir(dir):
+    for f in os.listdir(dir):
+        os.remove(os.path.join(dir, f))
+
+
+
+clear_dir('liquidity_pool_data')
+df = pd.read_csv('liquidity_pools.csv')
+df = df.loc[df['volumeUSD'] >= 10**5 ].reset_index()
+
+for index, row in df.iterrows():
+    path = generate_file_path(row['token0'], row['token1'])
+    print(path)
+    get_block_data(row['id'], path)
+

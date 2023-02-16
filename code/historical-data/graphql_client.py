@@ -15,7 +15,6 @@ class GraphqlClient:
             return o.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
     def execute(self, query, operation_name, variables={}):
-        print(query)
         data = simplejson.dumps({
             "query": query,
             "variables": variables,

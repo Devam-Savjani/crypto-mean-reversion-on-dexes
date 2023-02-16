@@ -1,39 +1,37 @@
 import json
 from graphql_client import GraphqlClient
 
-gq_client = GraphqlClient(
-        endpoint= 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',
-        headers={}
-    )
+# gq_client = GraphqlClient(
+#         endpoint= 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',
+#         headers={}
+#     )
 
-result = gq_client.execute(
-    query="""
-        query pools {
-            pools {
-                id
-                token0 {
-                    symbol
-                    decimals
-                }
-                token1 {
-                    symbol
-                    decimals
-                }
-                volumeUSD
-                createdAtTimestamp
-            }
-        }
-    """,
-    operation_name='foo',
-    variables={})
+# result = gq_client.execute(
+#     query="""
+#         query pools {
+#             pools {
+#                 id
+#                 token0 {
+#                     symbol
+#                     decimals
+#                 }
+#                 token1 {
+#                     symbol
+#                     decimals
+#                 }
+#                 volumeUSD
+#                 createdAtTimestamp
+#             }
+#         }
+#     """,
+#     operation_name='foo',
+#     variables={})
 
-print(json.dumps(json.loads(result), indent=4))
+# print(json.dumps(json.loads(result), indent=4))
 
-print(len(json.loads(result)['data']['pools']))
-
-f = open("demofile2.txt", "w")
-f.write(json.dumps(json.loads(result), indent=4))
-f.close()
+# f = open("demofile2.txt", "w")
+# f.write(json.dumps(json.loads(result), indent=4))
+# f.close()
 
 
 
@@ -90,7 +88,6 @@ def get_block_data(file_name):
         writer.writerows(rows)
 
         prev_max_time = hourlyData[-1]['createdAtTimestamp']
-        print(prev_max_time)
 
         result = gq_client.execute(
             query="""
@@ -115,8 +112,7 @@ def get_block_data(file_name):
 
         hourlyData = json.loads(result)['data']['pools']
 
-    # close the file
     f.close()
 
 
-get_block_data('foo1.csv')
+get_block_data('liquidity_pools.csv')
