@@ -3,6 +3,7 @@ from graphql_client import GraphqlClient
 import json
 import os
 import pandas as pd
+import logging
 
 
 header = ['id', 'periodStartUnix', 'token0Price',
@@ -12,6 +13,16 @@ gq_client = GraphqlClient(
     endpoint='https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3', #https://github.com/Uniswap/v3-subgraph/blob/main/schema.graphql
     headers={}
 )
+
+logging.basicConfig(filename='data_scraper.log',
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.DEBUG)
+
+logging.info("Running Urban Planning")
+
+logger = logging.getLogger('urbanGUI')
 
 # https://thegraph.com/docs/en/querying/graphql-api/
 # https://thegraph.com/hosted-service/subgraph/uniswap/uniswap-v3
@@ -29,10 +40,8 @@ def get_block_data(pool_address, file_name):
     result = gq_client.execute(
         query="""
             query ($id: ID!) {
-                pool(
-                    id: $id,
-                ) {
-                    poolHourData {
+                pool(id: $id) {
+                    poolHourData(orderBy: periodStartUnix, first: 1000) {
                         id
                         token0Price
                         token1Price
@@ -61,7 +70,7 @@ def get_block_data(pool_address, file_name):
                 query ($id: ID!, $prev_max_time: Int!) {
                     pool(id: $id) {
                         poolHourData(
-                            where: {periodStartUnix_gt: $prev_max_time}
+                            where: {periodStartUnix_gt: $prev_max_time}, orderBy: periodStartUnix, first: 1000
                             ){
                                 id
                                 token0Price
@@ -76,7 +85,12 @@ def get_block_data(pool_address, file_name):
             operation_name='foo',
             variables={"id": pool_address, "prev_max_time": prev_max_time})
 
-        hourlyData = json.loads(result)['data']['pool']['poolHourData']
+        # print(result)
+        if json.loads(result)['data']:
+            hourlyData = json.loads(result)['data']['pool']['poolHourData']
+        else:
+            logging.error('Error fetching in ' + file_name)
+            hourlyData = []
 
     # close the file
     f.close()
@@ -102,7 +116,9 @@ def clear_dir(dir):
 
 clear_dir('liquidity_pool_data')
 df = pd.read_csv('liquidity_pools.csv')
-df = df.loc[df['volumeUSD'] >= 10**5 ].reset_index()
+df = df.loc[df['volumeUSD'] >= 10**6 ].reset_index()
+
+print(df.shape)
 
 for index, row in df.iterrows():
     path = generate_file_path(row['token0'], row['token1'])

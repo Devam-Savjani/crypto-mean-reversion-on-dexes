@@ -60,13 +60,12 @@ def get_block_data(file_name):
         operation_name='foo',
         variables={})
     
-    hourlyData = json.loads(result)['data']['pools']
+    pools = json.loads(result)['data']['pools']
+    rows = [[pool['id'], pool['token0']['symbol'], pool['token1']['symbol'], pool['volumeUSD'], pool['createdAtTimestamp']] for pool in pools]
+    writer.writerows(rows)
 
-    while len(hourlyData) >= 1000:
-        rows = [[hourData['id'], hourData['token0']['symbol'], hourData['token1']['symbol'], hourData['volumeUSD'], hourData['createdAtTimestamp']] for hourData in hourlyData]
-        writer.writerows(rows)
-
-        prev_max_time = hourlyData[-1]['createdAtTimestamp']
+    while len(pools) >= 1000:
+        prev_max_time = pools[-1]['createdAtTimestamp']
 
         result = gq_client.execute(
             query="""
@@ -89,7 +88,9 @@ def get_block_data(file_name):
             operation_name='foo',
             variables={"prev_max_time": prev_max_time})
 
-        hourlyData = json.loads(result)['data']['pools']
+        pools = json.loads(result)['data']['pools']
+        rows = [[pool['id'], pool['token0']['symbol'], pool['token1']['symbol'], pool['volumeUSD'], pool['createdAtTimestamp']] for pool in pools]
+        writer.writerows(rows)
 
     f.close()
 
