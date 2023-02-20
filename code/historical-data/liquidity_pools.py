@@ -1,51 +1,30 @@
-import json
-from graphql_client import GraphqlClient
-
-# gq_client = GraphqlClient(
-#         endpoint= 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',
-#         headers={}
-#     )
-
-# result = gq_client.execute(
-#     query="""
-#         query pools {
-#             pools {
-#                 id
-#                 token0 {
-#                     symbol
-#                     decimals
-#                 }
-#                 token1 {
-#                     symbol
-#                     decimals
-#                 }
-#                 volumeUSD
-#                 createdAtTimestamp
-#             }
-#         }
-#     """,
-#     operation_name='foo',
-#     variables={})
-
-# print(json.dumps(json.loads(result), indent=4))
-
-# f = open("demofile2.txt", "w")
-# f.write(json.dumps(json.loads(result), indent=4))
-# f.close()
-
-
-
 import csv
 from graphql_client import GraphqlClient
 import json
 
-header = ['id', 'token0', 'token1',
-          'volumeUSD', 'createdAtTimestamp']
+header = ['id', 'token0', 'token1', 'volumeUSD', 'createdAtTimestamp']
 
 gq_client = GraphqlClient(
     endpoint='https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3', #https://github.com/Uniswap/v3-subgraph/blob/main/schema.graphql
     headers={}
 )
+
+# query pools {
+#                 pools(orderBy: volumeUSD, where: {id : "0x5777d92f208679db4b9778590fa3cab3ac9e2168"}) {
+#                     id
+#                     token0 {
+#                         symbol
+#                         decimals
+#                     }
+#                     token1 {
+#                         symbol
+#                         decimals
+#                     }
+#                     volumeUSD
+#                     createdAtTimestamp
+#                 }
+#             }
+
 
 # https://thegraph.com/docs/en/querying/graphql-api/
 # https://thegraph.com/hosted-service/subgraph/uniswap/uniswap-v3
@@ -63,7 +42,7 @@ def get_block_data(file_name):
     result = gq_client.execute(
         query="""
             query pools {
-                pools {
+                pools(orderBy: createdAtTimestamp, first: 1000) {
                     id
                     token0 {
                         symbol
@@ -80,10 +59,10 @@ def get_block_data(file_name):
         """,
         operation_name='foo',
         variables={})
-
+    
     hourlyData = json.loads(result)['data']['pools']
 
-    while len(hourlyData) > 0:
+    while len(hourlyData) >= 1000:
         rows = [[hourData['id'], hourData['token0']['symbol'], hourData['token1']['symbol'], hourData['volumeUSD'], hourData['createdAtTimestamp']] for hourData in hourlyData]
         writer.writerows(rows)
 
@@ -92,7 +71,7 @@ def get_block_data(file_name):
         result = gq_client.execute(
             query="""
                 query pools($prev_max_time: BigInt!) {
-                    pools(where: {createdAtTimestamp_gt: $prev_max_time}) {
+                    pools(orderBy: createdAtTimestamp, where: {createdAtTimestamp_gte: $prev_max_time}, first: 1000) {
                         id
                         token0 {
                             symbol
