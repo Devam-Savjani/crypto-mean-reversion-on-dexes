@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 import psycopg2
 import pandas as pd
+import sqlalchemy
 
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -187,7 +188,7 @@ def insert_rows(table_name, rows, should_print=False):
                 print('Database connection closed.')
 
 def table_to_df(table_name=None, command=None, should_print=False):
-    conn = None
+    engine = None
     command = command if command is not None else f"SELECT * FROM {table_name};"
     try:
         # read connection parameters
@@ -196,18 +197,18 @@ def table_to_df(table_name=None, command=None, should_print=False):
         # connect to the PostgreSQL server
         if should_print:
             print('Connecting to the PostgreSQL database...')
+
         conn = psycopg2.connect(**params)
-
-        dat = pd.read_sql_query(command, conn)
-        # dat = dat.astype({'volume_usd': 'float64'}) ## IF Liquity Pools
-
-        return dat
+        engine = sqlalchemy.create_engine('postgresql+psycopg2://', creator= lambda: conn)
+        df = pd.read_sql_query(sqlalchemy.text(command), engine.connect())
+        engine.dispose()
+        return df
 
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
-        if conn is not None:
-            conn.close()
+        if engine is not None:
+            engine.dispose()
             if should_print:
                 print('Database connection closed.')
 
