@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import logging
 from tqdm import tqdm
-
+from database_interactions import table_to_df, drop_table, create_table, insert_rows, drop_all_tables_except_table
 
 header = ['id', 'periodStartUnix', 'token0Price', 'token1Price', 'liquidity', 'feesUSD']
 
@@ -25,7 +25,8 @@ logger = logging.getLogger('urbanGUI')
 # https://thegraph.com/docs/en/querying/graphql-api/
 # https://thegraph.com/hosted-service/subgraph/uniswap/uniswap-v3
 
-def get_block_data(pool_address, file_name):    
+def get_block_data(pool_address, table_name):
+    rows_set = None
     try:
         result = gq_client.execute(
             query="""
@@ -45,19 +46,10 @@ def get_block_data(pool_address, file_name):
             operation_name='foo',
             variables={"id": pool_address})
         
-        # open the file in the write mode
-        f = open(file_name, 'w')
-
-        # create the csv writer
-        writer = csv.writer(f)
-
-        # write a row to the csv file
-        writer.writerow(header + ['token1PriceRatio'])
-
         hourlyData = json.loads(result)['data']['pool']['poolHourData']
 
-        rows = [[hourData[key] for key in header] + [float(hourData['token1Price']) / float(hourData['token0Price']) if float(hourData["token0Price"]) > 0 else 0] for hourData in hourlyData]
-        writer.writerows(rows)
+        rows_set = {}
+        rows_set.update({hourData['id'] : tuple([hourData[key] for key in header] + [float(hourData['token1Price']) / float(hourData['token0Price']) if float(hourData["token0Price"]) > 0 else 0]) for hourData in hourlyData})
         
         while len(hourlyData) >= 1000:
             prev_max_time = hourlyData[-1]['periodStartUnix']
@@ -83,28 +75,21 @@ def get_block_data(pool_address, file_name):
                 variables={"id": pool_address, "prev_max_time": prev_max_time})
 
             hourlyData = json.loads(result)['data']['pool']['poolHourData']
-            rows = [[hourData[key] for key in header] + [float(hourData['token1Price']) / float(hourData['token0Price']) if float(hourData["token0Price"]) > 0 else 0] for hourData in hourlyData]
-            writer.writerows(rows)
+            rows_set.update({hourData['id'] : tuple([hourData[key] for key in header] + [float(hourData['token1Price']) / float(hourData['token0Price']) if float(hourData["token0Price"]) > 0 else 0]) for hourData in hourlyData})
 
     except Exception as e:
-        print('ERROR: ' +  file_name)
-        print(e)
-        logger.error('Failed to fetch some data for address ' + pool_address + ' : ' +  file_name)
+        print(f'ERROR: {table_name} {e}')
+        logger.error('Failed to fetch some data for address ' + pool_address + ' : ' +  table_name)
     finally:
-        # close the file
-        f.close()
+        if rows_set is not None:
+            drop_table(table_name)
+            create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), ('token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC'), ('token1_Price_Ratio', 'NUMERIC')])
+            insert_rows(table_name, list(rows_set.values()))
 
-def clear_dir(dir):
-    for f in os.listdir(dir):
-        os.remove(os.path.join(dir, f))
-
-clear_dir('liquidity_pool_data')
-df = pd.read_csv('liquidity_pools.csv')
-df = df.loc[df['volumeUSD'] >= 10**8 ].reset_index()
-
-print(df.shape)
+drop_all_tables_except_table('liquidity_pools')
+df = table_to_df(command="SELECT pool_address, token0, token1 FROM liquidity_pools WHERE volume_usd >= 100000000;")
+logger.info('Begining to fetch data on pools')
 
 for index, row in tqdm(df.iterrows(), total=df.shape[0]):
-    path = f"liquidity_pool_data/{row['token0']}_{row['token1']}_{row['id']}.csv"
-    # print(path)
-    get_block_data(row['id'], path)
+    table_name = '"' + f"{row['token0']}_{row['token1']}_{row['pool_address']}" + '"'
+    get_block_data(row['pool_address'], table_name)

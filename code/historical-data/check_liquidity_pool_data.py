@@ -1,20 +1,31 @@
-import os
-import pandas as pd
 from datetime import datetime
+from database_interactions import table_to_df
+import time
 
-liquidity_pool_data_directory = 'liquidity_pool_data'
+def get_pools_max_timestamp():
+    todays_date = datetime.now().date()
+    today_timestamp = int(time.mktime(todays_date.timetuple()))
 
-def get_pools_with_data_till_today():
-    files_with_data_till_date = []
-    for root, dirs, files in os.walk(liquidity_pool_data_directory):
-        for filename in files:
-            data = pd.read_csv(os.path.join(root, filename))
-            contract_address = data.iloc[0]['id'].split('-')[0]
-            start_date = datetime.fromtimestamp(data.iloc[0]['periodStartUnix'])
-            end_date = datetime.fromtimestamp(data.iloc[-1]['periodStartUnix'])
-            if end_date.date() == datetime.now().date():
-                files_with_data_till_date.append(os.path.join(root, filename))
-                # print(f"{contract_address}: Start - {start_date} End - {end_date}")
+    df = table_to_df(command=f"""
+            CREATE OR REPLACE FUNCTION get_max_timestamp()
+                RETURNS TABLE (table_name TEXT, max_timestamp BIGINT)
+                LANGUAGE plpgsql AS $$
+            DECLARE
+                r RECORD;
+            BEGIN
+                FOR r IN
+                (select i.table_name, i.table_schema from information_schema.tables i WHERE i.table_schema = 'public' AND i.table_name <> 'liquidity_pools')
+            LOOP
+                EXECUTE FORMAT ('SELECT MAX(period_start_unix) FROM %I.%I', r.table_schema, r.table_name) INTO max_timestamp;
+                table_name := r.table_name;
+                RETURN next;
+            END LOOP;
+            END $$;
 
-    print(f"Total files with till date: {len(files_with_data_till_date)}")
-    return files_with_data_till_date
+            SELECT * FROM get_max_timestamp() WHERE max_timestamp >= {today_timestamp};
+            """)
+    
+    print(df)
+    return df
+
+get_pools_max_timestamp()

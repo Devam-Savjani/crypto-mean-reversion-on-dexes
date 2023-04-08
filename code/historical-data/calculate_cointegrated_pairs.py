@@ -72,6 +72,7 @@ def is_cointegrated(liquidity_pair):
         resid_adf = adfuller(resid)
         if resid_adf[0] < resid_adf[4]['5%']:
             # The variables are cointegrated
+            hedge_ratio = eg_test.params[1]
             return True
         else:
             # The variables are not cointegrated
