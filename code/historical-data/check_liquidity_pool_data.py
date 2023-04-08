@@ -22,10 +22,9 @@ def get_pools_max_timestamp():
             END LOOP;
             END $$;
 
-            SELECT * FROM get_max_timestamp() WHERE max_timestamp >= {today_timestamp};
+            SELECT table_name FROM get_max_timestamp() WHERE max_timestamp >= {today_timestamp};
             """)
-    
-    print(df)
+
     return df
 
 get_pools_max_timestamp()
