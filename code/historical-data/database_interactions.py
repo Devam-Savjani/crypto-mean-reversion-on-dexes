@@ -232,7 +232,7 @@ def drop_all_tables_except_table(table_name=None, should_print=False):
                         BEGIN
                             FOR rec IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '{table_name}')
                         LOOP
-                            EXECUTE 'DROP TABLE IF EXISTS ' || rec.tablename || ' CASCADE';
+                            EXECUTE 'DROP TABLE IF EXISTS "' || rec.tablename || '" CASCADE';
                         END LOOP;
                         END $$;
                         """
@@ -241,7 +241,7 @@ def drop_all_tables_except_table(table_name=None, should_print=False):
                         rec RECORD;
                         BEGIN
                         FOR rec IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-                        EXECUTE 'DROP TABLE IF EXISTS ' || rec.tablename || ' CASCADE';
+                        EXECUTE 'DROP TABLE IF EXISTS "' || rec.tablename || '" CASCADE';
                         END LOOP;
                         END $$;
                         """
