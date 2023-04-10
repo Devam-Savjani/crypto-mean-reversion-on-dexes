@@ -87,7 +87,7 @@ def get_block_data(pool_address, table_name):
             insert_rows(table_name, list(rows_set.values()))
 
 drop_all_tables_except_table('liquidity_pools')
-df = table_to_df(command="SELECT pool_address, token0, token1 FROM liquidity_pools WHERE volume_usd >= 100000000;")
+df = table_to_df(command="SELECT pool_address, token0, token1 FROM liquidity_pools WHERE volume_usd >= 10000000000;")
 logger.info('Begining to fetch data on pools')
 
 for index, row in tqdm(df.iterrows(), total=df.shape[0]):
