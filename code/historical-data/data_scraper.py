@@ -59,9 +59,8 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
             else:
                 raise Exception(hourlyData)
             
-
-            rows_set.update({hourData['id']: tuple([hourData[key] for key in header] + [float(hourData['token0Price']) / float(
-                hourData['token1Price']) if float(hourData["token1Price"]) > 0 else 0]) for hourData in hourlyData})
+            rows_set.update({hourData['id']: tuple([hourData[key] for key in header] + [float(hourData['token1Price']) / float(
+                hourData['token0Price']) if float(hourData["token0Price"]) > 0 else 0]) for hourData in hourlyData})
             
             data_length = len(hourlyData)
             prev_max_time = hourlyData[-1]['periodStartUnix'] if data_length > 0 else prev_max_time
@@ -87,7 +86,7 @@ def reinitialise_all_liquidity_pool_data():
         if len(rows) > 0:
             drop_table(table_name)
             create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), (
-                'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC'), ('token0_Price_Per_token1', 'NUMERIC')])
+                'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC'), ('token1_Price_Per_token0', 'NUMERIC')])
             insert_rows(table_name, rows)
 
 def refresh_database():
@@ -110,9 +109,9 @@ def refresh_database():
             
             if len(rows) > 0:
                 create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), (
-                    'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC'), ('token0_Price_Per_token1', 'NUMERIC')])
+                    'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC'), ('token1_Price_Per_token0', 'NUMERIC')])
                 insert_rows(table_name, rows)
 
 
-# reinitialise_all_liquidity_pool_data()
-refresh_database()
+reinitialise_all_liquidity_pool_data()
+# refresh_database()

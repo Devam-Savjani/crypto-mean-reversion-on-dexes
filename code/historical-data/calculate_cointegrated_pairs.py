@@ -15,12 +15,12 @@ def calculate_pairs_sum_of_squared_differences():
         for j in range(i+1, len(valid_liquidity_pools)):
     
             merged = table_to_df(command=f"""
-                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token0_price_per_token1 as p1_token0_price_per_token1, p2.id as p2_id, p2.token0_price_per_token1 as p2_token0_price_per_token1
+                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price_per_token0 as p1_token1_price_per_token0, p2.id as p2_id, p2.token1_price_per_token0 as p2_token1_price_per_token0
                 FROM "{valid_liquidity_pools[i]}" as p1 INNER JOIN "{valid_liquidity_pools[j]}" as p2
                 ON p1.period_start_unix = p2.period_start_unix;
                 """)
 
-            ssd = np.sum((merged['p1_token0_price_per_token1'].to_numpy() - merged['p2_token0_price_per_token1'].to_numpy())**2)
+            ssd = np.sum((merged['p1_token1_price_per_token0'].to_numpy() - merged['p2_token1_price_per_token0'].to_numpy())**2)
 
             key = (valid_liquidity_pools[i], valid_liquidity_pools[j])
             liquidity_pool_pair_ssds[key] = ssd
@@ -32,13 +32,13 @@ def calculate_pairs_sum_of_squared_differences():
 def get_is_cointegrated_and_hedge_ratio(p1, p2):
 
     merged = table_to_df(command=f"""
-                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token0_price_per_token1 as p1_token0_price_per_token1, p2.id as p2_id, p2.token0_price_per_token1 as p2_token0_price_per_token1
+                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price_per_token0 as p1_token1_price_per_token0, p2.id as p2_id, p2.token1_price_per_token0 as p2_token1_price_per_token0
                 FROM "{p1}" as p1 INNER JOIN "{p2}" as p2
                 ON p1.period_start_unix = p2.period_start_unix;
                 """)
     
-    df1 = merged['p1_token0_price_per_token1']
-    df2 = merged['p2_token0_price_per_token1']
+    df1 = merged['p1_token1_price_per_token0']
+    df2 = merged['p2_token1_price_per_token0']
 
     # Step 1: Test for unit roots
     adf1 = adfuller(df1)
