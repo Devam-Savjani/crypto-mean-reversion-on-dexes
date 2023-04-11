@@ -7,8 +7,6 @@ import pickle
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller
 
-liquidity_pool_data_directory = 'liquidity_pool_data'
-
 def calculate_pairs_sum_of_squared_differences():
     liquidity_pool_pair_ssds = {}
     valid_liquidity_pools = get_pools_max_timestamp()['table_name']
@@ -17,12 +15,12 @@ def calculate_pairs_sum_of_squared_differences():
         for j in range(i+1, len(valid_liquidity_pools)):
     
             merged = table_to_df(command=f"""
-                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price_ratio as p1_token1_price_ratio, p2.id as p2_id, p2.token1_price_ratio as p2_token1_price_ratio
+                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token0_price_per_token1 as p1_token0_price_per_token1, p2.id as p2_id, p2.token0_price_per_token1 as p2_token0_price_per_token1
                 FROM "{valid_liquidity_pools[i]}" as p1 INNER JOIN "{valid_liquidity_pools[j]}" as p2
                 ON p1.period_start_unix = p2.period_start_unix;
                 """)
 
-            ssd = np.sum((merged['p1_token1_price_ratio'].to_numpy() - merged['p2_token1_price_ratio'].to_numpy())**2)
+            ssd = np.sum((merged['p1_token0_price_per_token1'].to_numpy() - merged['p2_token0_price_per_token1'].to_numpy())**2)
 
             key = (valid_liquidity_pools[i], valid_liquidity_pools[j])
             liquidity_pool_pair_ssds[key] = ssd
@@ -31,44 +29,16 @@ def calculate_pairs_sum_of_squared_differences():
 
     return save_pairs_sum_of_squared_differences(liquidity_pool_pair_ssds)
 
-def save_pairs_sum_of_squared_differences(ssds):
-    with open('sum_square_differences.pickle', 'wb') as f:
-        pickle.dump(ssds, f)
-
-    f.close()
-    return ssds
-
-def load_pairs_sum_of_squared_differences():
-    with open('sum_square_differences.pickle', 'rb') as f:
-        liquidity_pool_pair_ssds = pickle.load(f)
-        f.close()
-
-    return liquidity_pool_pair_ssds
-
-def save_cointegrated_pairs(cointegrated_pairs):
-    with open('cointegrated_pairs.pickle', 'wb') as f:
-        pickle.dump(cointegrated_pairs, f)
-
-    f.close()
-    return cointegrated_pairs
-
-def load_cointegrated_pairs():
-    with open('cointegrated_pairs.pickle', 'rb') as f:
-        cointegrated_pairs = pickle.load(f)
-        f.close()
-
-    return cointegrated_pairs
-
 def get_is_cointegrated_and_hedge_ratio(p1, p2):
 
     merged = table_to_df(command=f"""
-                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price_ratio as p1_token1_price_ratio, p2.id as p2_id, p2.token1_price_ratio as p2_token1_price_ratio
+                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token0_price_per_token1 as p1_token0_price_per_token1, p2.id as p2_id, p2.token0_price_per_token1 as p2_token0_price_per_token1
                 FROM "{p1}" as p1 INNER JOIN "{p2}" as p2
                 ON p1.period_start_unix = p2.period_start_unix;
                 """)
     
-    df1 = merged['p1_token1_price_ratio']
-    df2 = merged['p2_token1_price_ratio']
+    df1 = merged['p1_token0_price_per_token1']
+    df2 = merged['p2_token0_price_per_token1']
 
     # Step 1: Test for unit roots
     adf1 = adfuller(df1)
@@ -107,6 +77,41 @@ def get_top_n_cointegrated_pairs(ssds, n=-1):
 
     return save_cointegrated_pairs(cointegrated_pairs)
 
-cointegrated_pairs = load_cointegrated_pairs()
+def save_pairs_sum_of_squared_differences(ssds):
+    with open('sum_square_differences.pickle', 'wb') as f:
+        pickle.dump(ssds, f)
+
+    f.close()
+    return ssds
+
+def load_pairs_sum_of_squared_differences():
+    with open('sum_square_differences.pickle', 'rb') as f:
+        liquidity_pool_pair_ssds = pickle.load(f)
+        f.close()
+
+    return liquidity_pool_pair_ssds
+
+def save_cointegrated_pairs(cointegrated_pairs):
+    with open('cointegrated_pairs.pickle', 'wb') as f:
+        pickle.dump(cointegrated_pairs, f)
+
+    f.close()
+    return cointegrated_pairs
+
+def load_cointegrated_pairs():
+    with open('cointegrated_pairs.pickle', 'rb') as f:
+        cointegrated_pairs = pickle.load(f)
+        f.close()
+
+    return cointegrated_pairs
+
+use_pickled_cointegrated_pairs = False
+
+if use_pickled_cointegrated_pairs:
+    cointegrated_pairs = load_cointegrated_pairs()
+else:
+    ssds = calculate_pairs_sum_of_squared_differences()
+    cointegrated_pairs = get_top_n_cointegrated_pairs(ssds=ssds)
+
 print(*cointegrated_pairs, sep="\n")
 print(len(cointegrated_pairs))
