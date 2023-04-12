@@ -17,7 +17,7 @@ def calculate_pairs_sum_of_squared_differences():
             merged = table_to_df(command=f"""
                 SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price_per_token0 as p1_token1_price_per_token0, p2.id as p2_id, p2.token1_price_per_token0 as p2_token1_price_per_token0
                 FROM "{valid_liquidity_pools[i]}" as p1 INNER JOIN "{valid_liquidity_pools[j]}" as p2
-                ON p1.period_start_unix = p2.period_start_unix;
+                ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price_per_token0 <> 0 AND p2.token1_price_per_token0 <> 0;
                 """)
 
             ssd = np.sum((merged['p1_token1_price_per_token0'].to_numpy() - merged['p2_token1_price_per_token0'].to_numpy())**2)
@@ -73,7 +73,7 @@ def get_top_n_cointegrated_pairs(ssds, n=-1):
         if is_cointegrated:
             cointegrated_pairs.append((pair[0], hedge_rato))
             if len(cointegrated_pairs) == n:
-                return cointegrated_pairs
+                return save_cointegrated_pairs(cointegrated_pairs)
 
     return save_cointegrated_pairs(cointegrated_pairs)
 
@@ -105,13 +105,14 @@ def load_cointegrated_pairs():
 
     return cointegrated_pairs
 
-use_pickled_cointegrated_pairs = False
+if __name__ == "__main__":
+    use_pickled_cointegrated_pairs = False
 
-if use_pickled_cointegrated_pairs:
-    cointegrated_pairs = load_cointegrated_pairs()
-else:
-    ssds = calculate_pairs_sum_of_squared_differences()
-    cointegrated_pairs = get_top_n_cointegrated_pairs(ssds=ssds)
+    if use_pickled_cointegrated_pairs:
+        cointegrated_pairs = load_cointegrated_pairs()
+    else:
+        ssds = calculate_pairs_sum_of_squared_differences()
+        cointegrated_pairs = get_top_n_cointegrated_pairs(ssds=ssds)
 
-print(*cointegrated_pairs, sep="\n")
-print(len(cointegrated_pairs))
+    print(*cointegrated_pairs, sep="\n")
+    print(len(cointegrated_pairs))
