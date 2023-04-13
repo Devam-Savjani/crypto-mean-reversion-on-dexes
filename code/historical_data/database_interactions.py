@@ -187,12 +187,12 @@ def insert_rows(table_name, rows, should_print=False):
             if should_print:
                 print('Database connection closed.')
 
-def table_to_df(table_name=None, command=None, should_print=False):
+def table_to_df(table_name=None, command=None, should_print=False, path_to_config='database.ini'):
     engine = None
     command = command if command is not None else f"SELECT * FROM {table_name};"
     try:
         # read connection parameters
-        params = config()
+        params = config(filename=path_to_config)
 
         # connect to the PostgreSQL server
         if should_print:

@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
-from database_interactions import table_to_df
-from check_liquidity_pool_data import get_pools_max_timestamp
 from tqdm import tqdm
 import pickle
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller
+from historical_data.database_interactions import table_to_df
+from historical_data.check_liquidity_pool_data import get_pools_max_timestamp
 
 def calculate_pairs_sum_of_squared_differences():
     liquidity_pool_pair_ssds = {}
@@ -98,8 +98,8 @@ def save_cointegrated_pairs(cointegrated_pairs):
     f.close()
     return cointegrated_pairs
 
-def load_cointegrated_pairs():
-    with open('cointegrated_pairs.pickle', 'rb') as f:
+def load_cointegrated_pairs(path='cointegrated_pairs.pickle'):
+    with open(path, 'rb') as f:
         cointegrated_pairs = pickle.load(f)
         f.close()
 

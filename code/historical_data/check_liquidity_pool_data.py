@@ -1,6 +1,6 @@
 from datetime import datetime
-from database_interactions import table_to_df
 import time
+from historical_data.database_interactions import table_to_df
 
 def get_pools_max_timestamp():
     todays_date = datetime.now().date()
