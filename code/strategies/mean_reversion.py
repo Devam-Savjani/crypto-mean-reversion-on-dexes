@@ -7,6 +7,7 @@ class Mean_Reversion_Strategy():
         self.hedge_ratio = hedge_ratio
         self.has_initialised_historical_data = False
         self.window_size = window_size
+        self.account_history = []
 
     def initialise_historical_data(self, history_p1, history_p2):
         self.history_p1 = history_p1.to_numpy()[-self.window_size:]
@@ -42,6 +43,7 @@ class Mean_Reversion_Strategy():
     def generate_signal(self, ctx, prices):
 
         open_positions = ctx['open_positions']
+        account = ctx['account']
         has_trade = (len(open_positions['BUY']) + len(open_positions['SELL'])) > 0
         
         price_of_pair1 = prices['P1']
@@ -52,20 +54,34 @@ class Mean_Reversion_Strategy():
 
         if has_trade:
             if spread < self.upper_threshold and spread > self.lower_threshold:
+                self.account_history.append(account)
                 return {'CLOSE': open_positions}
         else:
             volume_ratio = (price_of_pair1 / price_of_pair2) * self.hedge_ratio
+            amount_of_p1_b = account['P1'][1]
+            amount_of_p2_b = account['P2'][1]
+
             if spread > self.upper_threshold:
+                volume_to_trade = {
+                    'P1': (1 if self.hedge_ratio > 0 else -volume_ratio) * amount_of_p2_b,
+                    'P2': (volume_ratio if self.hedge_ratio > 0 else 1) * amount_of_p2_b
+                }
+                self.account_history.append(account)
                 return {
                     'OPEN': {
-                        'BUY': [('P2', volume_ratio if self.hedge_ratio > 0 else 1)],
-                        'SELL': [('P1', 1 if self.hedge_ratio > 0 else -volume_ratio)]
+                        'BUY': [('P2', volume_to_trade['P2'])],
+                        'SELL': [('P1', volume_to_trade['P1'])]
                     }}
             elif spread < self.lower_threshold:
+                volume_to_trade = {
+                    'P1': (1 if self.hedge_ratio > 0 else -volume_ratio) * amount_of_p1_b,
+                    'P2': (volume_ratio if self.hedge_ratio > 0 else 1) * amount_of_p1_b
+                }
+                self.account_history.append(account)
                 return {
                     'OPEN': {
-                        'BUY': [('P1', 1 if self.hedge_ratio > 0 else -volume_ratio)],
-                        'SELL': [('P2', volume_ratio if self.hedge_ratio > 0 else 1)]
+                        'BUY': [('P1', volume_to_trade['P1'])],
+                        'SELL': [('P2', volume_to_trade['P2'])]
                     }}
             else:
                 return None
