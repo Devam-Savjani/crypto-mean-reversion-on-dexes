@@ -77,4 +77,5 @@ def get_block_data():
     insert_rows('liquidity_pools', list(rows_set.values()))
     print(f'Inserted {len(rows_set.values())} Rows')
 
-get_block_data()
+if __name__ == "__main__":
+    get_block_data()

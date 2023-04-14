@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from historical_data.database_interactions import table_to_df
 
 def get_pools_max_timestamp():
-    todays_date = datetime.now().date()
+    todays_date = datetime.now().date() - timedelta(days=1)
     today_timestamp = int(time.mktime(todays_date.timetuple()))
 
     df = table_to_df(command=f"""
@@ -27,4 +27,5 @@ def get_pools_max_timestamp():
 
     return df
 
-get_pools_max_timestamp()
+if __name__ == "__main__":
+    get_pools_max_timestamp()

@@ -113,5 +113,6 @@ def refresh_database():
                 insert_rows(table_name, rows)
 
 
-# reinitialise_all_liquidity_pool_data()
-refresh_database()
+if __name__ == "__main__":
+    # reinitialise_all_liquidity_pool_data()
+    refresh_database()
