@@ -58,13 +58,17 @@ class Mean_Reversion_Strategy():
                 return {'CLOSE': open_positions}
         else:
             volume_ratio = (price_of_pair1 / price_of_pair2) * self.hedge_ratio
+            volume_ratios_of_pairs = {
+                'P1': (1 if self.hedge_ratio > 0 else -volume_ratio),
+                'P2': (volume_ratio if self.hedge_ratio > 0 else 1)
+            }
             amount_of_p1_b = account['P1'][1]
             amount_of_p2_b = account['P2'][1]
 
             if spread > self.upper_threshold:
                 volume_to_trade = {
-                    'P1': (1 if self.hedge_ratio > 0 else -volume_ratio) * amount_of_p2_b,
-                    'P2': (volume_ratio if self.hedge_ratio > 0 else 1) * amount_of_p2_b
+                    'P1': (volume_ratios_of_pairs['P1'] / volume_ratios_of_pairs['P2']) * (amount_of_p2_b / price_of_pair2),
+                    'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P2']) * (amount_of_p2_b / price_of_pair2)
                 }
                 self.account_history.append(account)
                 return {
@@ -74,8 +78,8 @@ class Mean_Reversion_Strategy():
                     }}
             elif spread < self.lower_threshold:
                 volume_to_trade = {
-                    'P1': (1 if self.hedge_ratio > 0 else -volume_ratio) * amount_of_p1_b,
-                    'P2': (volume_ratio if self.hedge_ratio > 0 else 1) * amount_of_p1_b
+                    'P1': (volume_ratios_of_pairs['P1'] / volume_ratios_of_pairs['P1']) * (amount_of_p1_b / price_of_pair1),
+                    'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P1']) * (amount_of_p1_b / price_of_pair1)
                 }
                 self.account_history.append(account)
                 return {
