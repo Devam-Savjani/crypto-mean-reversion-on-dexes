@@ -1,13 +1,14 @@
 import numpy as np
 
 class Mean_Reversion_Strategy():
-    def __init__(self, cointegrated_pair, hedge_ratio, number_of_sds_from_mean, window_size):
+    def __init__(self, cointegrated_pair, hedge_ratio, number_of_sds_from_mean, window_size, percent_to_invest):
         self.number_of_sds_from_mean = number_of_sds_from_mean
         self.cointegrated_pair = cointegrated_pair
         self.hedge_ratio = hedge_ratio
         self.has_initialised_historical_data = False
         self.window_size = window_size
         self.account_history = []
+        self.percent_to_invest = percent_to_invest
 
     def initialise_historical_data(self, history_p1, history_p2):
         self.history_p1 = history_p1.to_numpy()[-self.window_size:]
@@ -73,19 +74,19 @@ class Mean_Reversion_Strategy():
                 self.account_history.append(account)
                 return {
                     'OPEN': {
-                        'BUY': [('P2', volume_to_trade['P2'])],
-                        'SELL': [('P1', volume_to_trade['P1'])]
+                        'BUY': [('P2', volume_to_trade['P2'] * self.percent_to_invest)],
+                        'SELL': [('P1', volume_to_trade['P1'] * self.percent_to_invest)]
                     }}
             elif spread < self.lower_threshold:
                 volume_to_trade = {
                     'P1': (volume_ratios_of_pairs['P1'] / volume_ratios_of_pairs['P1']) * (amount_of_p1_b / price_of_pair1),
-                    'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P1']) * (amount_of_p1_b / price_of_pair1)
+                    'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P1']) * (amount_of_p1_b / price_of_pair1) 
                 }
                 self.account_history.append(account)
                 return {
                     'OPEN': {
-                        'BUY': [('P1', volume_to_trade['P1'])],
-                        'SELL': [('P2', volume_to_trade['P2'])]
+                        'BUY': [('P1', volume_to_trade['P1'] * self.percent_to_invest)],
+                        'SELL': [('P2', volume_to_trade['P2'] * self.percent_to_invest)]
                     }}
             else:
                 return None
