@@ -3,8 +3,8 @@ import time
 from historical_data.database_interactions import table_to_df
 
 def get_pools_max_timestamp():
-    todays_date = datetime.now().date() - timedelta(days=1)
-    today_timestamp = int(time.mktime(todays_date.timetuple()))
+    ydays_date = datetime.now().date() - timedelta(days=1)
+    ydays_timestamp = int(time.mktime(ydays_date.timetuple()))
 
     df = table_to_df(command=f"""
             CREATE OR REPLACE FUNCTION get_max_timestamp()
@@ -22,7 +22,7 @@ def get_pools_max_timestamp():
             END LOOP;
             END $$;
 
-            SELECT table_name FROM get_max_timestamp() WHERE max_timestamp >= {today_timestamp};
+            SELECT table_name FROM get_max_timestamp() WHERE max_timestamp >= {ydays_timestamp};
             """)
 
     return df
