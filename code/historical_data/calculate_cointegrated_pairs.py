@@ -1,11 +1,10 @@
-import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import pickle
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller
-from historical_data.database_interactions import table_to_df
-from historical_data.check_liquidity_pool_data import get_pools_max_timestamp
+from database_interactions import table_to_df
+from check_liquidity_pool_data import get_pools_max_timestamp
 
 def calculate_pairs_sum_of_squared_differences():
     liquidity_pool_pair_ssds = {}
@@ -15,12 +14,12 @@ def calculate_pairs_sum_of_squared_differences():
         for j in range(i+1, len(valid_liquidity_pools)):
     
             merged = table_to_df(command=f"""
-                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price_per_token0 as p1_token1_price_per_token0, p2.id as p2_id, p2.token1_price_per_token0 as p2_token1_price_per_token0
+                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price
                 FROM "{valid_liquidity_pools[i]}" as p1 INNER JOIN "{valid_liquidity_pools[j]}" as p2
-                ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price_per_token0 <> 0 AND p2.token1_price_per_token0 <> 0;
+                ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price <> 0 AND p2.token1_price <> 0;
                 """)
 
-            ssd = np.sum((merged['p1_token1_price_per_token0'].to_numpy() - merged['p2_token1_price_per_token0'].to_numpy())**2)
+            ssd = np.sum((merged['p1_token1_price'].to_numpy() - merged['p2_token1_price'].to_numpy())**2)
 
             key = (valid_liquidity_pools[i], valid_liquidity_pools[j])
             liquidity_pool_pair_ssds[key] = ssd
@@ -32,13 +31,13 @@ def calculate_pairs_sum_of_squared_differences():
 def get_is_cointegrated_and_hedge_ratio(p1, p2):
 
     merged = table_to_df(command=f"""
-                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price_per_token0 as p1_token1_price_per_token0, p2.id as p2_id, p2.token1_price_per_token0 as p2_token1_price_per_token0
+                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price
                 FROM "{p1}" as p1 INNER JOIN "{p2}" as p2
                 ON p1.period_start_unix = p2.period_start_unix;
                 """)
     
-    df1 = merged['p1_token1_price_per_token0']
-    df2 = merged['p2_token1_price_per_token0']
+    df1 = merged['p1_token1_price']
+    df2 = merged['p2_token1_price']
 
     # Step 1: Test for unit roots
     adf1 = adfuller(df1)
@@ -78,7 +77,7 @@ def get_top_n_cointegrated_pairs(ssds, n=-1):
     return save_cointegrated_pairs(cointegrated_pairs)
 
 def save_pairs_sum_of_squared_differences(ssds):
-    with open('sum_square_differences.pickle', 'wb') as f:
+    with open('historical_data/sum_square_differences.pickle', 'wb') as f:
         pickle.dump(ssds, f)
 
     f.close()
@@ -92,13 +91,13 @@ def load_pairs_sum_of_squared_differences():
     return liquidity_pool_pair_ssds
 
 def save_cointegrated_pairs(cointegrated_pairs):
-    with open('cointegrated_pairs.pickle', 'wb') as f:
+    with open('historical_data/cointegrated_pairs.pickle', 'wb') as f:
         pickle.dump(cointegrated_pairs, f)
 
     f.close()
     return cointegrated_pairs
 
-def load_cointegrated_pairs(path='cointegrated_pairs.pickle'):
+def load_cointegrated_pairs(path='historical_data/cointegrated_pairs.pickle'):
     with open(path, 'rb') as f:
         cointegrated_pairs = pickle.load(f)
         f.close()
