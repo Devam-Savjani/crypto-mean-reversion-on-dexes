@@ -1,1 +1,4 @@
-22:58:35,564 urbanGUI INFO Begining to fetch data on pools
+22:38:12,472 urbanGUI INFO Begining to reinitialise liquidity pool data tables
+22:41:38,244 urbanGUI INFO Completed: Reinitialise liquidity pool data tables
+22:41:38,255 urbanGUI INFO Refreshing liquidity pool data tables
+22:41:42,238 urbanGUI INFO Completed: Refresh liquidity pool data tables

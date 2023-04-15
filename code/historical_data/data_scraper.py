@@ -59,8 +59,7 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
             else:
                 raise Exception(hourlyData)
             
-            rows_set.update({hourData['id']: tuple([hourData[key] for key in header] + [float(hourData['token1Price']) / float(
-                hourData['token0Price']) if float(hourData["token0Price"]) > 0 else 0]) for hourData in hourlyData})
+            rows_set.update({hourData['id']: tuple([hourData[key] for key in header]) for hourData in hourlyData})
             
             data_length = len(hourlyData)
             prev_max_time = hourlyData[-1]['periodStartUnix'] if data_length > 0 else prev_max_time
@@ -77,7 +76,7 @@ def reinitialise_all_liquidity_pool_data():
     drop_all_tables_except_table('liquidity_pools')
     df = table_to_df(
         command="SELECT pool_address, token0, token1 FROM liquidity_pools WHERE volume_usd >= 10000000000;")
-    logger.info('Begining to fetch data on pools')
+    logger.info('Begining to reinitialise liquidity pool data tables')
 
     for _, row in tqdm(df.iterrows(), total=df.shape[0]):
         table_name = '"' + \
@@ -86,8 +85,10 @@ def reinitialise_all_liquidity_pool_data():
         if len(rows) > 0:
             drop_table(table_name)
             create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), (
-                'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC'), ('token1_Price_Per_token0', 'NUMERIC')])
+                'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC')])
             insert_rows(table_name, rows)
+
+    logger.info('Completed: Reinitialise liquidity pool data tables')
 
 def refresh_database():
     df = table_to_df(command="SELECT pool_address, token0, token1 FROM liquidity_pools WHERE volume_usd >= 10000000000;")
@@ -109,9 +110,10 @@ def refresh_database():
             
             if len(rows) > 0:
                 create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), (
-                    'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC'), ('token1_Price_Per_token0', 'NUMERIC')])
+                    'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('fees_USD', 'NUMERIC')])
                 insert_rows(table_name, rows)
 
+    logger.info('Completed: Refresh liquidity pool data tables')
 
 if __name__ == "__main__":
     # reinitialise_all_liquidity_pool_data()
