@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import time
-from historical_data.database_interactions import table_to_df
+from database_interactions import table_to_df
 
 def get_pools_max_timestamp():
     ydays_date = datetime.now().date() - timedelta(days=1)

@@ -1,4 +1,3 @@
-import csv
 from graphql_client import GraphqlClient
 import json
 from database_interactions import drop_table, create_table, insert_rows

@@ -187,7 +187,7 @@ def insert_rows(table_name, rows, should_print=False):
             if should_print:
                 print('Database connection closed.')
 
-def table_to_df(table_name=None, command=None, should_print=False, path_to_config='database.ini'):
+def table_to_df(table_name=None, command=None, should_print=False, path_to_config='historical_data/database.ini'):
     engine = None
     command = command if command is not None else f"SELECT * FROM {table_name};"
     try:

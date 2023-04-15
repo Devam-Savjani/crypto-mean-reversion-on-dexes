@@ -1,8 +1,5 @@
-import csv
 from graphql_client import GraphqlClient
 import json
-import os
-import pandas as pd
 import logging
 from tqdm import tqdm
 from database_interactions import table_to_df, drop_table, create_table, insert_rows, drop_all_tables_except_table
