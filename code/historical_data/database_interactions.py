@@ -199,15 +199,16 @@ def table_to_df(table_name=None, command=None, should_print=False, path_to_confi
             print('Connecting to the PostgreSQL database...')
 
         conn = psycopg2.connect(**params)
-        engine = sqlalchemy.create_engine('postgresql+psycopg2://', creator= lambda: conn)
-        df = pd.read_sql_query(sqlalchemy.text(command), engine.connect())
-        engine.dispose()
+        engine = sqlalchemy.create_engine('postgresql+psycopg2://', creator= lambda: conn)        
+        con = engine.connect()
+        df = pd.read_sql_query(sqlalchemy.text(command), con)
         return df
 
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
         if engine is not None:
+            con.close()
             engine.dispose()
             if should_print:
                 print('Database connection closed.')
