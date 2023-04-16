@@ -56,9 +56,37 @@ class Mean_Reversion_Strategy():
         if has_trade:
             if spread < self.upper_threshold and spread > self.lower_threshold:
                 self.account_history.append(account)
-                return {'CLOSE': open_positions}
+
+                swap_for_a = []
+                swap_for_b = []
+
+                if 'BUY' in open_positions:
+                    for buy_position in open_positions['BUY'].values():
+                        buy_pair, _, buy_volume = buy_position
+                        if account[buy_pair][0] - buy_volume < 0:
+                            swap_for_a.append((buy_pair, abs(account[buy_pair][0] - buy_volume)))
+
+                if 'SELL' in open_positions:
+                    for sell_position in open_positions['SELL'].values():
+                        sell_pair, sell_price, sell_volume = sell_position
+                        position_a, position_b = account[sell_pair]
+                        if position_a + (sell_volume * ((sell_price / prices[sell_pair]) - 1)) < 0:
+                            swap_for_a.append((sell_pair, abs(position_a + (sell_volume * ((sell_price / prices[sell_pair]) - 1)))))
+                        
+                        if position_b - (sell_price * sell_volume) < 0:
+                            swap_for_b.append((sell_pair, abs(position_b - (sell_price * sell_volume))))
+
+
+                return {
+                        'CLOSE': open_positions,
+                        'SWAP': {
+                            'A': swap_for_a,
+                            'B': swap_for_b                     
+                        }
+                    }
         else:
-            volume_ratio = (price_of_pair1 / price_of_pair2) * self.hedge_ratio
+            # volume_ratio = (price_of_pair1 / price_of_pair2) * self.hedge_ratio
+            volume_ratio = self.hedge_ratio
             volume_ratios_of_pairs = {
                 'P1': (1 if self.hedge_ratio > 0 else -volume_ratio),
                 'P2': (volume_ratio if self.hedge_ratio > 0 else 1)
@@ -67,27 +95,50 @@ class Mean_Reversion_Strategy():
             amount_of_p2_b = account['P2'][1]
 
             if spread > self.upper_threshold:
+                if amount_of_p1_b == 0: return None
+                volume_factor = (amount_of_p1_b / price_of_pair1)
                 volume_to_trade = {
-                    'P1': (volume_ratios_of_pairs['P1'] / volume_ratios_of_pairs['P2']) * (amount_of_p2_b / price_of_pair2),
-                    'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P2']) * (amount_of_p2_b / price_of_pair2)
+                    'P1': (volume_ratios_of_pairs['P1'] / volume_ratios_of_pairs['P1']) * volume_factor,
+                    'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P1']) * volume_factor
                 }
                 self.account_history.append(account)
+
+                swap_for_b = []
+                if amount_of_p2_b - (volume_to_trade['P2'] * self.percent_to_invest * prices['P2']) < 0:
+                    swap_for_b.append(('P2', abs(amount_of_p2_b - (volume_to_trade['P2'] * self.percent_to_invest * prices['P2']))))
+
                 return {
-                    'OPEN': {
-                        'BUY': [('P2', volume_to_trade['P2'] * self.percent_to_invest)],
-                        'SELL': [('P1', volume_to_trade['P1'] * self.percent_to_invest)]
-                    }}
+                        'OPEN': {
+                            'BUY': [('P2', volume_to_trade['P2'] * self.percent_to_invest)],
+                            'SELL': [('P1', volume_to_trade['P1'] * self.percent_to_invest)]
+                        },
+                        'SWAP': {
+                            'B': swap_for_b
+                        }
+                    }
+
             elif spread < self.lower_threshold:
+                if amount_of_p2_b == 0: return None
+                volume_factor = (amount_of_p2_b / price_of_pair2)
                 volume_to_trade = {
-                    'P1': (volume_ratios_of_pairs['P1'] / volume_ratios_of_pairs['P1']) * (amount_of_p1_b / price_of_pair1),
-                    'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P1']) * (amount_of_p1_b / price_of_pair1) 
+                    'P1': (volume_ratios_of_pairs['P1'] / volume_ratios_of_pairs['P2']) * volume_factor,
+                    'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P2']) * volume_factor
                 }
                 self.account_history.append(account)
+
+                swap_for_b = []
+                if amount_of_p1_b - (volume_to_trade['P1'] * self.percent_to_invest * prices['P1']) < 0:
+                    swap_for_b.append(('P1', abs(amount_of_p1_b - (volume_to_trade['P1'] * self.percent_to_invest * prices['P1']))))
+
                 return {
-                    'OPEN': {
-                        'BUY': [('P1', volume_to_trade['P1'] * self.percent_to_invest)],
-                        'SELL': [('P2', volume_to_trade['P2'] * self.percent_to_invest)]
-                    }}
+                        'OPEN': {
+                            'BUY': [('P1', volume_to_trade['P1'] * self.percent_to_invest)],
+                            'SELL': [('P2', volume_to_trade['P2'] * self.percent_to_invest)]
+                        },
+                        'SWAP': {
+                            'B': swap_for_b
+                        }
+                    }
             else:
                 return None
 
