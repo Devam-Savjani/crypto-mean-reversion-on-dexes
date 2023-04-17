@@ -6,7 +6,7 @@ from statsmodels.tsa.stattools import adfuller
 from database_interactions import table_to_df
 from check_liquidity_pool_data import get_pools_max_timestamp
 
-def calculate_pairs_sum_of_squared_differences():
+def calculate_pairs_sum_of_squared_differences(should_save=True):
     liquidity_pool_pair_ssds = {}
     valid_liquidity_pools = get_pools_max_timestamp()['table_name']
 
@@ -19,25 +19,41 @@ def calculate_pairs_sum_of_squared_differences():
                 ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price <> 0 AND p2.token1_price <> 0;
                 """)
 
-            ssd = np.sum((merged['p1_token1_price'].to_numpy() - merged['p2_token1_price'].to_numpy())**2)
+            ssd_1 = np.sum((merged['p1_token1_price'].to_numpy() - merged['p2_token1_price'].to_numpy())**2)
+            ssd_2 = np.sum((merged['p1_token1_price'].to_numpy() - (1 / merged['p2_token1_price']).to_numpy())**2)
+            
+            if ssd_1 < ssd_2:
+                key = (valid_liquidity_pools[i], valid_liquidity_pools[j])
+            else:
+                key = (valid_liquidity_pools[i], f'{valid_liquidity_pools[j]}_swapped')
 
-            key = (valid_liquidity_pools[i], valid_liquidity_pools[j])
-            liquidity_pool_pair_ssds[key] = ssd
+            liquidity_pool_pair_ssds[key] = min(ssd_1, ssd_2)
 
     liquidity_pool_pair_ssds = sorted(liquidity_pool_pair_ssds.items(), key=lambda x:x[1])
 
-    return save_pairs_sum_of_squared_differences(liquidity_pool_pair_ssds)
+    if should_save:
+        return save_pairs_sum_of_squared_differences(liquidity_pool_pair_ssds)
+    
+    return liquidity_pool_pair_ssds
 
 def get_is_cointegrated_and_hedge_ratio(p1, p2):
+    swapped = False
+    p2_split = p2.split('_')
+    if len(p2_split) == 4:
+        swapped = True
+        p2 = p2_split[0] + '_' + p2_split[1] + '_' + p2_split[2]
 
     merged = table_to_df(command=f"""
                 SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price
                 FROM "{p1}" as p1 INNER JOIN "{p2}" as p2
-                ON p1.period_start_unix = p2.period_start_unix;
+                ON p1.period_start_unix = p2.period_start_unix {'WHERE p2.token1_price <> 0' if swapped else ''};
                 """)
     
     df1 = merged['p1_token1_price']
     df2 = merged['p2_token1_price']
+
+    if swapped:
+        df2 = 1 / merged['p2_token1_price']
 
     # Step 1: Test for unit roots
     adf1 = adfuller(df1)
@@ -63,7 +79,7 @@ def get_is_cointegrated_and_hedge_ratio(p1, p2):
             # The variables are not cointegrated
             return False, None
 
-def get_top_n_cointegrated_pairs(ssds, n=-1):
+def get_top_n_cointegrated_pairs(ssds, n=-1, should_save=False):
     cointegrated_pairs = []
     n = n if n != -1 else len(ssds)
     for pair in tqdm(ssds):
@@ -72,9 +88,15 @@ def get_top_n_cointegrated_pairs(ssds, n=-1):
         if is_cointegrated:
             cointegrated_pairs.append((pair[0], hedge_rato))
             if len(cointegrated_pairs) == n:
-                return save_cointegrated_pairs(cointegrated_pairs)
+                if should_save:
+                    return save_cointegrated_pairs(cointegrated_pairs)
+                else:
+                    return cointegrated_pairs
 
-    return save_cointegrated_pairs(cointegrated_pairs)
+    if should_save:
+        return save_cointegrated_pairs(cointegrated_pairs)
+    else:
+        return cointegrated_pairs
 
 def save_pairs_sum_of_squared_differences(ssds):
     with open('historical_data/sum_square_differences.pickle', 'wb') as f:
@@ -106,12 +128,13 @@ def load_cointegrated_pairs(path='historical_data/cointegrated_pairs.pickle'):
 
 if __name__ == "__main__":
     use_pickled_cointegrated_pairs = False
+    should_save = True
 
     if use_pickled_cointegrated_pairs:
         cointegrated_pairs = load_cointegrated_pairs()
     else:
-        ssds = calculate_pairs_sum_of_squared_differences()
-        cointegrated_pairs = get_top_n_cointegrated_pairs(ssds=ssds)
+        ssds = calculate_pairs_sum_of_squared_differences(should_save=should_save)
+        cointegrated_pairs = get_top_n_cointegrated_pairs(ssds=ssds, should_save=should_save)
 
     print(*cointegrated_pairs, sep="\n")
     print(len(cointegrated_pairs))
