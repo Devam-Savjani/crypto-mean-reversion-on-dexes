@@ -77,9 +77,16 @@ class Backtest():
         }
 
     def fetch_and_preprocess_data(self, cointegrated_pair, strategy):
+        swapped = False
+        p2 = cointegrated_pair[1]
+        p2_split = p2.split('_')
+        if len(p2_split) == 4:
+            swapped = True
+            p2 = p2_split[0] + '_' + p2_split[1] + '_' + p2_split[2]
+
         merged = table_to_df(command=f"""
                         SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price
-                        FROM "{cointegrated_pair[0]}" as p1 INNER JOIN "{cointegrated_pair[1]}" as p2
+                        FROM "{cointegrated_pair[0]}" as p1 INNER JOIN "{p2}" as p2
                         ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price <> 0 AND p2.token1_price <> 0;
                         """, path_to_config='historical_data/database.ini')
 
@@ -93,7 +100,7 @@ class Backtest():
         history_remaining = merged.loc[merged['period_start_unix']
                                        >= window_size_in_seconds + merged['period_start_unix'][0]]
         history_remaining_p1 = history_remaining['p1_token1_price']
-        history_remaining_p2 = history_remaining['p2_token1_price']
+        history_remaining_p2 = (1 / history_remaining['p2_token1_price']) if swapped else history_remaining['p2_token1_price']
         return history_remaining, history_remaining_p1, history_remaining_p2
 
     def rebalance_account(self, prices):
@@ -138,20 +145,6 @@ class Backtest():
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P2[1]')
 
-    def swap_currencies(self, pair, should_swap_for_A, volume, prices, open_or_close=None):
-        print(f'swap {open_or_close}')
-        position_a, position_b = self.account[pair]
-        if should_swap_for_A:
-            self.account[pair] = (position_a + volume,
-                                  position_b - (volume * prices[pair]))
-            self.trades.append(
-                (str(len(self.trades)), 'SWAP FOR A', pair, prices[pair], volume))
-        else:
-            self.account[pair] = (
-                position_a - (volume / prices[pair]), position_b + volume)
-            self.trades.append(
-                (str(len(self.trades)), 'SWAP FOR B', pair, prices[pair], volume))
-
     def get_account_value_in_USDT(self, pair, account, timestamp, prices):
         p1_b = account['P1'][1] + account['P1'][0] * prices['P1']
         p2_b = account['P2'][1] + account['P2'][0] * prices['P2']
@@ -194,12 +187,29 @@ class Backtest():
         # plt.legend()
         # plt.show()
 
+        def close_buy_position(buy_id):
+            buy_pair, bought_price, buy_volume = self.open_positions['BUY'][buy_id]
+            position_a, position_b = self.account[buy_pair]
+
+            self.account[buy_pair] = (
+                position_a - buy_volume, position_b + (prices[buy_pair] * buy_volume))
+            self.open_positions['BUY'].pop(buy_id)
+        
+        def close_sell_position(sell_id):
+            sell_pair, sold_price, sell_volume = self.open_positions['SELL'][sell_id]
+            position_a, position_b = self.account[sell_pair]
+
+            self.account[sell_pair] = (position_a + (sell_volume * (
+                (sold_price / prices[sell_pair]) - 1)), position_b - (sold_price * sell_volume))
+            self.open_positions['SELL'].pop(sell_id)
+
+
+
         for i in history_remaining.index:
             prices = {
                 'P1': history_remaining_p1[i],
                 'P2': history_remaining_p2[i]
             }
-            # print('------------------')
 
             signal = strategy.generate_signal(
                 {'open_positions': self.open_positions, 'account': self.account}, prices)
@@ -255,28 +265,18 @@ class Backtest():
                     self.check_account('OPEN', 'SELL')
 
             if 'CLOSE' in signal:
-                for buy_id, buy_position in list(signal['CLOSE']['BUY'].items()):
-                    buy_pair, bought_price, buy_volume = buy_position
-                    position_a, position_b = self.account[buy_pair]
-
-                    self.account[buy_pair] = (
-                        position_a - buy_volume, position_b + (prices[buy_pair] * buy_volume))
-                    self.open_positions['BUY'].pop(buy_id)
+                for buy_id, _ in list(signal['CLOSE']['BUY'].items()):
+                    close_buy_position(buy_id=buy_id)
                     self.check_account('CLOSE', 'BUY')
 
-                for sell_id, sell_position in list(signal['CLOSE']['SELL'].items()):
-                    sell_pair, sold_price, sell_volume = sell_position
-                    position_a, position_b = self.account[sell_pair]
-
-                    self.account[sell_pair] = (position_a + (sell_volume * (
-                        (sold_price / prices[sell_pair]) - 1)), position_b - (sold_price * sell_volume))
-                    self.open_positions['SELL'].pop(sell_id)
+                for sell_id, _ in list(signal['CLOSE']['SELL'].items()):
+                    close_sell_position(sell_id)
                     self.check_account('CLOSE', 'SELL')
 
-        #         amount_of_usdt.append(self.account['P2'][1])
-
-        # plt.plot(amount_of_usdt)
-        # plt.show()
+        if len(self.open_positions['BUY']) != 0 or len(self.open_positions['SELL']) != 0:
+            sell_positions = self.open_positions['SELL'].keys()
+            for sell_id in list(sell_positions):
+                close_sell_position(sell_id)
 
         price_p1 = history_remaining_p1[len(history_remaining) - 1]
         position_p1_a, position_p1_b = self.account['P1']
@@ -305,23 +305,14 @@ class Backtest():
         else:
             print(f"Total returns \033[91m {return_percent}%\033[0m")
 
-        # print(self.open_positions)
-        # print(*self.trades, sep='\n')
-
-        # print(f'ACCOUNT AFTER: {self.account}')
-
-        if len(self.open_positions['BUY']) != 0 or len(self.open_positions['SELL']) != 0:
-            print('There are still open positions')
-
         return return_percent
-
 
 cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
-particular_idx = None
 particular_idx = 28
-particular_idx = 0
+particular_idx = 25
+particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
@@ -338,9 +329,8 @@ for cointegrated_pair, hedge_ratio in pairs:
         NUMBER_OF_DAYS_OF_HISTORY = 30
         mean_reversion_strategy = Mean_Reversion_Strategy(cointegrated_pair=cointegrated_pair,
                                                           hedge_ratio=hedge_ratio,
-                                                          number_of_sds_from_mean=3,
-                                                          window_size=days_to_seconds(
-                                                              NUMBER_OF_DAYS_OF_HISTORY),
+                                                          number_of_sds_from_mean=2,
+                                                          window_size=days_to_seconds(NUMBER_OF_DAYS_OF_HISTORY),
                                                           percent_to_invest=1)
 
         backtest = Backtest()
@@ -350,7 +340,6 @@ for cointegrated_pair, hedge_ratio in pairs:
         bad_pairs.append((cointegrated_pair, hedge_ratio))
         print(e)
         print()
-
 
 # for cointegrated_pair, hedge_ratio in bad_pairs:
 #     try:
