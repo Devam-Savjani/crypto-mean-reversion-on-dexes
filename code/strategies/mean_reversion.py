@@ -103,17 +103,17 @@ class Mean_Reversion_Strategy():
                 }
                 self.account_history.append(account)
 
-                swap_for_b = []
                 if amount_of_p2_b - (volume_to_trade['P2'] * self.percent_to_invest * prices['P2']) < 0:
-                    swap_for_b.append(('P2', abs(amount_of_p2_b - (volume_to_trade['P2'] * self.percent_to_invest * prices['P2']))))
+                    volume_factor = (amount_of_p2_b / price_of_pair2)
+                    volume_to_trade = {
+                        'P1': (volume_ratios_of_pairs['P1'] / volume_ratios_of_pairs['P2']) * volume_factor,
+                        'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P2']) * volume_factor
+                    }
 
                 return {
                         'OPEN': {
                             'BUY': [('P2', volume_to_trade['P2'] * self.percent_to_invest)],
                             'SELL': [('P1', volume_to_trade['P1'] * self.percent_to_invest)]
-                        },
-                        'SWAP': {
-                            'B': swap_for_b
                         }
                     }
 
@@ -126,17 +126,17 @@ class Mean_Reversion_Strategy():
                 }
                 self.account_history.append(account)
 
-                swap_for_b = []
                 if amount_of_p1_b - (volume_to_trade['P1'] * self.percent_to_invest * prices['P1']) < 0:
-                    swap_for_b.append(('P1', abs(amount_of_p1_b - (volume_to_trade['P1'] * self.percent_to_invest * prices['P1']))))
+                    volume_factor = (amount_of_p1_b / price_of_pair1)
+                    volume_to_trade = {
+                        'P1': volume_factor,
+                        'P2': (volume_ratios_of_pairs['P2'] / volume_ratios_of_pairs['P1']) * volume_factor
+                    }
 
                 return {
                         'OPEN': {
                             'BUY': [('P1', volume_to_trade['P1'] * self.percent_to_invest)],
                             'SELL': [('P2', volume_to_trade['P2'] * self.percent_to_invest)]
-                        },
-                        'SWAP': {
-                            'B': swap_for_b
                         }
                     }
             else:
