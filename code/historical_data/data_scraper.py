@@ -12,10 +12,9 @@ gq_client = GraphqlClient(
     headers={}
 )
 
-logging.basicConfig(filename='data_scraper.log',
+logging.basicConfig(filename='historical_data/data_scraper.log',
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                    datefmt='%H:%M:%S',
                     level=logging.DEBUG)
 
 logger = logging.getLogger('urbanGUI')
