@@ -127,21 +127,20 @@ class Backtest():
             warnings.warn(f'Boosting P2[1] by {abs(position_b)}')
 
     def check_account(self, open_or_close, buy_or_sell):
-        if self.account['P1'][0] < 0:
+        negative_threshold = -1e-15
+        if self.account['P1'][0] < negative_threshold:
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P1[0]')
 
-        if self.account['P1'][1] < 0:
+        if self.account['P1'][1] < negative_threshold:
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P1[1]')
 
-        if self.account['P2'][0] < 0:
-            print(self.account)
+        if self.account['P2'][0] < negative_threshold:
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P2[0]')
 
-        if self.account['P2'][1] < 0:
-            print(self.account)
+        if self.account['P2'][1] < negative_threshold:
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P2[1]')
 
@@ -174,19 +173,6 @@ class Backtest():
             'SELL': {}
         }
 
-        amount_of_usdt = []
-
-        # figure, axis = plt.subplots(2, 1)
-
-        # axis[0].plot(history_remaining_p1, label='P1')
-        # axis[0].set_title("P1")
-
-        # axis[1].plot(1 / history_remaining_p2, label='P2')
-        # axis[1].set_title("P2")
-
-        # plt.legend()
-        # plt.show()
-
         def close_buy_position(buy_id):
             buy_pair, bought_price, buy_volume = self.open_positions['BUY'][buy_id]
             position_a, position_b = self.account[buy_pair]
@@ -202,7 +188,6 @@ class Backtest():
             self.account[sell_pair] = (position_a + (sell_volume * (
                 (sold_price / prices[sell_pair]) - 1)), position_b - (sold_price * sell_volume))
             self.open_positions['SELL'].pop(sell_id)
-
 
 
         for i in history_remaining.index:
@@ -311,7 +296,7 @@ cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
 particular_idx = 28
-particular_idx = 25
+particular_idx = 0
 particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
@@ -335,6 +320,7 @@ for cointegrated_pair, hedge_ratio in pairs:
 
         backtest = Backtest()
         backtest.backtest_pair(cointegrated_pair, mean_reversion_strategy, 100)
+        print(len(backtest.trades))
         print()
     except Exception as e:
         bad_pairs.append((cointegrated_pair, hedge_ratio))
