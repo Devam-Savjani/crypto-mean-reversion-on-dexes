@@ -3,7 +3,7 @@ import psycopg2
 import pandas as pd
 import sqlalchemy
 
-def config(filename='database.ini', section='postgresql'):
+def config(filename='historical_data/database.ini', section='postgresql'):
     # create a parser
     parser = ConfigParser()
     # read config file
