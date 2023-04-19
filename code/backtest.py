@@ -90,7 +90,7 @@ class Backtest():
                         ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price <> 0 AND p2.token1_price <> 0;
                         """, path_to_config='historical_data/database.ini')
 
-        window_size_in_seconds = strategy.window_size
+        window_size_in_seconds = strategy.window_size_in_seconds
 
         history_arg = merged.loc[merged['period_start_unix'] <
                                  window_size_in_seconds + merged['period_start_unix'][0]]
@@ -126,21 +126,29 @@ class Backtest():
                 position_a - (abs(position_b) / prices['P2']), position_b + abs(position_b))
             warnings.warn(f'Boosting P2[1] by {abs(position_b)}')
 
-    def check_account(self, open_or_close, buy_or_sell):
-        negative_threshold = -1e-15
+    def check_account(self, open_or_close, buy_or_sell, should_print_account=False):
+        negative_threshold = -1e-10
         if self.account['P1'][0] < negative_threshold:
+            if should_print_account:
+                print(self.account)
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P1[0]')
 
         if self.account['P1'][1] < negative_threshold:
+            if should_print_account:
+                print(self.account)
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P1[1]')
 
         if self.account['P2'][0] < negative_threshold:
+            if should_print_account:
+                print(self.account)
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P2[0]')
 
         if self.account['P2'][1] < negative_threshold:
+            if should_print_account:
+                print(self.account)
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P2[1]')
 
@@ -296,8 +304,8 @@ cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
 particular_idx = 28
-particular_idx = 0
 particular_idx = None
+particular_idx = 2
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
@@ -305,17 +313,14 @@ pairs = cointegrated_pairs[particular_idx:particular_idx +
 
 bad_pairs = []
 
-for cointegrated_pair, hedge_ratio in pairs:
+for cointegrated_pair, _ in pairs:
     try:
         print(num)
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
-        print(f'hedge_ratio: {hedge_ratio}')
-        NUMBER_OF_DAYS_OF_HISTORY = 30
         mean_reversion_strategy = Mean_Reversion_Strategy(cointegrated_pair=cointegrated_pair,
-                                                          hedge_ratio=hedge_ratio,
-                                                          number_of_sds_from_mean=2,
-                                                          window_size=days_to_seconds(NUMBER_OF_DAYS_OF_HISTORY),
+                                                          number_of_sds_from_mean=1,
+                                                          window_size_in_seconds=days_to_seconds(30),
                                                           percent_to_invest=1)
 
         backtest = Backtest()
@@ -323,24 +328,6 @@ for cointegrated_pair, hedge_ratio in pairs:
         print(len(backtest.trades))
         print()
     except Exception as e:
-        bad_pairs.append((cointegrated_pair, hedge_ratio))
+        bad_pairs.append((cointegrated_pair))
         print(e)
         print()
-
-# for cointegrated_pair, hedge_ratio in bad_pairs:
-#     try:
-#         print(f'cointegrated_pair: {cointegrated_pair}')
-#         print(f'hedge_ratio: {hedge_ratio}')
-#         NUMBER_OF_DAYS_OF_HISTORY = 30
-#         mean_reversion_strategy = Mean_Reversion_Strategy(cointegrated_pair=cointegrated_pair,
-#                                                         hedge_ratio=hedge_ratio,
-#                                                         number_of_sds_from_mean=3,
-#                                                         window_size=days_to_seconds(NUMBER_OF_DAYS_OF_HISTORY),
-#                                                         percent_to_invest=1)
-
-#         backtest = Backtest()
-#         backtest.backtest_pair(cointegrated_pair, mean_reversion_strategy, 100)
-#         print()
-#     except Exception as e:
-#         print(e)
-#         print()
