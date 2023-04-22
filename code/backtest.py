@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import warnings
 import numpy as np
 from strategies.mean_reversion import Mean_Reversion_Strategy
+from strategies.kalman_filter import Kalman_Filter_Strategy
 import sys
 sys.path.append('./historical_data')
 from database_interactions import table_to_df
@@ -293,19 +294,13 @@ class Backtest():
         return_percent = ((total_usdt - initial_investment_in_USDT)
                           * 100 / initial_investment_in_USDT)
 
-        if return_percent > 0:
-            print(f"Total returns \033[92m {return_percent}%\033[0m")
-        else:
-            print(f"Total returns \033[91m {return_percent}%\033[0m")
-
         return return_percent
 
 cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
-particular_idx = 28
+particular_idx = 14
 particular_idx = None
-particular_idx = 2
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
@@ -323,9 +318,25 @@ for cointegrated_pair, _ in pairs:
                                                           window_size_in_seconds=days_to_seconds(30),
                                                           percent_to_invest=1)
 
-        backtest = Backtest()
-        backtest.backtest_pair(cointegrated_pair, mean_reversion_strategy, 100)
-        print(len(backtest.trades))
+        backtest_mean_reversion = Backtest()
+        return_percent = backtest_mean_reversion.backtest_pair(cointegrated_pair, mean_reversion_strategy, 100)
+        if return_percent > 0:
+            print(f"Mean_Reversion_Strategy Total returns \033[92m{return_percent}%\033[0m with {len(backtest_mean_reversion.trades)} trades")
+        else:
+            print(f"Mean_Reversion_Strategy Total returns \033[91m{return_percent}%\033[0m with {len(backtest_mean_reversion.trades)} trades")
+
+        kalman_filter_strategy = Kalman_Filter_Strategy(cointegrated_pair=cointegrated_pair,
+                                                        number_of_sds_from_mean=1,
+                                                        window_size_in_seconds=days_to_seconds(30),
+                                                        percent_to_invest=1)
+
+        backtest_kalman_filter = Backtest()
+        return_percent = backtest_kalman_filter.backtest_pair(cointegrated_pair, kalman_filter_strategy, 100)
+        if return_percent > 0:
+            print(f"Kalman_Filter_Strategy Total returns \033[92m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+        else:
+            print(f"Kalman_Filter_Strategy Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+
         print()
     except Exception as e:
         bad_pairs.append((cointegrated_pair))
