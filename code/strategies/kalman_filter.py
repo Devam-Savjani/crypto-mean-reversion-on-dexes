@@ -40,8 +40,7 @@ class Kalman_Filter_Strategy():
         self.stdX = np.std(p1)
         self.stdY = np.std(p2)
 
-        # factor = 1e-4
-        state_cov_multiplier = np.power(0.1, 2)       # 0.1: spread_std=2.2, cov=16  ==> 0.01: 0.22, 0.16
+        state_cov_multiplier = np.power(0.01, 2)       # 0.1: spread_std=2.2, cov=16  ==> 0.01: 0.22, 0.16
         observation_cov = 0.001
 
         # observation matrix F is 2-dimensional, containing sym_a price and 1
@@ -110,7 +109,6 @@ class Kalman_Filter_Strategy():
         self.means_trace.append(state_means_stepwise)
         self.covs_trace.append(state_covs_stepwise)
         self.hedge_ratio = state_means_stepwise[0] * self.stdX / self.stdY
-        print(f'Stepwise Hedge Ratio: {self.hedge_ratio}')
 
         # if self.n % self.N == 0:
         #     cm = plt.get_cmap('jet')
