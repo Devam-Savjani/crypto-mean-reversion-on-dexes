@@ -15,6 +15,8 @@ class Kalman_Filter_Strategy():
         self.window_size_in_hours = window_size_in_seconds // (60 * 60)
         self.account_history = []
         self.percent_to_invest = percent_to_invest
+        self.n = 0
+        self.N = 3000
 
     def initialise_historical_data(self, history_p1, history_p2):
         self.history_p1 = history_p1.to_numpy()
@@ -28,12 +30,13 @@ class Kalman_Filter_Strategy():
         p1, p2 = self.history_p1, self.history_p2
 
         # create a StandardScaler object
-        scaler = StandardScaler()
+        scalerX = StandardScaler()
+        scalerY = StandardScaler()
 
         # transform the data using the scaler
         # extract the scaled x and y arrays
-        scaled_x = scaler.fit_transform(p2.reshape(-1,1)).flatten()
-        scaled_y = scaler.fit_transform(p1.reshape(-1,1)).flatten()
+        scaled_x = scalerX.fit_transform(p2.reshape(-1,1)).flatten()
+        scaled_y = scalerY.fit_transform(p1.reshape(-1,1)).flatten()
         self.stdX = np.std(p1)
         self.stdY = np.std(p2)
 
@@ -61,7 +64,8 @@ class Kalman_Filter_Strategy():
 
         self.hedge_ratio = state_means[-1,0] * self.stdX / self.stdY
         self.kf = kf
-        self.scaler = scaler
+        self.scalerX = scalerX
+        self.scalerY = scalerY
 
         spread = self.history_p1[-self.window_size_in_hours:] - \
             self.hedge_ratio * self.history_p2[-self.window_size_in_hours:]
@@ -91,23 +95,38 @@ class Kalman_Filter_Strategy():
         
     def update_hedge_ratio(self):
         p1, p2 = self.history_p1, self.history_p2
-        scaledx = self.scaler.transform(np.reshape([p2[-1]], (-1,1))).flatten()[0]
-        scaledy = self.scaler.transform(np.reshape([p1[-1]], (-1,1))).flatten()[0]
-        observation_matrix_stepwise = np.array([[scaledx, 1]])
-        observation_stepwise = scaledy
+        scaled_x = self.scalerX.transform(np.reshape([p2[-1]], (-1,1))).flatten()[0]
+        scaled_y = self.scalerY.transform(np.reshape([p1[-1]], (-1,1))).flatten()[0]
+
+        observation_matrix_stepwise = np.array([[scaled_y, 1]])
+        observation_stepwise = scaled_x
 
         state_means_stepwise, state_covs_stepwise = self.kf.filter_update(
-            self.means_trace[-1], self.covs_trace[-1],
+            filtered_state_mean=self.means_trace[-1],
+            filtered_state_covariance=self.covs_trace[-1],
             observation=observation_stepwise,
             observation_matrix=observation_matrix_stepwise)
 
-        # P = covs_trace[-1] + np.eye(2)*state_cov_multiplier                        # This has to be small enough
-        # spread = y - observation_matrix_stepwise.dot(means_trace[-1])[0]
-        # spread_std = np.sqrt(observation_matrix_stepwise.dot(P).dot(observation_matrix_stepwise.transpose())[0][0] + observation_cov)
-        self.means_trace.append(state_means_stepwise.data)
+        self.means_trace.append(state_means_stepwise)
         self.covs_trace.append(state_covs_stepwise)
-
         self.hedge_ratio = state_means_stepwise[0] * self.stdX / self.stdY
+        print(f'Stepwise Hedge Ratio: {self.hedge_ratio}')
+
+        # if self.n % self.N == 0:
+        #     cm = plt.get_cmap('jet')
+        #     colors = np.linspace(0.1, 1, len(self.history_p1))
+        #     sc = plt.scatter(self.history_p2, self.history_p1, s=30, c=colors, cmap=cm, edgecolor='k', alpha=0.7)
+
+        #     xi = np.linspace(self.history_p2.min(), self.history_p2.max(), 2)
+        #     model = sm.OLS(self.history_p1[-1000:], sm.add_constant(self.history_p2[-1000:]))
+        #     results = model.fit()
+        #     plt.plot(xi, poly1d(results.params[::-1])(xi), alpha=.9, lw=1)
+        #     print(f'Hedge Ratio: {self.hedge_ratio}')
+        #     print(f'Params: {results.params}')
+        #     plt.xlabel('p2')
+        #     plt.ylabel('p1')
+        #     plt.show()
+        self.n = self.n + 1
 
     def new_tick(self, price_of_pair1, price_of_pair2):
         if not self.has_initialised_historical_data:
