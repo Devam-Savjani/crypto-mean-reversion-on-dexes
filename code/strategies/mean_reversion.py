@@ -1,6 +1,7 @@
 import numpy as np
 import statsmodels.api as sm
-
+# import matplotlib.pyplot as plt
+# from scipy import poly1d
 
 class Mean_Reversion_Strategy():
     def __init__(self, cointegrated_pair, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest):
@@ -20,11 +21,24 @@ class Mean_Reversion_Strategy():
         # Calculate the ratio of the coefficients
         # Gradient of the OLS i.e. X = results.params[0] + results.params[1] 'p2_token1_price'
         ratio = results.params[1]
+
+        # cm = plt.get_cmap('jet')
+        # colors = np.linspace(0.1, 1, len(self.history_p1))
+        # sc = plt.scatter(self.history_p2, self.history_p1, s=30, c=colors, cmap=cm, edgecolor='k', alpha=0.7)
+
+        # xi = np.linspace(self.history_p2.min(), self.history_p2.max(), 2)
+        # model = sm.OLS(self.history_p1, sm.add_constant(self.history_p2))
+        # results = model.fit()
+        # plt.plot(xi, poly1d(results.params[::-1])(xi), alpha=.2, lw=1)
+        # plt.xlabel('p2')
+        # plt.ylabel('p1')
+        # plt.show()
+
         return ratio
 
     def initialise_historical_data(self, history_p1, history_p2):
-        self.history_p1 = history_p1.to_numpy()[-self.window_size_in_hours:]
-        self.history_p2 = history_p2.to_numpy()[-self.window_size_in_hours:]
+        self.history_p1 = history_p1.to_numpy()
+        self.history_p2 = history_p2.to_numpy()
         self.upper_thresholds = []
         self.lower_thresholds = []
         self.hedge_ratio = self.calculate_hedge_ratio()
