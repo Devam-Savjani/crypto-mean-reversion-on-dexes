@@ -36,7 +36,7 @@ def calculate_pairs_sum_of_squared_differences(should_save=True):
     
     return liquidity_pool_pair_ssds
 
-def get_is_cointegrated_and_hedge_ratio(p1, p2):
+def is_cointegrated(p1, p2):
     swapped = False
     p2_split = p2.split('_')
     if len(p2_split) == 4:
@@ -61,7 +61,7 @@ def get_is_cointegrated_and_hedge_ratio(p1, p2):
 
     if adf1[0] < adf1[4]['5%'] and adf2[0] < adf2[4]['5%']:
         # Both variables are stationary
-        return False, None
+        return False
     else:
         # At least one variable is non-stationary, proceed to step 2
 
@@ -74,19 +74,19 @@ def get_is_cointegrated_and_hedge_ratio(p1, p2):
         if resid_adf[0] < resid_adf[4]['5%']:
             # The variables are cointegrated
             hedge_ratio = eg_test.params[1]
-            return True, hedge_ratio
+            return True
         else:
             # The variables are not cointegrated
-            return False, None
+            return False
 
 def get_top_n_cointegrated_pairs(ssds, n=-1, should_save=False):
     cointegrated_pairs = []
     n = n if n != -1 else len(ssds)
     for pair in tqdm(ssds):
         p1, p2 = pair[0]
-        is_cointegrated, hedge_rato = get_is_cointegrated_and_hedge_ratio(p1, p2)
+        is_cointegrated = is_cointegrated(p1, p2)
         if is_cointegrated:
-            cointegrated_pairs.append((pair[0], hedge_rato))
+            cointegrated_pairs.append(pair[0])
             if len(cointegrated_pairs) == n:
                 if should_save:
                     return save_cointegrated_pairs(cointegrated_pairs)
