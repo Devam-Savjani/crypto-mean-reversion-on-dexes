@@ -78,7 +78,7 @@ class Backtest():
             'P2': (0, initial_account_p2_b)
         }
 
-    def fetch_and_preprocess_data(self, cointegrated_pair, strategy):
+    def fetch_and_preprocess_data(self, cointegrated_pair, window_size_in_seconds):
         swapped = False
         p2 = cointegrated_pair[1]
         p2_split = p2.split('_')
@@ -87,26 +87,20 @@ class Backtest():
             p2 = p2_split[0] + '_' + p2_split[1] + '_' + p2_split[2]
 
         merged = table_to_df(command=f"""
-                        SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price
+                        SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price, p1.gas_price_wei as p1_gas_price_wei, p2.gas_price_wei as p2_gas_price_wei
                         FROM "{cointegrated_pair[0]}" as p1 INNER JOIN "{p2}" as p2
                         ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price <> 0 AND p2.token1_price <> 0;
                         """, path_to_config='historical_data/database.ini')
 
-        window_size_in_seconds = strategy.window_size_in_seconds
-
         history_arg = merged.loc[merged['period_start_unix'] <
-                                 window_size_in_seconds + merged['period_start_unix'][0]]
-        
-        history_arg_p1 = history_arg['p1_token1_price']
-        history_arg_p2 = (1 / history_arg['p2_token1_price']) if swapped else history_arg['p2_token1_price']
+                                 window_size_in_seconds + merged['period_start_unix'][0]]        
+        history_arg = history_arg.assign(p2_token1_price= (1 / history_arg['p2_token1_price']) if swapped else history_arg['p2_token1_price'])
 
-        strategy.initialise_historical_data(history_p1=history_arg_p1, history_p2=history_arg_p2)
 
-        history_remaining = merged.loc[merged['period_start_unix']
-                                       >= window_size_in_seconds + merged['period_start_unix'][0]]
-        history_remaining_p1 = history_remaining['p1_token1_price']
-        history_remaining_p2 = (1 / history_remaining['p2_token1_price']) if swapped else history_remaining['p2_token1_price']
-        return history_remaining, history_remaining_p1, history_remaining_p2
+        history_remaining = merged.loc[merged['period_start_unix'] >= window_size_in_seconds + merged['period_start_unix'][0]]
+        history_remaining = history_remaining.assign(p2_token1_price= (1 / history_remaining['p2_token1_price']) if swapped else history_remaining['p2_token1_price'])
+
+        return history_arg, history_remaining
 
     def rebalance_account(self, prices):
         position_a, position_b = self.account['P1']
@@ -170,15 +164,14 @@ class Backtest():
         return p1_usdt + p2_usdt
 
     def backtest_pair(self, cointegrated_pair, strategy, initial_investment_in_USDT=100):
-        history_remaining, history_remaining_p1, history_remaining_p2 = self.fetch_and_preprocess_data(
-            cointegrated_pair, strategy)
+        history_arg, history_remaining = self.fetch_and_preprocess_data(cointegrated_pair, strategy.window_size_in_seconds)
+        
+        strategy.initialise_historical_data(history_p1=history_arg['p1_token1_price'], history_p2=history_arg['p2_token1_price'])
+        history_remaining_p1, history_remaining_p2 = history_remaining['p1_token1_price'], history_remaining['p2_token1_price']
 
         initial_account = self.initialise_account(
             cointegrated_pair=cointegrated_pair, account_size_in_USDT=initial_investment_in_USDT, start_timestamp=history_remaining['period_start_unix'].iloc[0])
         self.account = initial_account
-
-        initial_p1 = initial_account['P1']
-        initial_p2 = initial_account['P2']
 
         self.trades = []
         self.open_positions = {
@@ -272,31 +265,14 @@ class Backtest():
                     close_sell_position(sell_id)
                     self.check_account('CLOSE', 'SELL')
 
-        if len(self.open_positions['BUY']) != 0 or len(self.open_positions['SELL']) != 0:
+        # Close open short positions
+        if len(self.open_positions['SELL']) != 0:
             sell_positions = self.open_positions['SELL'].keys()
             for sell_id in list(sell_positions):
                 close_sell_position(sell_id)
 
-        price_p1 = history_remaining_p1[len(history_remaining) - 1]
-        position_p1_a, position_p1_b = self.account['P1']
-        self.account['P1'] = (position_p1_a - (position_p1_a - initial_p1[0]),
-                              position_p1_b + ((position_p1_a - initial_p1[0]) * price_p1))
-
-        price_p2 = history_remaining_p2[len(history_remaining) - 1]
-        position_p2_a, position_p2_b = self.account['P2']
-        self.account['P2'] = (position_p2_a - (position_p2_a - initial_p2[0]), position_p2_b + (
-            ((position_p2_a - initial_p2[0]) * price_p2)))
-
-        p1_b = cointegrated_pair[0].split('_')[1]
-        p2_b = cointegrated_pair[1].split('_')[1]
-        end_timestamp = history_remaining['period_start_unix'].iloc[-1]
-        conversion_rate_p1_b = conversion_rate_tokens_to_USDT(
-            p1_b, end_timestamp)
-        p1_usdt = conversion_rate_p1_b * self.account['P1'][1]
-        p2_usdt = (conversion_rate_p1_b if p1_b == p2_b else conversion_rate_tokens_to_USDT(
-            p2_b, end_timestamp)) * self.account['P2'][1]
-        total_usdt = p1_usdt + p2_usdt
-        return_percent = ((total_usdt - initial_investment_in_USDT)
+        account_value_in_usdt = self.get_account_value_in_USDT(cointegrated_pair, self.account, list(history_remaining['period_start_unix'])[-1], prices)
+        return_percent = ((account_value_in_usdt - initial_investment_in_USDT)
                           * 100 / initial_investment_in_USDT)
 
         return return_percent
@@ -304,7 +280,7 @@ class Backtest():
 cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
-particular_idx = 14
+particular_idx = 10
 particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
