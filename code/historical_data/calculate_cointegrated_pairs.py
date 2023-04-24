@@ -73,7 +73,6 @@ def is_cointegrated(p1, p2):
         resid_adf = adfuller(resid)
         if resid_adf[0] < resid_adf[4]['5%']:
             # The variables are cointegrated
-            hedge_ratio = eg_test.params[1]
             return True
         else:
             # The variables are not cointegrated
@@ -84,8 +83,8 @@ def get_top_n_cointegrated_pairs(ssds, n=-1, should_save=False):
     n = n if n != -1 else len(ssds)
     for pair in tqdm(ssds):
         p1, p2 = pair[0]
-        is_cointegrated = is_cointegrated(p1, p2)
-        if is_cointegrated:
+        is_pair_cointegrated = is_cointegrated(p1, p2)
+        if is_pair_cointegrated:
             cointegrated_pairs.append(pair[0])
             if len(cointegrated_pairs) == n:
                 if should_save:

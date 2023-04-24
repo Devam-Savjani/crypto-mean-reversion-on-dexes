@@ -313,7 +313,7 @@ pairs = cointegrated_pairs[particular_idx:particular_idx +
 
 bad_pairs = []
 
-for cointegrated_pair, _ in pairs:
+for cointegrated_pair in pairs:
     try:
         print(num)
         num += 1
