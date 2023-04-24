@@ -59,8 +59,8 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
             if len(hourlyData) != 0:
                 swaps_data = gq_client.execute(
                     query="""
-                            query pools($id: ID!, $min_timestamp: Int!, $max_timestamp: Int!) {
-                                pools(where: {id: $id}) {
+                            query pools($min_timestamp: Int!, $max_timestamp: Int!) {
+                                pools(where: {volumeUSD_gte: 10000000000}) {
                                     id
                                     swaps(where: {timestamp_gte: $min_timestamp, timestamp_lt: $max_timestamp}) {
                                     id
@@ -74,12 +74,12 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
                             }
                         """,
                     operation_name='foo',
-                    variables={"id": pool_address, "min_timestamp": int(hourlyData[0]['periodStartUnix']) - (7*60*60), "max_timestamp": int(hourlyData[-1]['periodStartUnix']) + (7*60*60)})
+                    variables={"min_timestamp": int(hourlyData[0]['periodStartUnix']) - (7*60*60), "max_timestamp": int(hourlyData[-1]['periodStartUnix']) + (7*60*60)})
 
                 swaps_data = json.loads(swaps_data)
 
                 if 'data' in swaps_data:
-                    swaps = swaps_data['data']['pools'][0]['swaps']
+                    swaps = sum([pool_data['swaps'] for pool_data in swaps_data['data']['pools']], [])
                     df = pd.DataFrame(data={'timestamp': [int(swap['timestamp']) for swap in swaps], 'gasPrice': [
                                       int(swap['transaction']['gasPrice']) for swap in swaps]})
                     for i in range(len(hourlyData)):
@@ -121,7 +121,7 @@ def reinitialise_all_liquidity_pool_data():
         if len(rows) > 0:
             drop_table(table_name)
             create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), (
-                'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('gas_price_ether', 'NUMERIC')])
+                'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('gas_price_wei', 'NUMERIC')])
             insert_rows(table_name, rows)
 
     logger.info('Completed: Reinitialise liquidity pool data tables')
@@ -153,7 +153,7 @@ def refresh_database():
 
             if len(rows) > 0:
                 create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), (
-                    'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('gas_price_ether', 'NUMERIC')])
+                    'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('gas_price_wei', 'NUMERIC')])
                 insert_rows(table_name, rows)
 
     logger.info('Completed: Refresh liquidity pool data tables')
