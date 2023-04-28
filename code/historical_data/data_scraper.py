@@ -63,12 +63,12 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
                                 pools(where: {volumeUSD_gte: 10000000000}) {
                                     id
                                     swaps(where: {timestamp_gte: $min_timestamp, timestamp_lt: $max_timestamp}) {
-                                    id
-                                    timestamp
-                                    transaction {
                                         id
-                                        gasPrice
-                                    }
+                                        timestamp
+                                        transaction {
+                                            id
+                                            gasPrice
+                                        }
                                     }
                                 }
                             }
