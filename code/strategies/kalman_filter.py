@@ -119,6 +119,7 @@ class Kalman_Filter_Strategy():
         #     model = sm.OLS(self.history_p1[-1000:], sm.add_constant(self.history_p2[-1000:]))
         #     results = model.fit()
         #     plt.plot(xi, poly1d(results.params[::-1])(xi), alpha=.9, lw=1)
+        #     plt.plot(xi, self.hedge_ratio * xi + results.params[0], alpha=.9, lw=1)
         #     print(f'Hedge Ratio: {self.hedge_ratio}')
         #     print(f'Params: {results.params}')
         #     plt.xlabel('p2')

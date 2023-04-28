@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import warnings
+import statsmodels.api as sm
 import numpy as np
 from strategies.mean_reversion import Mean_Reversion_Strategy
 from strategies.kalman_filter import Kalman_Filter_Strategy
@@ -9,6 +10,10 @@ sys.path.append('./historical_data')
 from database_interactions import table_to_df
 from calculate_cointegrated_pairs import load_cointegrated_pairs
 
+
+GAS_USED_BY_SWAP = 150000
+GAS_USED_BY_LOAN = 100000
+GAS_USED = (2 * GAS_USED_BY_SWAP) + GAS_USED_BY_LOAN 
 
 def days_to_seconds(days): return int(days * 24 * 60 * 60)
 
@@ -24,7 +29,7 @@ def conversion_rates(token, timestamp):
                     FOR r IN
                     (SELECT pool_address, token0, token1 FROM liquidity_pools WHERE ((token0 = '{token}' AND token1 = 'USDT') OR (token1 = '{token}' AND token0 = 'USDT')) AND volume_usd >= 10000000000)
                 LOOP
-                    EXECUTE FORMAT ('SELECT token1_price FROM "%s_%s_%s" WHERE period_start_unix={timestamp}', r.token0, r.token1, r.pool_address) INTO token1_price;
+                    EXECUTE FORMAT ('SELECT token1_price FROM "%s_%s_%s" ORDER BY ABS(period_start_unix - {timestamp}) LIMIT 1', r.token0, r.token1, r.pool_address) INTO token1_price;
                     pool_addr := r.pool_address;
                     t0 := r.token0;
                     t1 := r.token1;
@@ -60,8 +65,19 @@ def conversion_rate_tokens_to_USDT(token, timestamp):
 class Backtest():
     def __init__(self):
         self.trades = None
+        self.account_value_history = []
+        self.foo = []
 
     def initialise_account(self, cointegrated_pair, account_size_in_USDT, start_timestamp):
+
+        if ((cointegrated_pair[0].split('_')[1] == cointegrated_pair[1].split('_')[1]) or (len(cointegrated_pair[1].split('_')) == 4 and cointegrated_pair[0].split('_')[1] == cointegrated_pair[1].split('_')[0])):
+            print('hey')
+            return {
+                'P1': (0, account_size_in_USDT / 2),
+                'P2': (0, account_size_in_USDT / 2),
+                'ETH': 0
+            }
+    
         p1_b = cointegrated_pair[0].split('_')[1]
         p2_b = cointegrated_pair[1].split('_')[1]
         rate_p1_b = get_best_conversion_rate_from_USDT(p1_b, start_timestamp)
@@ -75,7 +91,8 @@ class Backtest():
 
         return {
             'P1': (0, initial_account_p1_b),
-            'P2': (0, initial_account_p2_b)
+            'P2': (0, initial_account_p2_b),
+            'ETH': 0
         }
 
     def fetch_and_preprocess_data(self, cointegrated_pair, window_size_in_seconds):
@@ -151,9 +168,16 @@ class Backtest():
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} P2[1]')
 
-    def get_account_value_in_USDT(self, pair, account, timestamp, prices):
-        p1_b = account['P1'][1] + account['P1'][0] * prices['P1']
-        p2_b = account['P2'][1] + account['P2'][0] * prices['P2']
+    def get_account_value_in_USDT(self, pair, timestamp, prices):
+        p1_b = self.account['P1'][1] + self.account['P1'][0] * prices['P1']
+        p2_b = self.account['P2'][1] + self.account['P2'][0] * prices['P2']
+
+        if ((pair[0].split('_')[1] == pair[1].split('_')[1]) or (len(pair[1].split('_')) == 4 and pair[0].split('_')[1] == pair[1].split('_')[0])):
+            print(self.account)
+            eth_balance = self.account['ETH']
+            print(f'Account value excl. Gas {p1_b + p2_b} incl. Gas {p1_b + p2_b + eth_balance}')
+            return p1_b + p2_b + self.account['ETH']
+        
         p1_tokenb = pair[0].split('_')[1]
         p2_tokenb = pair[1].split('_')[1]
         conversion_rate_p1_b = conversion_rate_tokens_to_USDT(
@@ -179,23 +203,25 @@ class Backtest():
             'SELL': {}
         }
 
-        def close_buy_position(buy_id):
+        def close_buy_position(buy_id, gas_price_in_eth):
             buy_pair, bought_price, buy_volume = self.open_positions['BUY'][buy_id]
             position_a, position_b = self.account[buy_pair]
 
             self.account[buy_pair] = (
                 position_a - buy_volume, position_b + (prices[buy_pair] * buy_volume))
+            self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
             self.open_positions['BUY'].pop(buy_id)
         
-        def close_sell_position(sell_id):
+        def close_sell_position(sell_id, gas_price_in_eth):
             sell_pair, sold_price, sell_volume = self.open_positions['SELL'][sell_id]
             position_a, position_b = self.account[sell_pair]
 
             self.account[sell_pair] = (position_a + (sell_volume * (
                 (sold_price / prices[sell_pair]) - 1)), position_b - (sold_price * sell_volume))
+            self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
             self.open_positions['SELL'].pop(sell_id)
 
-
+        f = 0
         for i in history_remaining.index:
         # for i in tqdm(history_remaining.index):
             prices = {
@@ -206,8 +232,13 @@ class Backtest():
             signal = strategy.generate_signal(
                 {'open_positions': self.open_positions, 'account': self.account}, prices)
 
+            # self.account_value_history.append(self.get_account_value_in_USDT(cointegrated_pair, history_remaining.loc[i]['period_start_unix'], prices))
+            # self.foo.append(history_remaining_p1[i] - ratio * history_remaining_p2[i])
+
             if signal is None:
                 continue
+
+            gas_price_in_eth = ((history_remaining.loc[i]['p1_gas_price_wei'] + history_remaining.loc[i]['p2_gas_price_wei']) / 2) * 1e-18
 
             if 'SWAP' in signal:
                 if 'A' in signal['SWAP']:
@@ -216,6 +247,7 @@ class Backtest():
                         position_a, position_b = self.account[swap_pair]
                         self.account[swap_pair] = (position_a + swap_volume,
                                             position_b - (swap_volume * prices[swap_pair]))
+                        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
                         self.trades.append(
                             (str(len(self.trades)), 'SWAP FOR A', swap_pair, prices[swap_pair], swap_volume))
 
@@ -226,21 +258,25 @@ class Backtest():
                         position_a, position_b = self.account[swap_pair]
                         self.account[swap_pair] = (
                             position_a - (swap_volume / prices[swap_pair]), position_b + swap_volume)
+                        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
                         self.trades.append(
                             (str(len(self.trades)), 'SWAP FOR B', swap_pair, prices[swap_pair], swap_volume))
 
             if 'OPEN' in signal:
+                trades = []
+                next_id = len(self.trades)
                 for buy_order in signal['OPEN']['BUY']:
                     buy_pair, buy_volume = buy_order
                     position_a, position_b = self.account[buy_pair]
                     self.account[buy_pair] = (
                         position_a + buy_volume, position_b - (buy_volume * prices[buy_pair]))
 
-                    trade_id = str(len(self.trades))
-                    self.open_positions['BUY'][trade_id] = (
+                    self.open_positions['BUY'][str(next_id)] = (
                         buy_pair, prices[buy_pair], buy_volume)
-                    self.trades.append(
-                        (trade_id, 'BUY', buy_pair, prices[buy_pair], buy_volume))
+                    self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                    trades.append(
+                        (str(next_id), 'BUY', buy_pair, prices[buy_pair], buy_volume))
+                    next_id += 1
                     self.check_account('OPEN', 'BUY')
 
                 for sell_order in signal['OPEN']['SELL']:
@@ -248,30 +284,35 @@ class Backtest():
                     position_a, position_b = self.account[sell_pair]
                     self.account[sell_pair] = (
                         position_a, position_b + (sell_volume * prices[sell_pair]))
-                    trade_id = str(len(self.trades))
 
-                    self.open_positions['SELL'][trade_id] = (
+                    self.open_positions['SELL'][str(next_id)] = (
                         sell_pair, prices[sell_pair], sell_volume)
-                    self.trades.append(
-                        (trade_id, 'SELL', sell_pair, prices[sell_pair], sell_volume))
+                    self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
+                    trades.append(
+                        (str(next_id), 'SELL', sell_pair, prices[sell_pair], sell_volume))
+                    next_id += 1
                     self.check_account('OPEN', 'SELL')
+                
+                self.trades.append(trades)
 
             if 'CLOSE' in signal:
+                f += 1
                 for buy_id, _ in list(signal['CLOSE']['BUY'].items()):
-                    close_buy_position(buy_id=buy_id)
+                    close_buy_position(buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
                     self.check_account('CLOSE', 'BUY')
 
                 for sell_id, _ in list(signal['CLOSE']['SELL'].items()):
-                    close_sell_position(sell_id)
+                    close_sell_position(sell_id, gas_price_in_eth=gas_price_in_eth)
                     self.check_account('CLOSE', 'SELL')
+                # self.account_value_history.append(self.get_account_value_in_USDT(cointegrated_pair, history_remaining.loc[i]['period_start_unix'], prices))
 
         # Close open short positions
         if len(self.open_positions['SELL']) != 0:
             sell_positions = self.open_positions['SELL'].keys()
             for sell_id in list(sell_positions):
-                close_sell_position(sell_id)
-
-        account_value_in_usdt = self.get_account_value_in_USDT(cointegrated_pair, self.account, list(history_remaining['period_start_unix'])[-1], prices)
+                close_sell_position(sell_id, gas_price_in_eth=gas_price_in_eth)
+        
+        account_value_in_usdt = self.get_account_value_in_USDT(cointegrated_pair, list(history_remaining['period_start_unix'])[-1], prices)
         return_percent = ((account_value_in_usdt - initial_investment_in_USDT)
                           * 100 / initial_investment_in_USDT)
 
@@ -280,44 +321,67 @@ class Backtest():
 cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
-particular_idx = 10
+particular_idx = 0
 particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
                            1] if particular_idx is not None else cointegrated_pairs
 
+ps = []
+
+for p in pairs:   
+    if ((p[0].split('_')[1] == p[1].split('_')[1]) or (len(p[1].split('_')) == 4 and p[0].split('_')[1] == p[1].split('_')[0])):
+        ps.append(p)
+
+ps = pairs
+
 bad_pairs = []
 
-for cointegrated_pair in pairs:
+number_of_sds_from_mean = 1
+window_size_in_seconds= days_to_seconds(30)
+percent_to_invest = 1.00
+initial_investment = 1000
+
+for cointegrated_pair in ps:
     try:
         print(num)
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
-        mean_reversion_strategy = Mean_Reversion_Strategy(cointegrated_pair=cointegrated_pair,
-                                                          number_of_sds_from_mean=1,
-                                                          window_size_in_seconds=days_to_seconds(30),
-                                                          percent_to_invest=1)
+        mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                          window_size_in_seconds=window_size_in_seconds,
+                                                          percent_to_invest=percent_to_invest)
 
         backtest_mean_reversion = Backtest()
-        return_percent = backtest_mean_reversion.backtest_pair(cointegrated_pair, mean_reversion_strategy, 100)
+        return_percent = backtest_mean_reversion.backtest_pair(cointegrated_pair, mean_reversion_strategy, 1000)
         if return_percent > 0:
             print(f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_mean_reversion.trades)} trades")
         else:
             print(f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_mean_reversion.trades)} trades")
 
         kalman_filter_strategy = Kalman_Filter_Strategy(cointegrated_pair=cointegrated_pair,
-                                                        number_of_sds_from_mean=1,
-                                                        window_size_in_seconds=days_to_seconds(30),
-                                                        percent_to_invest=1)
+                                                        number_of_sds_from_mean=number_of_sds_from_mean,
+                                                        window_size_in_seconds=window_size_in_seconds,
+                                                        percent_to_invest=percent_to_invest)
 
         backtest_kalman_filter = Backtest()
-        return_percent = backtest_kalman_filter.backtest_pair(cointegrated_pair, kalman_filter_strategy, 100)
+        return_percent = backtest_kalman_filter.backtest_pair(cointegrated_pair, kalman_filter_strategy, initial_investment)
         if return_percent > 0:
             print(f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
         else:
             print(f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
 
+        # plt.plot(backtest_kalman_filter.account_value_history, label='account')
+
+        # _, axarr = plt.subplots(2, sharex=True)
+        # axarr[0].plot(backtest_mean_reversion.account_value_history, label='account')
+        # axarr[0].legend()
+        # axarr[1].plot(backtest_mean_reversion.foo, label='Spread')
+        # axarr[1].plot(mean_reversion_strategy.upper_thresholds[:1], label='upper')
+        # axarr[1].plot(mean_reversion_strategy.lower_thresholds[:1], label='lower')
+        # axarr[1].legend()
+        # plt.tight_layout()
+        # plt.show()
         print()
     except Exception as e:
         bad_pairs.append((cointegrated_pair))

@@ -4,9 +4,8 @@ import statsmodels.api as sm
 # from scipy import poly1d
 
 class Mean_Reversion_Strategy():
-    def __init__(self, cointegrated_pair, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest):
+    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest):
         self.number_of_sds_from_mean = number_of_sds_from_mean
-        self.cointegrated_pair = cointegrated_pair
         self.has_initialised_historical_data = False
         self.window_size_in_seconds = window_size_in_seconds
         self.window_size_in_hours = window_size_in_seconds // (60 * 60)
@@ -148,6 +147,7 @@ class Mean_Reversion_Strategy():
                         'SELL': [('P1', volume_to_trade['P1'] * self.percent_to_invest)]
                     }
                 }
+                return None
 
             elif spread < self.lower_threshold:
                 if amount_of_p2_b == 0:
@@ -172,5 +172,6 @@ class Mean_Reversion_Strategy():
                         'SELL': [('P2', volume_to_trade['P2'] * self.percent_to_invest)]
                     }
                 }
+                return None
             else:
                 return None
