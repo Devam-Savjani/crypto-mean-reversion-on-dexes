@@ -25,7 +25,10 @@ def calculate_pairs_sum_of_squared_differences(should_save=True):
             if ssd_1 < ssd_2:
                 key = (valid_liquidity_pools[i], valid_liquidity_pools[j])
             else:
-                key = (valid_liquidity_pools[i], f'{valid_liquidity_pools[j]}_swapped')
+                if valid_liquidity_pools[i][:4] == 'WETH':
+                    key = (valid_liquidity_pools[j], f'{valid_liquidity_pools[i]}_swapped')
+                else:
+                    key = (valid_liquidity_pools[i], f'{valid_liquidity_pools[j]}_swapped')
 
             liquidity_pool_pair_ssds[key] = min(ssd_1, ssd_2)
 
@@ -55,28 +58,8 @@ def is_cointegrated(p1, p2):
     if swapped:
         df2 = 1 / merged['p2_token1_price']
 
-    # Step 1: Test for unit roots
-    adf1 = adfuller(df1)
-    adf2 = adfuller(df2)
-
-    if adf1[0] < adf1[4]['5%'] and adf2[0] < adf2[4]['5%']:
-        # Both variables are stationary
-        return False
-    else:
-        # At least one variable is non-stationary, proceed to step 2
-
-        # Step 2: Test for cointegration
-        eg_test = sm.OLS(df1, sm.add_constant(df2)).fit()
-        resid = eg_test.resid
-
-        # Test the residuals for stationarity
-        resid_adf = adfuller(resid)
-        if resid_adf[0] < resid_adf[4]['5%']:
-            # The variables are cointegrated
-            return True
-        else:
-            # The variables are not cointegrated
-            return False
+    result = sm.tsa.stattools.coint(df1, df2)
+    return result[0] < result[2][0]
 
 def get_top_n_cointegrated_pairs(ssds, n=-1, should_save=False):
     cointegrated_pairs = []
