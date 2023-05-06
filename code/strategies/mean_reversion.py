@@ -144,7 +144,6 @@ class Mean_Reversion_Strategy():
                            GAS_USED_BY_LOAN) * gas_price_in_eth)
 
                 if account['WETH'] < tx_cost:
-                    print(account)
                     return None
 
                 VTL_T1 = 1
@@ -167,7 +166,6 @@ class Mean_Reversion_Strategy():
                            GAS_USED_BY_LOAN) * gas_price_in_eth)
 
                 if account['WETH'] < tx_cost:
-                    print(account)
                     return None
 
                 VTL_T2 = 1

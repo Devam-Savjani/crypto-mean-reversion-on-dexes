@@ -227,7 +227,6 @@ class Backtest():
                 
                 for buy_order in signal['OPEN']['BUY']:
                     buy_token, buy_volume = buy_order
-                    # print(buy_volume)
                     buy_price = prices[f'P{buy_token[1]}']
                     self.account[buy_token] = self.account[buy_token] + buy_volume
                     self.account['WETH'] = self.account['WETH'] - \
@@ -272,8 +271,8 @@ class Backtest():
 cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
-particular_idx = None
 particular_idx = 0
+particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
@@ -313,19 +312,19 @@ for cointegrated_pair in ps:
             print(
                 f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_mean_reversion.trades)} trades")
 
-        # kalman_filter_strategy = Kalman_Filter_Strategy(cointegrated_pair=cointegrated_pair,
-        #                                                 number_of_sds_from_mean=number_of_sds_from_mean,
-        #                                                 window_size_in_seconds=window_size_in_seconds,
-        #                                                 percent_to_invest=percent_to_invest)
+        kalman_filter_strategy = Kalman_Filter_Strategy(cointegrated_pair=cointegrated_pair,
+                                                        number_of_sds_from_mean=number_of_sds_from_mean,
+                                                        window_size_in_seconds=window_size_in_seconds,
+                                                        percent_to_invest=percent_to_invest)
 
-        # backtest_kalman_filter = Backtest()
-        # return_percent = backtest_kalman_filter.backtest_pair(cointegrated_pair, kalman_filter_strategy, initial_investment)
-        # if return_percent > 0:
-        #     print(f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
-        # else:
-        #     print(f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+        backtest_kalman_filter = Backtest()
+        return_percent = backtest_kalman_filter.backtest_pair(cointegrated_pair, kalman_filter_strategy, initial_investment)
+        if return_percent > 0:
+            print(f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+        else:
+            print(f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
 
-        plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history, label='account')
+        # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history, label='account')
         # _, axarr = plt.subplots(2, sharex=True)
         # axarr[0].plot(backtest_mean_reversion.account_value_history, label='account')
         # axarr[0].legend()
@@ -334,7 +333,7 @@ for cointegrated_pair in ps:
         # axarr[1].plot(mean_reversion_strategy.lower_thresholds[:1], label='lower')
         # axarr[1].legend()
         # plt.tight_layout()
-        plt.show()
+        # plt.show()
         print()
     except Exception as e:
         bad_pairs.append((cointegrated_pair))
