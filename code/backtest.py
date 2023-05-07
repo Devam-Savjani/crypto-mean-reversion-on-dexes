@@ -312,8 +312,7 @@ for cointegrated_pair in ps:
             print(
                 f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_mean_reversion.trades)} trades")
 
-        kalman_filter_strategy = Kalman_Filter_Strategy(cointegrated_pair=cointegrated_pair,
-                                                        number_of_sds_from_mean=number_of_sds_from_mean,
+        kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest)
 
