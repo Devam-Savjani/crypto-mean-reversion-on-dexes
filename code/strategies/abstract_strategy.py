@@ -1,10 +1,4 @@
 import numpy as np
-from pykalman import KalmanFilter
-from sklearn.preprocessing import StandardScaler
-import pandas as pd
-from scipy import poly1d
-import statsmodels.api as sm
-import matplotlib.pyplot as plt
 
 GAS_USED_BY_SWAP = 150000
 GAS_USED_BY_LOAN = 100000
