@@ -27,7 +27,7 @@ class Mean_Reversion_Strategy(abstract_strategy.Abstract_Strategy):
         self.hedge_ratio = self.calculate_hedge_ratio()
         self.recalculate_thresholds()
 
-    def recalculate_thresholds(self):
+    def recalculate_thresholds(self, has_trade=False):
         spread = self.history_p1[-self.window_size_in_hours:] - \
             self.hedge_ratio * self.history_p2[-self.window_size_in_hours:]
         spread_mean = spread.mean()

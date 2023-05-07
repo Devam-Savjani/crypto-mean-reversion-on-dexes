@@ -27,10 +27,10 @@ class Abstract_Strategy():
         self.lower_thresholds = []
         self.has_initialised_historical_data = True
     
-    def recalculate_thresholds(self):
+    def recalculate_thresholds(self, has_trade=False):
         raise NotImplementedError("recalculate_thresholds not implemented")
     
-    def new_tick(self, price_of_pair1, price_of_pair2):
+    def new_tick(self, price_of_pair1, price_of_pair2, has_trade):
         if not self.has_initialised_historical_data:
             raise Exception(f'{self.strategy_name} not initialised with historical data')
 
@@ -51,7 +51,7 @@ class Abstract_Strategy():
         price_of_pair1 = prices['P1']
         price_of_pair2 = prices['P2']
 
-        self.new_tick(price_of_pair1, price_of_pair2)
+        self.new_tick(price_of_pair1, price_of_pair2, has_trade)
         spread = price_of_pair1 - self.hedge_ratio * price_of_pair2
 
         if has_trade:

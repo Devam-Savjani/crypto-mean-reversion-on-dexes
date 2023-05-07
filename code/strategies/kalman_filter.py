@@ -69,19 +69,20 @@ class Kalman_Filter_Strategy(abstract_strategy.Abstract_Strategy):
         self.lower_thresholds.append(
             spread_mean - self.number_of_sds_from_mean * spread_std)
 
-    def recalculate_thresholds(self):
-        self.update_hedge_ratio()
-        spread = self.history_p1[-self.window_size_in_hours:] - \
-            self.hedge_ratio * self.history_p2[-self.window_size_in_hours:]
-        spread_mean = spread.mean()
-        spread_std = spread.std()
+    def recalculate_thresholds(self, has_trade=False):
+        if not has_trade:
+            self.update_hedge_ratio()
+            spread = self.history_p1[-self.window_size_in_hours:] - \
+                self.hedge_ratio * self.history_p2[-self.window_size_in_hours:]
+            spread_mean = spread.mean()
+            spread_std = spread.std()
 
-        self.upper_threshold = spread_mean + self.number_of_sds_from_mean * spread_std
-        self.lower_threshold = spread_mean - self.number_of_sds_from_mean * spread_std
-        self.upper_thresholds.append(
-            spread_mean + self.number_of_sds_from_mean * spread_std)
-        self.lower_thresholds.append(
-            spread_mean - self.number_of_sds_from_mean * spread_std)
+            self.upper_threshold = spread_mean + self.number_of_sds_from_mean * spread_std
+            self.lower_threshold = spread_mean - self.number_of_sds_from_mean * spread_std
+            self.upper_thresholds.append(
+                spread_mean + self.number_of_sds_from_mean * spread_std)
+            self.lower_thresholds.append(
+                spread_mean - self.number_of_sds_from_mean * spread_std)
         
     def update_hedge_ratio(self):
         p1, p2 = self.history_p1, self.history_p2
