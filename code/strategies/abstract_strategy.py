@@ -4,6 +4,7 @@ GAS_USED_BY_SWAP = 150000
 GAS_USED_BY_LOAN = 100000
 GAS_USED = (2 * GAS_USED_BY_SWAP) + GAS_USED_BY_LOAN
 
+
 class Abstract_Strategy():
     def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name):
         self.number_of_sds_from_mean = number_of_sds_from_mean
@@ -20,13 +21,14 @@ class Abstract_Strategy():
         self.upper_thresholds = []
         self.lower_thresholds = []
         self.has_initialised_historical_data = True
-    
+
     def recalculate_thresholds(self, has_trade=False):
         raise NotImplementedError("recalculate_thresholds not implemented")
-    
+
     def new_tick(self, price_of_pair1, price_of_pair2, has_trade):
         if not self.has_initialised_historical_data:
-            raise Exception(f'{self.strategy_name} not initialised with historical data')
+            raise Exception(
+                f'{self.strategy_name} not initialised with historical data')
 
         self.history_p1 = np.append(self.history_p1, price_of_pair1)
         self.history_p2 = np.append(self.history_p2, price_of_pair2)
@@ -38,6 +40,9 @@ class Abstract_Strategy():
         open_positions = ctx['open_positions']
         account = ctx['account']
         gas_price_in_eth = ctx['gas_price_in_eth']
+        timestamp = ctx['timestamp']
+        apy = ctx['apy']
+        vtl = ctx['vtl']
 
         has_trade = (len(open_positions['BUY']) +
                      len(open_positions['SELL'])) > 0
@@ -57,22 +62,30 @@ class Abstract_Strategy():
 
                 if 'SELL' in open_positions:
                     for sell_position in open_positions['SELL'].values():
-                        sell_token, sold_price, sell_volume = sell_position
+                        sell_token, sold_price, sell_volume, sell_timestamp = sell_position
                         position_token = account[sell_token]
                         current_token_price = prices[f'P{sell_token[1]}']
 
-                        if position_token + (sell_volume * ((sold_price / current_token_price) - 1)) < 0:
-                            swap_for_a.append((sell_token, abs(
-                                position_token + (sell_volume * ((sold_price / current_token_price) - 1)))))
+                        number_of_hours = (
+                            timestamp - sell_timestamp) / (60 * 60)
+                        hourly_yield = (1 + apy[sell_token])**(1 / (365*24)) - 1
 
-                        if account['WETH'] - (sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth) < 0:
-                            n = len(open_positions['BUY'].values()) + len(swap_for_a) + 1
+                        new_token_balance = position_token + (sell_volume * ((sold_price / current_token_price) - 1)) - sell_volume * (hourly_yield ** number_of_hours)
+
+                        if new_token_balance < 0:
+                            swap_for_a.append((sell_token, abs(new_token_balance)))
+
+                        new_eth_balance = account['WETH'] - (sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
+
+                        if new_eth_balance < 0:
+                            n = len(
+                                open_positions['BUY'].values()) + len(swap_for_a) + len(swap_for_b) + 1
                             swap_for_b.append(
-                                (sell_token, abs(account['WETH'] - (sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
-                
+                                (sell_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
+
                 if 'BUY' in open_positions:
                     for buy_position in open_positions['BUY'].values():
-                        buy_token, _, buy_volume = buy_position
+                        buy_token, _, buy_volume, buy_timestamp = buy_position
                         if account[buy_token] - buy_volume < 0:
                             swap_for_a.append(
                                 (buy_token, abs(account[buy_token] - buy_volume)))
@@ -95,7 +108,6 @@ class Abstract_Strategy():
                 swap_for_b.append(('T1', account['T1'] * prices['P1']))
                 swap_for_b.append(('T2', account['T2'] * prices['P2']))
 
-
             if spread > self.upper_threshold:
                 tx_cost = ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP +
                            GAS_USED_BY_LOAN) * gas_price_in_eth)
@@ -103,12 +115,11 @@ class Abstract_Strategy():
                 if account['WETH'] < tx_cost:
                     return None
 
-                VTL_T1 = 1
                 volume_a = (account['WETH'] - tx_cost) / (((volume_ratios_of_pairs['T2'] /
-                                                            volume_ratios_of_pairs['T1']) * prices['P2']) + VTL_T1 * prices['P1'])
+                                                            volume_ratios_of_pairs['T1']) * prices['P2']) + vtl['T1'] * prices['P1'])
                 volume_b = (
                     volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1']) * volume_a
-                
+
                 self.account_history.append(account)
 
                 return {
@@ -125,9 +136,8 @@ class Abstract_Strategy():
                 if account['WETH'] < tx_cost:
                     return None
 
-                VTL_T2 = 1
                 volume_b = (account['WETH'] - tx_cost) / (((volume_ratios_of_pairs['T1'] /
-                                                            volume_ratios_of_pairs['T2']) * prices['P1']) + VTL_T2 * prices['P2'])
+                                                            volume_ratios_of_pairs['T2']) * prices['P1']) + vtl['T2'] * prices['P2'])
                 volume_a = (
                     volume_ratios_of_pairs['T1'] / volume_ratios_of_pairs['T2']) * volume_b
 
