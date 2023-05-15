@@ -42,7 +42,7 @@ class Abstract_Strategy():
         gas_price_in_eth = ctx['gas_price_in_eth']
         timestamp = ctx['timestamp']
         apy = ctx['apy']
-        vtl = ctx['vtl']
+        vtl_eth = ctx['vtl_eth']
 
         has_trade = (len(open_positions['BUY']) +
                      len(open_positions['SELL'])) > 0
@@ -75,13 +75,16 @@ class Abstract_Strategy():
                         if new_token_balance < 0:
                             swap_for_a.append((sell_token, abs(new_token_balance)))
 
-                        new_eth_balance = account['WETH'] - (sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
+                        new_eth_balance = account['WETH'] + account['collateral_WETH'] - (sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
 
                         if new_eth_balance < 0:
-                            n = len(
-                                open_positions['BUY'].values()) + len(swap_for_a) + len(swap_for_b) + 1
-                            swap_for_b.append(
-                                (sell_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
+                            n = len(open_positions['BUY'].values()) + len(swap_for_a) + len(swap_for_b) + 1
+                            if account[sell_token] - (abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)) / prices[f'P{sell_token[1]}'] < 0:
+                                swap_for_b.append(
+                                    (buy_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
+                            else:
+                                swap_for_b.append(
+                                    (sell_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
 
                 if 'BUY' in open_positions:
                     for buy_position in open_positions['BUY'].values():
@@ -116,9 +119,11 @@ class Abstract_Strategy():
                     return None
 
                 volume_a = (account['WETH'] - tx_cost) / (((volume_ratios_of_pairs['T2'] /
-                                                            volume_ratios_of_pairs['T1']) * prices['P2']) + vtl['T1'] * prices['P1'])
+                                                            volume_ratios_of_pairs['T1']) * prices['P2']) + (vtl_eth * prices['P1']))
                 volume_b = (
                     volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1']) * volume_a
+                
+                # volume_a = vtl_eth * volume_a
 
                 self.account_history.append(account)
 
@@ -137,9 +142,11 @@ class Abstract_Strategy():
                     return None
 
                 volume_b = (account['WETH'] - tx_cost) / (((volume_ratios_of_pairs['T1'] /
-                                                            volume_ratios_of_pairs['T2']) * prices['P1']) + vtl['T2'] * prices['P2'])
+                                                            volume_ratios_of_pairs['T2']) * prices['P1']) + (vtl_eth * prices['P2']))
                 volume_a = (
                     volume_ratios_of_pairs['T1'] / volume_ratios_of_pairs['T2']) * volume_b
+
+                # volume_b = vtl_eth * volume_b
 
                 self.account_history.append(account)
 
