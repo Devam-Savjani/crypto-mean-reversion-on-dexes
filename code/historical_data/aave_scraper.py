@@ -6,6 +6,7 @@ from tqdm import tqdm
 from datetime import datetime
 from database_interactions import table_to_df, drop_table, create_table, insert_rows, drop_all_tables_except_table
 
+
 def get_block_data(symbol, gq_client, prev_max_time=0):
     rows_set = None
     try:
@@ -20,6 +21,7 @@ def get_block_data(symbol, gq_client, prev_max_time=0):
                             symbol
                             lifetimeBorrows
                             baseLTVasCollateral
+                            reserveLiquidationThreshold
                             borrowHistory(
                                 where: {timestamp_gt: $prev_max_time}, first: 1000, orderBy: timestamp, orderDirection: asc) {
                                 id
@@ -40,7 +42,7 @@ def get_block_data(symbol, gq_client, prev_max_time=0):
                     f'Error fetching reserve data: {str(reserveData)}')
 
             rows_set.update({hourData['id']: tuple([hourData['id'], hourData['timestamp'], ((1 + ((int(hourData['borrowRate']) * 1e-27) / 31536000))
-                            ** 31536000) - 1] + [int(json.loads(result)['data']['reserves'][0]['baseLTVasCollateral']) * 1e-4]) for hourData in reserveData})
+                            ** 31536000) - 1] + [int(json.loads(result)['data']['reserves'][0]['baseLTVasCollateral']) * 1e-4, int(json.loads(result)['data']['reserves'][0]['reserveLiquidationThreshold']) * 1e-4]) for hourData in reserveData})
 
             data_length = len(reserveData)
             prev_max_time = reserveData[-1]['timestamp'] if data_length > 0 else prev_max_time
@@ -77,7 +79,7 @@ def reinitialise_borrowing_rates_data():
         if len(rows) > 0:
             drop_table(table_name)
             create_table(table_name, [('id', 'VARCHAR(255)'), ('timestamp',
-                         'BIGINT'), ('borrow_rate', 'NUMERIC'), ('LTV', 'NUMERIC')])
+                         'BIGINT'), ('borrow_rate', 'NUMERIC'), ('LTV', 'NUMERIC'), ('liquidation_threshold', 'NUMERIC')])
             insert_rows(table_name, rows)
 
 
