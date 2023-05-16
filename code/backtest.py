@@ -181,47 +181,89 @@ class Backtest():
                 self.get_account_value_in_WETH(prices))
             self.times.append(history_remaining['period_start_unix'][i])
 
-            if 'DEPOSIT' in signal:
-                self.account['WETH'] = self.account['WETH'] - signal['DEPOSIT']
-                self.account['collateral_WETH'] = self.account['collateral_WETH'] + signal['DEPOSIT']
-                self.check_account('DEPOSIT', f'WETH')
+            for order in signal:
+                order_type = order[0]
 
-            if 'SWAP' in signal:
-                if 'A' in signal['SWAP']:
-                    for swap_for_a in signal['SWAP']['A']:
-                        swap_token, swap_volume = swap_for_a
-                        swap_price = prices[f'P{swap_token[1]}']
-                        self.account[swap_token] = self.account[swap_token] + swap_volume
+                if order_type == 'DEPOSIT':
+                    deposit_amount = order[1]
+                    self.account['WETH'] = self.account['WETH'] - deposit_amount
+                    self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
+                    self.check_account('DEPOSIT', f'WETH')
+
+                elif order_type == 'SWAP':
+                    target_token, swaps = order[1]
+                    if target_token == 'A':
+                        for swap_for_a in swaps:
+                            swap_token, swap_volume = swap_for_a
+                            swap_price = prices[f'P{swap_token[1]}']
+                            self.account[swap_token] = self.account[swap_token] + swap_volume
+                            self.account['WETH'] = self.account['WETH'] - \
+                                (swap_volume * swap_price) - \
+                                (GAS_USED_BY_SWAP * gas_price_in_eth)
+                            self.trades.append(
+                                (str(len(self.trades)), 'SWAP FOR A', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
+                            self.check_account('SWAP', f'A {swap_token}')
+
+                    elif target_token == 'B':
+                        for swap_for_b in swaps:
+                            swap_token, swap_volume = swap_for_b
+                            swap_price = prices[f'P{swap_token[1]}']
+                            self.account[swap_token] = self.account[swap_token] - \
+                                (swap_volume / swap_price)
+                            self.account['WETH'] = self.account['WETH'] + \
+                                swap_volume - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                            self.trades.append(
+                                (str(len(self.trades)), 'SWAP FOR B', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
+                            self.check_account('SWAP', f'B {swap_token}')
+                
+                elif order_type == 'CLOSE':
+                    positions_to_close = order[1]
+                    for buy_id, _ in list(positions_to_close['BUY'].items()):
+                        close_buy_position(
+                            buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
+                        self.check_account('CLOSE', f'BUY {buy_id}')
+
+                    for sell_id, _ in list(positions_to_close['SELL'].items()):
+                        close_sell_position(
+                            sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=history_remaining['period_start_unix'][i])
+                        self.check_account('CLOSE', f'SELL {sell_id}')
+
+                elif order_type == 'OPEN':
+                    open_type, token, volume = order[1]
+                    next_id = len(self.trades)
+                    if open_type == 'BUY':
+                        buy_price = prices[f'P{token[1]}']
+                        self.account[token] = self.account[token] + volume
                         self.account['WETH'] = self.account['WETH'] - \
-                            (swap_volume * swap_price) - \
+                            (volume * buy_price) - \
                             (GAS_USED_BY_SWAP * gas_price_in_eth)
-                        self.trades.append(
-                            (str(len(self.trades)), 'SWAP FOR A', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
-                        self.check_account('SWAP', f'A {swap_token}')
 
-                if 'B' in signal['SWAP']:
-                    for swap_for_b in signal['SWAP']['B']:
-                        swap_token, swap_volume = swap_for_b
-                        swap_price = prices[f'P{swap_token[1]}']
-                        self.account[swap_token] = self.account[swap_token] - \
-                            (swap_volume / swap_price)
+                        self.open_positions['BUY'][str(next_id)] = (
+                            token, buy_price, volume, history_remaining['period_start_unix'][i])
+                        self.trades.append(
+                            (str(next_id), 'BUY', token, buy_price, volume, history_remaining['period_start_unix'][i]))
+
+                        self.check_account('OPEN', f'BUY {token}')
+                    elif open_type == 'SELL':
+                        sell_price = prices[f'P{token[1]}']
+
+                        # Borrow Token from Aave
+                        self.account[token] = self.account[token] + volume
+                        self.account['WETH'] = self.account['WETH'] - (GAS_USED_BY_LOAN * gas_price_in_eth) - ((volume * sell_price) / vtl_eth)
+                        self.account['collateral_WETH'] = self.account['collateral_WETH'] + ((volume * sell_price) / vtl_eth)
+
+                        # Swap borrowed tokens to WETH
+                        self.account[token] = self.account[token] - volume
                         self.account['WETH'] = self.account['WETH'] + \
-                            swap_volume - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                            (volume * sell_price) - \
+                            (GAS_USED_BY_SWAP * gas_price_in_eth)
+
+                        self.open_positions['SELL'][str(next_id)] = (
+                            token, sell_price, volume, history_remaining['period_start_unix'][i])
                         self.trades.append(
-                            (str(len(self.trades)), 'SWAP FOR B', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
-                        self.check_account('SWAP', f'B {swap_token}')
+                            (str(next_id), 'SELL', token, sell_price, volume, history_remaining['period_start_unix'][i]))
 
-            if 'CLOSE' in signal:
-                for buy_id, _ in list(signal['CLOSE']['BUY'].items()):
-                    close_buy_position(
-                        buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
-                    self.check_account('CLOSE', f'BUY {buy_id}')
-
-                for sell_id, _ in list(signal['CLOSE']['SELL'].items()):
-                    close_sell_position(
-                        sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=history_remaining['period_start_unix'][i])
-                    self.check_account('CLOSE', f'SELL {sell_id}')
-                # self.account_value_history.append(self.get_account_value_in_WETH(cointegrated_pair, history_remaining.loc[i]['period_start_unix'], prices))
+                        self.check_account('OPEN', f'SELL {token}')
 
             for sell_trade in self.open_positions['SELL'].values():
                 sell_token, sold_price, sell_volume, _ = sell_trade
@@ -230,51 +272,6 @@ class Backtest():
                 if curr_value_of_loan_pct > liquidation_threshold:
                     print(self.account)
                     raise Exception(f'Short position liquidated')
-
-            if 'OPEN' in signal:
-                trades = []
-                next_id = len(self.trades)
-
-                for sell_order in signal['OPEN']['SELL']:
-                    sell_token, sell_volume = sell_order
-                    sell_price = prices[f'P{sell_token[1]}']
-
-                    # Borrow Token from Aave
-                    self.account[sell_token] = self.account[sell_token] + sell_volume
-                    self.account['WETH'] = self.account['WETH'] - (GAS_USED_BY_LOAN * gas_price_in_eth) - ((sell_volume * sell_price) / vtl_eth)
-                    self.account['collateral_WETH'] = self.account['collateral_WETH'] + ((sell_volume * sell_price) / vtl_eth)
-
-                    # Swap borrowed tokens to WETH
-                    self.account[sell_token] = self.account[sell_token] - sell_volume
-                    self.account['WETH'] = self.account['WETH'] + \
-                        (sell_volume * sell_price) - \
-                        (GAS_USED_BY_SWAP * gas_price_in_eth)
-
-                    self.open_positions['SELL'][str(next_id)] = (
-                        sell_token, sell_price, sell_volume, history_remaining['period_start_unix'][i])
-                    trades.append(
-                        (str(next_id), 'SELL', sell_token, sell_price, sell_volume, history_remaining['period_start_unix'][i]))
-
-                    next_id += 1
-                    self.check_account('OPEN', f'SELL {sell_token}')
-
-                for buy_order in signal['OPEN']['BUY']:
-                    buy_token, buy_volume = buy_order
-                    buy_price = prices[f'P{buy_token[1]}']
-                    self.account[buy_token] = self.account[buy_token] + buy_volume
-                    self.account['WETH'] = self.account['WETH'] - \
-                        (buy_volume * buy_price) - \
-                        (GAS_USED_BY_SWAP * gas_price_in_eth)
-
-                    self.open_positions['BUY'][str(next_id)] = (
-                        buy_token, buy_price, buy_volume, history_remaining['period_start_unix'][i])
-                    trades.append(
-                        (str(next_id), 'BUY', buy_token, buy_price, buy_volume, history_remaining['period_start_unix'][i]))
-
-                    next_id += 1
-                    self.check_account('OPEN', f'BUY {buy_token}')
-
-                self.trades.append(trades)
 
         # Close open short positions
         if len(self.open_positions['SELL']) != 0:
@@ -319,6 +316,7 @@ for cointegrated_pair in pairs:
         print(num)
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
+
         mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                           window_size_in_seconds=window_size_in_seconds,
                                                           percent_to_invest=percent_to_invest)
