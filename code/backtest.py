@@ -173,15 +173,18 @@ class Backtest():
                     'gas_price_in_eth': gas_price_in_eth,
                     'timestamp': history_remaining['period_start_unix'][i],
                     'apy': apy,
-                    'vtl_eth': vtl_eth
+                    'vtl_eth': vtl_eth,
+                    'liquidation_threshold': liquidation_threshold
                 }, prices)
 
             self.account_value_history.append(
                 self.get_account_value_in_WETH(prices))
             self.times.append(history_remaining['period_start_unix'][i])
 
-            if signal is None:
-                continue
+            if 'DEPOSIT' in signal:
+                self.account['WETH'] = self.account['WETH'] - signal['DEPOSIT']
+                self.account['collateral_WETH'] = self.account['collateral_WETH'] + signal['DEPOSIT']
+                self.check_account('DEPOSIT', f'WETH')
 
             if 'SWAP' in signal:
                 if 'A' in signal['SWAP']:
@@ -207,6 +210,26 @@ class Backtest():
                         self.trades.append(
                             (str(len(self.trades)), 'SWAP FOR B', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
                         self.check_account('SWAP', f'B {swap_token}')
+
+            if 'CLOSE' in signal:
+                for buy_id, _ in list(signal['CLOSE']['BUY'].items()):
+                    close_buy_position(
+                        buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
+                    self.check_account('CLOSE', f'BUY {buy_id}')
+
+                for sell_id, _ in list(signal['CLOSE']['SELL'].items()):
+                    close_sell_position(
+                        sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=history_remaining['period_start_unix'][i])
+                    self.check_account('CLOSE', f'SELL {sell_id}')
+                # self.account_value_history.append(self.get_account_value_in_WETH(cointegrated_pair, history_remaining.loc[i]['period_start_unix'], prices))
+
+            for sell_trade in self.open_positions['SELL'].values():
+                sell_token, sold_price, sell_volume, _ = sell_trade
+                current_token_price = prices[f'P{sell_token[1]}']
+                curr_value_of_loan_pct = (sell_volume * current_token_price) / self.account['collateral_WETH']
+                if curr_value_of_loan_pct > liquidation_threshold:
+                    print(self.account)
+                    raise Exception(f'Short position liquidated')
 
             if 'OPEN' in signal:
                 trades = []
@@ -253,18 +276,6 @@ class Backtest():
 
                 self.trades.append(trades)
 
-            if 'CLOSE' in signal:
-                for buy_id, _ in list(signal['CLOSE']['BUY'].items()):
-                    close_buy_position(
-                        buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
-                    self.check_account('CLOSE', f'BUY {buy_id}')
-
-                for sell_id, _ in list(signal['CLOSE']['SELL'].items()):
-                    close_sell_position(
-                        sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=history_remaining['period_start_unix'][i])
-                    self.check_account('CLOSE', f'SELL {sell_id}')
-                # self.account_value_history.append(self.get_account_value_in_WETH(cointegrated_pair, history_remaining.loc[i]['period_start_unix'], prices))
-
         # Close open short positions
         if len(self.open_positions['SELL']) != 0:
             sell_positions = self.open_positions['SELL'].keys()
@@ -289,7 +300,7 @@ for p in cointegrated_pairs:
     if ((p[0].split('_')[1] == p[1].split('_')[1]) or (len(p[1].split('_')) == 4 and p[0].split('_')[1] == p[1].split('_')[0])) and p[0].split('_')[1] == 'WETH':
         ps.append(p)
 
-particular_idx = 8
+particular_idx = 0
 particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
@@ -353,6 +364,7 @@ for cointegrated_pair in pairs:
     except Exception as e:
         bad_pairs.append((cointegrated_pair))
         print(e)
+        # print(kalman_filter_strategy.account_history[-1])
         print()
     finally:
         pass

@@ -43,6 +43,7 @@ class Abstract_Strategy():
         timestamp = ctx['timestamp']
         apy = ctx['apy']
         vtl_eth = ctx['vtl_eth']
+        liquidation_threshold = ctx['liquidation_threshold']
 
         has_trade = (len(open_positions['BUY']) +
                      len(open_positions['SELL'])) > 0
@@ -54,11 +55,27 @@ class Abstract_Strategy():
         spread = price_of_pair1 - self.hedge_ratio * price_of_pair2
 
         if has_trade:
+            should_deposit_more = False
+            for sell_trade in open_positions['SELL'].values():
+                sell_token, sold_price, sell_volume, _ = sell_trade
+                current_token_price = prices[f'P{sell_token[1]}']
+                collatoral = sell_volume * sold_price / vtl_eth
+                curr_value_of_loan_pct = (sell_volume * current_token_price) / collatoral
+                if curr_value_of_loan_pct > liquidation_threshold:
+                    should_deposit_more = True
+
             if spread < self.upper_threshold and spread > self.lower_threshold:
                 self.account_history.append(account)
 
                 swap_for_a = []
                 swap_for_b = []
+
+                if 'BUY' in open_positions:
+                    for buy_position in open_positions['BUY'].values():
+                        buy_token, _, buy_volume, buy_timestamp = buy_position
+                        if account[buy_token] - buy_volume < 0:
+                            swap_for_a.append(
+                                (buy_token, abs(account[buy_token] - buy_volume)))
 
                 if 'SELL' in open_positions:
                     for sell_position in open_positions['SELL'].values():
@@ -86,13 +103,6 @@ class Abstract_Strategy():
                                 swap_for_b.append(
                                     (sell_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
 
-                if 'BUY' in open_positions:
-                    for buy_position in open_positions['BUY'].values():
-                        buy_token, _, buy_volume, buy_timestamp = buy_position
-                        if account[buy_token] - buy_volume < 0:
-                            swap_for_a.append(
-                                (buy_token, abs(account[buy_token] - buy_volume)))
-
                 return {
                     'CLOSE': open_positions,
                     'SWAP': {
@@ -100,6 +110,12 @@ class Abstract_Strategy():
                         'B': swap_for_b
                     }
                 }
+
+            if should_deposit_more:
+                    return {'DEPOSIT': 0.1* account['WETH']}
+            
+            return {}
+
         else:
             volume_ratios_of_pairs = {
                 'T1': (1 if self.hedge_ratio > 0 else -self.hedge_ratio),
@@ -107,7 +123,7 @@ class Abstract_Strategy():
             }
 
             swap_for_b = []
-            if account['WETH'] < 0.1:
+            if account['WETH'] < 10:
                 swap_for_b.append(('T1', account['T1'] * prices['P1']))
                 swap_for_b.append(('T2', account['T2'] * prices['P2']))
 
@@ -116,48 +132,68 @@ class Abstract_Strategy():
                            GAS_USED_BY_LOAN) * gas_price_in_eth)
 
                 if account['WETH'] < tx_cost:
-                    return None
-
-                volume_a = (account['WETH'] - tx_cost) / (((volume_ratios_of_pairs['T2'] /
-                                                            volume_ratios_of_pairs['T1']) * prices['P2']) + (vtl_eth * prices['P1']))
-                volume_b = (
-                    volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1']) * volume_a
+                    return {}
                 
-                # volume_a = vtl_eth * volume_a
+                volume_ratio_coeff = (volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1'])
+                volume_a = (account['WETH'] - tx_cost) / ((volume_ratio_coeff * prices['P2']) + (prices['P1'] / vtl_eth))
+                volume_b = volume_ratio_coeff * volume_a
+                
+                # f = account['WETH'] - tx_cost - (volume_a * price_of_pair1 / vtl_eth) - volume_b * price_of_pair2
+
+                # print(f'Collatoral Strat: {(volume_a * price_of_pair1 / vtl_eth)}')
+                # print(f)
+                # print(self.hedge_ratio - (volume_b / volume_a))
 
                 self.account_history.append(account)
-
-                return {
-                    'OPEN': {
-                        'BUY': [('T2', volume_b * self.percent_to_invest)],
-                        'SELL': [('T1', volume_a * self.percent_to_invest)]
+                if len(swap_for_b) > 0:
+                    return {
+                        'OPEN': {
+                            'BUY': [('T2', volume_b * self.percent_to_invest)],
+                            'SELL': [('T1', volume_a * self.percent_to_invest)]
+                        },
+                        'SWAP': {
+                            'B': swap_for_b
+                        }
                     }
-                }
+                
+                return {
+                        'OPEN': {
+                            'BUY': [('T2', volume_b * self.percent_to_invest)],
+                            'SELL': [('T1', volume_a * self.percent_to_invest)]
+                        }
+                    }
 
             elif spread < self.lower_threshold:
                 tx_cost = ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP +
                            GAS_USED_BY_LOAN) * gas_price_in_eth)
 
                 if account['WETH'] < tx_cost:
-                    return None
+                    return {}
+                
+                volume_ratio_coeff = volume_ratios_of_pairs['T1'] / volume_ratios_of_pairs['T2']
 
-                volume_b = (account['WETH'] - tx_cost) / (((volume_ratios_of_pairs['T1'] /
-                                                            volume_ratios_of_pairs['T2']) * prices['P1']) + (vtl_eth * prices['P2']))
-                volume_a = (
-                    volume_ratios_of_pairs['T1'] / volume_ratios_of_pairs['T2']) * volume_b
-
-                # volume_b = vtl_eth * volume_b
+                volume_b = (account['WETH'] - tx_cost) / ((volume_ratio_coeff * prices['P1']) + (prices['P2'] / vtl_eth))
+                volume_a = volume_ratio_coeff * volume_b
 
                 self.account_history.append(account)
 
-                return {
-                    'OPEN': {
-                        'BUY': [('T1', volume_a * self.percent_to_invest)],
-                        'SELL': [('T2', volume_b * self.percent_to_invest)]
-                    },
-                    'SWAP': {
-                        'B': swap_for_b
+                if len(swap_for_b) > 0:
+                    return {
+                        'OPEN': {
+                            'BUY': [('T1', volume_a * self.percent_to_invest)],
+                            'SELL': [('T2', volume_b * self.percent_to_invest)]
+                        },
+                        'SWAP': {
+                            'B': swap_for_b
+                        }
                     }
-                }
+                
+                return {
+                        'OPEN': {
+                            'BUY': [('T1', volume_a * self.percent_to_invest)],
+                            'SELL': [('T2', volume_b * self.percent_to_invest)]
+                        }
+                    }
+                
             else:
-                return None
+                return {}
