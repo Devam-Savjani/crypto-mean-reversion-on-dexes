@@ -61,23 +61,23 @@ class Backtest():
 
         return history_arg, history_remaining
 
-    def check_account(self, open_or_close, buy_or_sell, should_print_account=True):
+    def check_account(self, open_or_close, buy_or_sell, should_print_account=True, signal=None):
         negative_threshold = -1e-10
         if self.account['T1'] < negative_threshold:
             if should_print_account:
-                print(self.account)
+                print(self.account, signal)
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} T1')
 
         if self.account['T2'] < negative_threshold:
             if should_print_account:
-                print(self.account)
+                print(self.account, signal)
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} T2')
 
         if self.account['WETH'] < negative_threshold:
             if should_print_account:
-                print(self.account)
+                print(self.account, signal)
             raise Exception(
                 f'Account balace goes below 0 - {open_or_close} {buy_or_sell} WETH')
 
@@ -190,6 +190,12 @@ class Backtest():
                     self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
                     self.check_account('DEPOSIT', f'WETH')
 
+                if order_type == 'WITHDRAW':
+                    withdraw_amount = order[1]
+                    self.account['WETH'] = self.account['WETH'] + withdraw_amount
+                    self.account['collateral_WETH'] = self.account['collateral_WETH'] - withdraw_amount
+                    self.check_account('WITHDRAW', f'WETH')
+
                 elif order_type == 'SWAP':
                     target_token, swaps = order[1]
                     if target_token == 'A':
@@ -202,7 +208,7 @@ class Backtest():
                                 (GAS_USED_BY_SWAP * gas_price_in_eth)
                             self.trades.append(
                                 (str(len(self.trades)), 'SWAP FOR A', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
-                            self.check_account('SWAP', f'A {swap_token}')
+                            self.check_account('SWAP', f'A {swap_token}', signal=signal)
 
                     elif target_token == 'B':
                         for swap_for_b in swaps:
@@ -271,8 +277,7 @@ class Backtest():
                 sell_token, sold_price, sell_volume, _ = sell_trade
                 current_token_price = prices[f'P{sell_token[1]}']
                 curr_value_of_loan_pct = (sell_volume * current_token_price) / self.account['collateral_WETH']
-                if curr_value_of_loan_pct > liquidation_threshold:
-                    print(self.account)
+                if round(curr_value_of_loan_pct, 4) > liquidation_threshold:
                     raise Exception(f'Short position liquidated')
 
         # Close open short positions
@@ -299,8 +304,8 @@ for p in cointegrated_pairs:
     if ((p[0].split('_')[1] == p[1].split('_')[1]) or (len(p[1].split('_')) == 4 and p[0].split('_')[1] == p[1].split('_')[0])) and p[0].split('_')[1] == 'WETH':
         ps.append(p)
 
-particular_idx = None
 particular_idx = 4
+particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
 pairs = ps[particular_idx:particular_idx +
@@ -319,19 +324,19 @@ for cointegrated_pair in pairs:
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
 
-        # mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
-        #                                                   window_size_in_seconds=window_size_in_seconds,
-        #                                                   percent_to_invest=percent_to_invest)
+        mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                          window_size_in_seconds=window_size_in_seconds,
+                                                          percent_to_invest=percent_to_invest)
 
-        # backtest_mean_reversion = Backtest()
-        # return_percent = backtest_mean_reversion.backtest_pair(
-        #     cointegrated_pair, mean_reversion_strategy, initial_investment)
-        # if return_percent > 0:
-        #     print(
-        #         f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
-        # else:
-        #     print(
-        #         f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
+        backtest_mean_reversion = Backtest()
+        return_percent = backtest_mean_reversion.backtest_pair(
+            cointegrated_pair, mean_reversion_strategy, initial_investment)
+        if return_percent > 0:
+            print(
+                f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
+        else:
+            print(
+                f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
 
         kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,

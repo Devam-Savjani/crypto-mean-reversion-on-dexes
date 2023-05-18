@@ -59,8 +59,7 @@ class Abstract_Strategy():
             for sell_trade in open_positions['SELL'].values():
                 sell_token, sold_price, sell_volume, _ = sell_trade
                 current_token_price = prices[f'P{sell_token[1]}']
-                collatoral = sell_volume * sold_price / vtl_eth
-                curr_value_of_loan_pct = (sell_volume * current_token_price) / collatoral
+                curr_value_of_loan_pct = (sell_volume * current_token_price) / account['collateral_WETH']
                 if curr_value_of_loan_pct > liquidation_threshold:
                     should_deposit_more = True
 
@@ -69,6 +68,14 @@ class Abstract_Strategy():
 
                 swap_for_a = []
                 swap_for_b = []
+                withdraw_amount = 0
+
+                if gas_price_in_eth > 1.25e-07:
+                    sell_token, sold_price, sell_volume, sell_timestamp = open_positions['SELL'].values()[0]
+                    position_token = account[sell_token]
+                    current_token_price = prices[f'P{sell_token[1]}']
+                    deposit_amount = ((sell_volume * current_token_price) / liquidation_threshold) -  account['collateral_WETH']
+                    return [('DEPOSIT', deposit_amount)] if should_deposit_more else []
 
                 if 'BUY' in open_positions:
                     for buy_position in open_positions['BUY'].values():
@@ -97,23 +104,33 @@ class Abstract_Strategy():
                         if new_eth_balance < 0:
                             n = len(open_positions['BUY'].values()) + len(swap_for_a) + len(swap_for_b) + 1
                             if account[sell_token] - (abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)) / prices[f'P{sell_token[1]}'] < 0:
+                                # NEVER GETS HERE, which is good
                                 swap_for_b.append(
                                     (buy_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
                             else:
                                 swap_for_b.append(
                                     (sell_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
 
-                return [
+                        withdraw_amount += account['collateral_WETH'] + withdraw_amount - (sell_volume * current_token_price) / liquidation_threshold
+
+                orders = []
+
+                for swap in swap_for_a:
+                    swap_token, swap_volume = swap
+                    swap_price = prices[f'P{swap_token[1]}']
+
+                    if account['WETH'] - (swap_volume * swap_price) - (GAS_USED_BY_SWAP * gas_price_in_eth) < 0:
+                        orders += [('WITHDRAW', withdraw_amount)]
+
+                return orders + [
                     ('SWAP', ('A', swap_for_a)),
                     ('SWAP', ('B', swap_for_b)),
                     ('CLOSE', ('SELL', [sell_position for sell_position in open_positions['SELL']])),
                     ('CLOSE', ('BUY', [buy_position for buy_position in open_positions['BUY']])),
                 ]
 
-            if should_deposit_more:
-                    return [('DEPOSIT', 0.1 * account['WETH'])]
-            
-            return []
+            deposit_amount = ((sell_volume * current_token_price) / liquidation_threshold) -  account['collateral_WETH']
+            return [('DEPOSIT', deposit_amount)] if should_deposit_more else []
 
         else:
             volume_ratios_of_pairs = {
