@@ -6,7 +6,7 @@ GAS_USED = (2 * GAS_USED_BY_SWAP) + GAS_USED_BY_LOAN
 
 
 class Abstract_Strategy():
-    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name):
+    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold=1.25e-07):
         self.number_of_sds_from_mean = number_of_sds_from_mean
         self.has_initialised_historical_data = False
         self.window_size_in_seconds = window_size_in_seconds
@@ -14,6 +14,7 @@ class Abstract_Strategy():
         self.account_history = []
         self.percent_to_invest = percent_to_invest
         self.strategy_name = strategy_name
+        self.gas_price_threshold = gas_price_threshold
 
     def initialise_historical_data(self, history_p1, history_p2):
         self.history_p1 = history_p1.to_numpy()
@@ -63,14 +64,14 @@ class Abstract_Strategy():
                 if curr_value_of_loan_pct > liquidation_threshold:
                     should_deposit_more = True
 
-            if spread < self.upper_threshold and spread > self.lower_threshold and gas_price_in_eth < 1.25e-07:
+            if spread < self.upper_threshold and spread > self.lower_threshold and gas_price_in_eth < self.gas_price_threshold:
                 self.account_history.append(account)
 
                 swap_for_a = []
                 swap_for_b = []
                 withdraw_amount = 0
 
-                if gas_price_in_eth > 1.25e-07:
+                if gas_price_in_eth > self.gas_price_threshold:
                     sell_token, sold_price, sell_volume, sell_timestamp = open_positions['SELL'].values()[0]
                     position_token = account[sell_token]
                     current_token_price = prices[f'P{sell_token[1]}']
@@ -138,7 +139,7 @@ class Abstract_Strategy():
                 'T2': (self.hedge_ratio if self.hedge_ratio > 0 else 1)
             }
 
-            if gas_price_in_eth > 1.25e-07:
+            if gas_price_in_eth > self.gas_price_threshold:
                 return []
 
             swap_for_b = []
