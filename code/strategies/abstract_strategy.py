@@ -90,7 +90,6 @@ class Abstract_Strategy():
                         new_token_balance = position_token + (sell_volume * ((sold_price / current_token_price) - 1)) - sell_volume * (hourly_yield ** number_of_hours)
 
                         if new_token_balance < 0:
-                            # print('that one')
                             swap_for_a.append((sell_token, abs(new_token_balance)))
 
                         new_eth_balance = account['WETH'] + account['collateral_WETH'] - (sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
@@ -107,7 +106,8 @@ class Abstract_Strategy():
                 return [
                     ('SWAP', ('A', swap_for_a)),
                     ('SWAP', ('B', swap_for_b)),
-                    ('CLOSE', open_positions),
+                    ('CLOSE', ('SELL', [sell_position for sell_position in open_positions['SELL']])),
+                    ('CLOSE', ('BUY', [buy_position for buy_position in open_positions['BUY']])),
                 ]
 
             if should_deposit_more:

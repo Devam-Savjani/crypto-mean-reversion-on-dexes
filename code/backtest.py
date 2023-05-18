@@ -217,16 +217,18 @@ class Backtest():
                             self.check_account('SWAP', f'B {swap_token}')
                 
                 elif order_type == 'CLOSE':
-                    positions_to_close = order[1]
-                    for buy_id, _ in list(positions_to_close['BUY'].items()):
-                        close_buy_position(
-                            buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
-                        self.check_account('CLOSE', f'BUY {buy_id}')
+                    position_type, position_ids = order[1]
+                    if position_type == 'BUY':
+                        for buy_id in position_ids:
+                            close_buy_position(
+                                buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
+                            self.check_account('CLOSE', f'BUY {buy_id}')
 
-                    for sell_id, _ in list(positions_to_close['SELL'].items()):
-                        close_sell_position(
-                            sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=history_remaining['period_start_unix'][i])
-                        self.check_account('CLOSE', f'SELL {sell_id}')
+                    if position_type == 'SELL':
+                        for sell_id in position_ids:
+                            close_sell_position(
+                                sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=history_remaining['period_start_unix'][i])
+                            self.check_account('CLOSE', f'SELL {sell_id}')
 
                 elif order_type == 'OPEN':
                     open_type, token, volume = order[1]
@@ -297,8 +299,8 @@ for p in cointegrated_pairs:
     if ((p[0].split('_')[1] == p[1].split('_')[1]) or (len(p[1].split('_')) == 4 and p[0].split('_')[1] == p[1].split('_')[0])) and p[0].split('_')[1] == 'WETH':
         ps.append(p)
 
-particular_idx = 0
 particular_idx = None
+particular_idx = 4
 
 num = particular_idx if particular_idx is not None else 0
 pairs = ps[particular_idx:particular_idx +
@@ -317,19 +319,19 @@ for cointegrated_pair in pairs:
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
 
-        mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
-                                                          window_size_in_seconds=window_size_in_seconds,
-                                                          percent_to_invest=percent_to_invest)
+        # mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+        #                                                   window_size_in_seconds=window_size_in_seconds,
+        #                                                   percent_to_invest=percent_to_invest)
 
-        backtest_mean_reversion = Backtest()
-        return_percent = backtest_mean_reversion.backtest_pair(
-            cointegrated_pair, mean_reversion_strategy, initial_investment)
-        if return_percent > 0:
-            print(
-                f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
-        else:
-            print(
-                f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
+        # backtest_mean_reversion = Backtest()
+        # return_percent = backtest_mean_reversion.backtest_pair(
+        #     cointegrated_pair, mean_reversion_strategy, initial_investment)
+        # if return_percent > 0:
+        #     print(
+        #         f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
+        # else:
+        #     print(
+        #         f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
 
         kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
@@ -359,10 +361,10 @@ for cointegrated_pair in pairs:
         # axarr[1].legend()
         # plt.tight_layout()
         # plt.show()
-    except Exception as e:
-        bad_pairs.append((cointegrated_pair))
-        print(e)
-        # print(kalman_filter_strategy.account_history[-1])
-        print()
+    # except Exception as e:
+    #     bad_pairs.append((cointegrated_pair))
+    #     print(e)
+    #     # print(kalman_filter_strategy.account_history[-1])
+    #     print()
     finally:
         pass
