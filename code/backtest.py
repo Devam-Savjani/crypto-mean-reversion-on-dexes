@@ -1,5 +1,3 @@
-from calculate_cointegrated_pairs import load_cointegrated_pairs
-from database_interactions import table_to_df
 import matplotlib.pyplot as plt
 import warnings
 import statsmodels.api as sm
@@ -10,6 +8,8 @@ from strategies.kalman_filter import Kalman_Filter_Strategy
 from tqdm import tqdm
 import sys
 sys.path.append('./historical_data')
+from calculate_cointegrated_pairs import load_cointegrated_pairs
+from database_interactions import table_to_df
 
 
 GAS_USED_BY_SWAP = 150000
@@ -336,7 +336,9 @@ for cointegrated_pair in pairs:
 
         mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                           window_size_in_seconds=window_size_in_seconds,
-                                                          percent_to_invest=percent_to_invest)
+                                                          percent_to_invest=percent_to_invest,
+                                                          gas_price_threshold=1.25e-07,
+                                                          rebalance_threshold_as_percent_of_initial_investment=0.5)
 
         backtest_mean_reversion = Backtest()
         return_percent = backtest_mean_reversion.backtest_pair(
@@ -350,7 +352,9 @@ for cointegrated_pair in pairs:
 
         kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
-                                                        percent_to_invest=percent_to_invest)
+                                                        percent_to_invest=percent_to_invest,
+                                                        gas_price_threshold=1.25e-07,
+                                                        rebalance_threshold_as_percent_of_initial_investment=0.5)
 
         backtest_kalman_filter = Backtest()
         return_percent = backtest_kalman_filter.backtest_pair(

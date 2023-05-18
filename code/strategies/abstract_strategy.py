@@ -6,7 +6,7 @@ GAS_USED = (2 * GAS_USED_BY_SWAP) + GAS_USED_BY_LOAN
 
 
 class Abstract_Strategy():
-    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold=1.25e-07):
+    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold=1.25e-07, rebalance_threshold_as_percent_of_initial_investment=0.001):
         self.number_of_sds_from_mean = number_of_sds_from_mean
         self.has_initialised_historical_data = False
         self.window_size_in_seconds = window_size_in_seconds
@@ -15,6 +15,8 @@ class Abstract_Strategy():
         self.percent_to_invest = percent_to_invest
         self.strategy_name = strategy_name
         self.gas_price_threshold = gas_price_threshold
+        self.initial_WETH = None
+        self.rebalance_threshold_as_percent_of_initial_investment = rebalance_threshold_as_percent_of_initial_investment
 
     def initialise_historical_data(self, history_p1, history_p2):
         self.history_p1 = history_p1.to_numpy()
@@ -45,6 +47,9 @@ class Abstract_Strategy():
         apy = ctx['apy']
         vtl_eth = ctx['vtl_eth']
         liquidation_threshold = ctx['liquidation_threshold']
+
+        if self.initial_WETH is None:
+            self.initial_WETH = account['WETH']
 
         has_trade = (len(open_positions['BUY']) +
                      len(open_positions['SELL'])) > 0
@@ -156,7 +161,7 @@ class Abstract_Strategy():
                 return []
 
             swap_for_b = []
-            if account['WETH'] < 0.1:
+            if account['WETH'] < self.rebalance_threshold_as_percent_of_initial_investment * self.initial_WETH:
                 swap_for_b.append(('T1', account['T1'] * prices['P1']))
                 swap_for_b.append(('T2', account['T2'] * prices['P2']))
 
