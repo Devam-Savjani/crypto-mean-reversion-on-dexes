@@ -1,3 +1,5 @@
+from calculate_cointegrated_pairs import load_cointegrated_pairs
+from database_interactions import table_to_df
 import matplotlib.pyplot as plt
 import warnings
 import statsmodels.api as sm
@@ -8,8 +10,6 @@ from strategies.kalman_filter import Kalman_Filter_Strategy
 from tqdm import tqdm
 import sys
 sys.path.append('./historical_data')
-from database_interactions import table_to_df
-from calculate_cointegrated_pairs import load_cointegrated_pairs
 
 
 GAS_USED_BY_SWAP = 150000
@@ -164,7 +164,8 @@ class Backtest():
             gas_price_in_eth = (
                 (history_remaining.loc[i]['p1_gas_price_wei'] + history_remaining.loc[i]['p2_gas_price_wei']) / 2) * 1e-18
 
-            apy = self.get_apy_at_timestamp(history_remaining['period_start_unix'][i])
+            apy = self.get_apy_at_timestamp(
+                history_remaining['period_start_unix'][i])
 
             signal = strategy.generate_signal(
                 {
@@ -186,14 +187,17 @@ class Backtest():
 
                 if order_type == 'DEPOSIT':
                     deposit_amount = order[1]
-                    self.account['WETH'] = self.account['WETH'] - deposit_amount
+                    self.account['WETH'] = self.account['WETH'] - \
+                        deposit_amount
                     self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
                     self.check_account('DEPOSIT', f'WETH')
 
                 if order_type == 'WITHDRAW':
                     withdraw_amount = order[1]
-                    self.account['WETH'] = self.account['WETH'] + withdraw_amount
-                    self.account['collateral_WETH'] = self.account['collateral_WETH'] - withdraw_amount
+                    self.account['WETH'] = self.account['WETH'] + \
+                        withdraw_amount
+                    self.account['collateral_WETH'] = self.account['collateral_WETH'] - \
+                        withdraw_amount
                     self.check_account('WITHDRAW', f'WETH')
 
                 elif order_type == 'SWAP':
@@ -208,7 +212,8 @@ class Backtest():
                                 (GAS_USED_BY_SWAP * gas_price_in_eth)
                             self.trades.append(
                                 (str(len(self.trades)), 'SWAP FOR A', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
-                            self.check_account('SWAP', f'A {swap_token}', signal=signal)
+                            self.check_account(
+                                'SWAP', f'A {swap_token}', signal=signal)
 
                     elif target_token == 'B':
                         for swap_for_b in swaps:
@@ -217,11 +222,12 @@ class Backtest():
                             self.account[swap_token] = self.account[swap_token] - \
                                 (swap_volume / swap_price)
                             self.account['WETH'] = self.account['WETH'] + \
-                                swap_volume - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                                swap_volume - \
+                                (GAS_USED_BY_SWAP * gas_price_in_eth)
                             self.trades.append(
                                 (str(len(self.trades)), 'SWAP FOR B', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
                             self.check_account('SWAP', f'B {swap_token}')
-                
+
                 elif order_type == 'CLOSE':
                     position_type, position_ids = order[1]
                     if position_type == 'BUY':
@@ -257,8 +263,10 @@ class Backtest():
 
                         # Borrow Token from Aave
                         self.account[token] = self.account[token] + volume
-                        self.account['WETH'] = self.account['WETH'] - (GAS_USED_BY_LOAN * gas_price_in_eth) - ((volume * sell_price) / vtl_eth)
-                        self.account['collateral_WETH'] = self.account['collateral_WETH'] + ((volume * sell_price) / vtl_eth)
+                        self.account['WETH'] = self.account['WETH'] - (
+                            GAS_USED_BY_LOAN * gas_price_in_eth) - ((volume * sell_price) / vtl_eth)
+                        self.account['collateral_WETH'] = self.account['collateral_WETH'] + (
+                            (volume * sell_price) / vtl_eth)
 
                         # Swap borrowed tokens to WETH
                         self.account[token] = self.account[token] - volume
@@ -276,7 +284,8 @@ class Backtest():
             for sell_trade in self.open_positions['SELL'].values():
                 sell_token, sold_price, sell_volume, _ = sell_trade
                 current_token_price = prices[f'P{sell_token[1]}']
-                curr_value_of_loan_pct = (sell_volume * current_token_price) / self.account['collateral_WETH']
+                curr_value_of_loan_pct = (
+                    sell_volume * current_token_price) / self.account['collateral_WETH']
                 if round(curr_value_of_loan_pct, 4) > liquidation_threshold:
                     raise Exception(f'Short position liquidated')
 
@@ -284,7 +293,8 @@ class Backtest():
         if len(self.open_positions['SELL']) != 0:
             sell_positions = self.open_positions['SELL'].keys()
             for sell_id in list(sell_positions):
-                apy = self.get_apy_at_timestamp(history_remaining['period_start_unix'].iloc[-1])
+                apy = self.get_apy_at_timestamp(
+                    history_remaining['period_start_unix'].iloc[-1])
                 close_sell_position(sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy,
                                     curr_timestamp=history_remaining['period_start_unix'].iloc[-1])
 
@@ -309,7 +319,7 @@ particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
 pairs = ps[particular_idx:particular_idx +
-                           1] if particular_idx is not None else ps
+           1] if particular_idx is not None else ps
 
 bad_pairs = []
 

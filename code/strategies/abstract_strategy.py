@@ -60,7 +60,8 @@ class Abstract_Strategy():
             for sell_trade in open_positions['SELL'].values():
                 sell_token, sold_price, sell_volume, _ = sell_trade
                 current_token_price = prices[f'P{sell_token[1]}']
-                curr_value_of_loan_pct = (sell_volume * current_token_price) / account['collateral_WETH']
+                curr_value_of_loan_pct = (
+                    sell_volume * current_token_price) / account['collateral_WETH']
                 if curr_value_of_loan_pct > liquidation_threshold:
                     should_deposit_more = True
 
@@ -72,10 +73,12 @@ class Abstract_Strategy():
                 withdraw_amount = 0
 
                 if gas_price_in_eth > self.gas_price_threshold:
-                    sell_token, sold_price, sell_volume, sell_timestamp = open_positions['SELL'].values()[0]
+                    sell_token, sold_price, sell_volume, sell_timestamp = open_positions['SELL'].values()[
+                        0]
                     position_token = account[sell_token]
                     current_token_price = prices[f'P{sell_token[1]}']
-                    deposit_amount = ((sell_volume * current_token_price) / liquidation_threshold) -  account['collateral_WETH']
+                    deposit_amount = ((sell_volume * current_token_price) /
+                                      liquidation_threshold) - account['collateral_WETH']
                     return [('DEPOSIT', deposit_amount)] if should_deposit_more else []
 
                 if 'BUY' in open_positions:
@@ -93,17 +96,23 @@ class Abstract_Strategy():
 
                         number_of_hours = (
                             timestamp - sell_timestamp) / (60 * 60)
-                        hourly_yield = (1 + apy[sell_token])**(1 / (365*24)) - 1
+                        hourly_yield = (
+                            1 + apy[sell_token])**(1 / (365*24)) - 1
 
-                        new_token_balance = position_token + (sell_volume * ((sold_price / current_token_price) - 1)) - sell_volume * (hourly_yield ** number_of_hours)
+                        new_token_balance = position_token + \
+                            (sell_volume * ((sold_price / current_token_price) - 1)
+                             ) - sell_volume * (hourly_yield ** number_of_hours)
 
                         if new_token_balance < 0:
-                            swap_for_a.append((sell_token, abs(new_token_balance)))
+                            swap_for_a.append(
+                                (sell_token, abs(new_token_balance)))
 
-                        new_eth_balance = account['WETH'] + account['collateral_WETH'] - (sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
+                        new_eth_balance = account['WETH'] + account['collateral_WETH'] - (
+                            sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
 
                         if new_eth_balance < 0:
-                            n = len(open_positions['BUY'].values()) + len(swap_for_a) + len(swap_for_b) + 1
+                            n = len(open_positions['BUY'].values(
+                            )) + len(swap_for_a) + len(swap_for_b) + 1
                             if account[sell_token] - (abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)) / prices[f'P{sell_token[1]}'] < 0:
                                 # NEVER GETS HERE, which is good
                                 swap_for_b.append(
@@ -112,7 +121,8 @@ class Abstract_Strategy():
                                 swap_for_b.append(
                                     (sell_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
 
-                        withdraw_amount += account['collateral_WETH'] + withdraw_amount - (sell_volume * current_token_price) / liquidation_threshold
+                        withdraw_amount += account['collateral_WETH'] + withdraw_amount - (
+                            sell_volume * current_token_price) / liquidation_threshold
 
                 orders = []
 
@@ -126,11 +136,14 @@ class Abstract_Strategy():
                 return orders + [
                     ('SWAP', ('A', swap_for_a)),
                     ('SWAP', ('B', swap_for_b)),
-                    ('CLOSE', ('SELL', [sell_position for sell_position in open_positions['SELL']])),
-                    ('CLOSE', ('BUY', [buy_position for buy_position in open_positions['BUY']])),
+                    ('CLOSE', ('SELL', [
+                     sell_position for sell_position in open_positions['SELL']])),
+                    ('CLOSE', ('BUY', [
+                     buy_position for buy_position in open_positions['BUY']])),
                 ]
 
-            deposit_amount = ((sell_volume * current_token_price) / liquidation_threshold) -  account['collateral_WETH']
+            deposit_amount = ((sell_volume * current_token_price) /
+                              liquidation_threshold) - account['collateral_WETH']
             return [('DEPOSIT', deposit_amount)] if should_deposit_more else []
 
         else:
@@ -153,23 +166,24 @@ class Abstract_Strategy():
 
                 if account['WETH'] < tx_cost:
                     return []
-                
-                volume_ratio_coeff = (volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1'])
-                volume_a = (account['WETH'] - tx_cost) / ((volume_ratio_coeff * prices['P2']) + (prices['P1'] / vtl_eth))
+
+                volume_ratio_coeff = (
+                    volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1'])
+                volume_a = (account['WETH'] - tx_cost) / \
+                    ((volume_ratio_coeff *
+                     prices['P2']) + (prices['P1'] / vtl_eth))
                 volume_b = volume_ratio_coeff * volume_a
-                
+
                 self.account_history.append(account)
+
+                orders = []
                 if len(swap_for_b) > 0:
-                    return [
-                        ('SWAP', swap_for_b),
-                        ('OPEN', ('BUY', 'T2', volume_b * self.percent_to_invest)),
-                        ('OPEN', ('SELL', 'T1', volume_a * self.percent_to_invest)),
-                    ]
-                
-                return [
-                        ('OPEN', ('BUY', 'T2', volume_b * self.percent_to_invest)),
-                        ('OPEN', ('SELL', 'T1', volume_a * self.percent_to_invest))
-                    ]
+                    orders += [('SWAP', swap_for_b)]
+
+                return orders + [
+                    ('OPEN', ('BUY', 'T2', volume_b * self.percent_to_invest)),
+                    ('OPEN', ('SELL', 'T1', volume_a * self.percent_to_invest))
+                ]
 
             elif spread < self.lower_threshold:
                 tx_cost = ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP +
@@ -177,25 +191,25 @@ class Abstract_Strategy():
 
                 if account['WETH'] < tx_cost:
                     return {}
-                
-                volume_ratio_coeff = volume_ratios_of_pairs['T1'] / volume_ratios_of_pairs['T2']
 
-                volume_b = (account['WETH'] - tx_cost) / ((volume_ratio_coeff * prices['P1']) + (prices['P2'] / vtl_eth))
+                volume_ratio_coeff = volume_ratios_of_pairs['T1'] / \
+                    volume_ratios_of_pairs['T2']
+
+                volume_b = (account['WETH'] - tx_cost) / \
+                    ((volume_ratio_coeff *
+                     prices['P1']) + (prices['P2'] / vtl_eth))
                 volume_a = volume_ratio_coeff * volume_b
 
                 self.account_history.append(account)
 
+                orders = []
                 if len(swap_for_b) > 0:
-                    return [
-                        ('SWAP', swap_for_b),
-                        ('OPEN', ('BUY', 'T1', volume_a * self.percent_to_invest)),
-                        ('OPEN', ('SELL', 'T2', volume_b * self.percent_to_invest)),
-                    ]
-                
-                return [
-                        ('OPEN', ('BUY', 'T1', volume_a * self.percent_to_invest)),
-                        ('OPEN', ('SELL', 'T2', volume_b * self.percent_to_invest)),
-                    ]
-                
+                    orders += [('SWAP', swap_for_b)]
+
+                return orders + [
+                    ('OPEN', ('BUY', 'T1', volume_a * self.percent_to_invest)),
+                    ('OPEN', ('SELL', 'T2', volume_b * self.percent_to_invest)),
+                ]
+
             else:
                 return []
