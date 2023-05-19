@@ -14,7 +14,7 @@ def get_pools_max_timestamp():
                 r RECORD;
             BEGIN
                 FOR r IN
-                (select i.table_name, i.table_schema from information_schema.tables i WHERE i.table_schema = 'public' AND i.table_name <> 'liquidity_pools')
+                (select i.table_name, i.table_schema from information_schema.tables i WHERE i.table_schema = 'public' AND i.table_name <> 'liquidity_pools' AND i.table_name NOT LIKE '%_borrowing_rates')
             LOOP
                 EXECUTE FORMAT ('SELECT MAX(period_start_unix) FROM %I.%I', r.table_schema, r.table_name) INTO max_timestamp;
                 table_name := r.table_name;
