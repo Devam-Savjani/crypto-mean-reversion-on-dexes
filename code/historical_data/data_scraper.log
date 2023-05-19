@@ -40,3 +40,30 @@
 2023-04-28 12:38:37,965, urbanGUI INFO Completed: Refresh liquidity pool data tables
 2023-05-13 12:56:53,654, urbanGUI INFO Refreshing liquidity pool data tables
 2023-05-13 12:57:36,122, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-18 22:20:41,385, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-18 22:26:23,217, urbanGUI ERROR Failed to fetch some data for address 0xcbcdf9626bc03e24f779434178a73a0b4bad62ed : "WBTC_WETH_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed"
+2023-05-18 22:26:24,216, urbanGUI ERROR Failed to fetch some data for address 0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8 : "DAI_WETH_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8"
+2023-05-18 22:30:07,058, urbanGUI ERROR Failed to fetch some data for address 0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf : "USDC_USDT_0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf"
+2023-05-18 22:32:18,855, urbanGUI ERROR Failed to fetch some data for address 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8 : "USDC_WETH_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8"
+2023-05-18 22:33:52,938, urbanGUI ERROR Failed to fetch some data for address 0x4e68ccd3e89f51c3074ca5072bbac773960dfa36 : "WETH_USDT_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36"
+2023-05-18 22:46:56,845, urbanGUI ERROR Failed to fetch some data for address 0x99ac8ca7087fa4a2a1fb6357269965a2014abc35 : "WBTC_USDC_0x99ac8ca7087fa4a2a1fb6357269965a2014abc35"
+2023-05-18 23:13:37,535, urbanGUI ERROR Failed to fetch some data for address 0x11b815efb8f581194ae79006d24e0d814b7697f6 : "WETH_USDT_0x11b815efb8f581194ae79006d24e0d814b7697f6"
+2023-05-18 23:13:37,743, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-18 23:13:56,208, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-18 23:14:31,854, urbanGUI ERROR Failed to fetch some data for address 0xcbcdf9626bc03e24f779434178a73a0b4bad62ed : "WBTC_WETH_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed"
+2023-05-18 23:15:32,891, urbanGUI ERROR Failed to fetch some data for address 0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8 : "DAI_WETH_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8"
+2023-05-18 23:15:33,515, urbanGUI ERROR Failed to fetch some data for address 0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf : "USDC_USDT_0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf"
+2023-05-18 23:15:34,005, urbanGUI ERROR Failed to fetch some data for address 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8 : "USDC_WETH_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8"
+2023-05-18 23:17:50,589, urbanGUI ERROR Failed to fetch some data for address 0x4e68ccd3e89f51c3074ca5072bbac773960dfa36 : "WETH_USDT_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36"
+2023-05-18 23:20:38,022, urbanGUI ERROR Failed to fetch some data for address 0x11b815efb8f581194ae79006d24e0d814b7697f6 : "WETH_USDT_0x11b815efb8f581194ae79006d24e0d814b7697f6"
+2023-05-18 23:20:38,115, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-18 23:20:41,766, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-18 23:30:16,861, urbanGUI ERROR Failed to fetch some data for address 0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf : "USDC_USDT_0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf"
+2023-05-18 23:30:17,821, urbanGUI ERROR Failed to fetch some data for address 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8 : "USDC_WETH_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8"
+2023-05-18 23:33:13,840, urbanGUI ERROR Failed to fetch some data for address 0x4e68ccd3e89f51c3074ca5072bbac773960dfa36 : "WETH_USDT_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36"
+2023-05-18 23:33:14,622, urbanGUI ERROR Failed to fetch some data for address 0x99ac8ca7087fa4a2a1fb6357269965a2014abc35 : "WBTC_USDC_0x99ac8ca7087fa4a2a1fb6357269965a2014abc35"
+2023-05-18 23:35:53,790, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-18 23:36:06,239, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-18 23:44:55,982, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-18 23:45:14,300, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-18 23:45:21,031, urbanGUI INFO Completed: Refresh liquidity pool data tables

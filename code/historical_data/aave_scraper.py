@@ -88,11 +88,6 @@ def refresh_database():
         command="SELECT token0, token1 FROM liquidity_pools WHERE volume_usd >= 10000000000;")
     tokens = np.unique(pd.concat([df['token0'], df['token1']]))
 
-    gq_client_aave_v2 = GraphqlClient(
-        endpoint='https://api.thegraph.com/subgraphs/name/aave/protocol-v2',
-        headers={}
-    )
-
     gq_client_aave_v3 = GraphqlClient(
         endpoint='https://api.thegraph.com/subgraphs/name/aave/protocol-v3',
         headers={}
@@ -102,26 +97,25 @@ def refresh_database():
         command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'liquidity_pools'")['tablename'])
 
     for token in tqdm(tokens):
-        table_name = f'{token}_borrowing_rates'
+        token_lower = token.lower()
+        table_name = f'{token_lower}_borrowing_rates'
 
         if table_name in tables:
             df = table_to_df(
-                command=f'SELECT max(id) as max_id, max(period_start_unix) as max_period_start_unix FROM {table_name};')
+                command=f'SELECT max(id) as max_id, max(timestamp) as max_timestamp FROM {table_name};')
             rows = get_block_data(token, gq_client=gq_client_aave_v3,
-                                  prev_max_time=df['max_period_start_unix'].iloc[0])
+                                  prev_max_time=df['max_timestamp'].iloc[0])
             if len(rows) > 0:
                 insert_rows(table_name, rows)
         else:
             table_name = f'{token}_borrowing_rates'
-            rows_v2 = get_block_data(token, gq_client=gq_client_aave_v2)
             rows_v3 = get_block_data(token, gq_client=gq_client_aave_v3)
-            rows = rows_v2 + rows_v3
 
-            if len(rows) > 0:
+            if len(rows_v3) > 0:
                 drop_table(table_name)
                 create_table(table_name, [('id', 'VARCHAR(255)'), ('timestamp',
                                                                    'BIGINT'), ('borrow_rate', 'NUMERIC'), ('LTV', 'NUMERIC')])
-                insert_rows(table_name, rows)
+                insert_rows(table_name, rows_v3)
 
 
 if __name__ == "__main__":
