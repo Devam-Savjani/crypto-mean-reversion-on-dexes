@@ -1,0 +1,20 @@
+\chapter{Evaluation}
+
+\section{Number Arbitrage opportunities found}
+One of the ways I will be evaluating the strategies I implemented will be finding the number of opportunities that each strategy finds as well as highlighting opportunities that resulted in both profits and loss. Furthermore, I will show how the P\&L is effected by transaction/gas fees by plotting both the P\&L including and excluding any fees.
+
+\section{Return on theoretical trading}
+One major problem with this project is the timeline, from background research, I can see that most papers evaluate their strategies over at least a 6 month period. As this limits development time and evaluation time, the majority of the evaluation will be run by a backtesting system and evaluating each transaction cost at each time for any transaction that I theoretically make to simulate the trade environment. Using this trading environment, I will run each strategy and plot it's revenue and return.
+
+\section{Return on actual trading}
+
+In addition to the trading on the in-sample data points, I plan to trade and evaluate the performance and returns of each strategy in real time.
+
+\section{Sharpe Ratio}
+
+Another metric I will use is the Sharpe Ratio, the reason for this is that it is important to evaluate how risky the strategies are compared to the risk free rate. The metric is given by the formula below:$$\text{Sharpe Ratio} = \frac{R_p - R_f}{\sigma_p}$$ Where $R_p$ is the return of a portfolio, $R_f$ is the risk-free rate and $\sigma_p$ is the standard deviation of the portfolio. I will calculate the Sharpe Ratio for both in-sample and out-of-sample results. 
+
+\section{Performance of Signal Generation}
+
+I also plan to evaluate how long it takes for each strategy to generate a signal when prices change. In analysing this metric, we may be able to find times where once the signal is created, the opportunity could be lost hence by looking at this metric, we may be able to find processes that may decrease the signal creation time.
+
