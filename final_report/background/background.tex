@@ -3,7 +3,15 @@
 Before delving into the financial side of the project, it is important to understand the underlying assets and the technology that drives them.
 
 \subsection{Blockchain}
-The building blocks of cryptocurrencies come from blockchain technology. Blockchain is a distributed ledger that stores data, in blocks, in a chain, comprising the data itself as well as a full transaction history~\cite{nofer2017blockchain}. Below shows a diagram of blocks in a blockchain.
+The building blocks of cryptocurrencies come from blockchain technology. Blockchain is a distributed ledger that stores data, in blocks, in a chain, comprising the data itself as well as a full transaction history~\cite{nofer2017blockchain}. They can be thought of as a State Transition System where the state is the store of data, i.e. the owners of each token, and the state-transition function is a function of state and a transaction~\cite{ethereum_whitepaper}. The transition function defines how the transaction, $T$, should affect the state, $\sigma$. $$\sigma' = transition\_func(\sigma, T)$$Thus the state, $\sigma$, and transition function $transition\_func$ are defined by the blockchain implementation, which tends to be more complex.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/ethereum-state-transition.png}
+    \caption{State Transition Diagram~\cite{ethereum_whitepaper}}
+\end{figure}
+
+\noindent In reality, a collection of transactions are batched together into a block which is then commited to the network. The components of a block can be seen below.
 
 \begin{figure}[!htb]
     \centering
@@ -11,16 +19,22 @@ The building blocks of cryptocurrencies come from blockchain technology. Blockch
     \caption{Blockchain Diagram~\cite{inbookBlockchain}}
 \end{figure}
 
-\subsubsection{Header, Hash of Previous Block and Timestamp}
-The timestamp and hashes of the block and its' preceding block are all used to ensure the ordering of blocks within a chain. Hashing the data to a fixed size, and storing it in its succeeding block makes the tampering of chains difficult as it would mean the chain deviates from its old state. In addition to this, by hashing and using Nonce, blockchain employs the Proof-of-Work algorithm or the Proof-of-Stake algorithm to ensure correctness. These algorithms are used to confirm and add a new transaction to the chain.
+\noindent A block can two significant components, the header and the body. The body of the block contains the list of transactions that are to be applied. Whereas, the components of the header may depend on the blockchain's implementation however they typically have the following key components.
+\begin{itemize}
+    \item \textbf{Block number} - A unique identifier assigned to each block in the chain. It serves as a chronological ordering mechanism, indicating the position of the block within the blockchain.
+    \item \textbf{Timestamp} - Timestamp of the block's creation time.
+    \item \textbf{Merkle Root} - A Merkle root is also stored in each block to validate transactions in the body of the block efficiently, in terms of storage and searching~\cite{noauthor_merkle_nodate}. A Merkle tree is a tree of hashes where each leaf node is its data hash and its parent node is the hash of their children's hashes. In storing the Merkle root, we do not need to directly store each transaction in each block, and also allows a quick search for any malicious alterations in differing blocks.
+    \item \textbf{Hash of Previous Block} - Acts as a pointer to the predecessing block. Hence, the term ``Blockchain'' is coined as one would be able to track back to the first block from the latest block in a chain like manner.
+    % \item \textbf{Nonce} - A nonce, `Number only used once', is a number that is added to a hashed block to make the transaction more secure. It is randomly generated and used to validate a transaction. A miner first guesses a nonce and appends the guess to the hash of the current header. The miner then rehashes the value and compares this to the target hash. If the guess was correct, the miner is granted the block~\cite{noauthor_components_2021}.
+\end{itemize}
 
-\subsubsection{Nonce}
-A nonce, `Number Only used Once', is a number that is added to a hashed block to make the transaction more secure. It is randomly generated which miners use to validate a transaction. A miner first guesses a nonce and appends the guess to the hash of the current header. The miner then rehashes the value and compares this to the target hash. If the guess was correct, the miner is granted the block~\cite{noauthor_components_2021}.
-
-\subsubsection{Merkle root}
-A Merkle root is also stored in each block to validate transactions efficiently, in terms of storage and searching. A Merkle tree is a tree of hashes where each leaf node is its data hash and its parent node, is the hash of their children's hashes. In storing the Merkle root, we do not need to directly store each transaction in each block, and also allows a quick search for any malicious alterations in differing blocks~\cite{noauthor_merkle_nodate}.
+\noindent In addition to these components, a major feature of blockchain technology is its property of being decentralised. The state of the blockchain is managed by a distributed network of nodes that are maintained by voluntary node operators. Node operators maintain the blockchain by synchorizing with the network, validating, propogating transactions and blocks and finally participating in consensus mechanisms to ensure all of the nodes agree on the current state before updating the blockchain. For this blockchain networks are typically built on a peer-to-peer (P2P) architecture. Each participant in the network, or node, has an equal status and communicates directly with other nodes. Transactions and data are shared among participants without the need for intermediaries or central servers. When transitioning to the next state, the node broadcasts the transaction, $T$, to the blockchain network and each node applies the transition function to obtain the new and same state, $\sigma' = transition\_func(\sigma, T)$. All nodes arrive to the same state as the transition function is deterministic. Once each node has applied the transition function, the network uses a consensus mechanism to the globally agreed $\sigma'$ and the transactions become actualised.
 \\[5mm]
-One of the first applications of blockchain was by Satoshi Nakamoto to create the first `purely peer-to-peer version of electronic cash'~\cite{nakamoto2009bitcoin}. Nakamoto's solution details the process in which a decentralised, peer-to-peer approach to verify and track transactions without a centralized institution. Since then, many other technologies derived from using blockchain as its underlying technology.
+Consensus mechanisms are used to achieve agreement among participants on the validity of transactions and the order in which they are added to the blockchain. Examples of consensus mechanisms include Proof of Work (PoW), Proof of Stake (PoS), and Delegated Proof of Stake (DPoS), however current blockchains predominantly use Proof of Work or Proof of Stake~\cite{noauthor_consensus_nodate}. In addition to reaching consensus, the consensus algorithms also determine which node should be the create of a new block, which node should be granted a monetary reward.
+\\[5mm]
+The Proof of Work (PoW) consensus algorithm was first used in Bitcoin and is where the nodes compete to solve complex mathematical problems to verify that the transactions from a new block are valid in order to add them to the blockchain. These nodes are called miners. Once the first miner obtains the solution of the mathematical puzzle, it broadcasts the new block on the network so that the other nodes verify the solution and update their local replica. Consensus is then reaches when 51\% of the nodes agree on the new state of the blockchain. The main drawback of this algorithm is that it requires miners to perform extensive computational calculations repeatedly until they find the solution to the mathematical problem, hence once the solution has been found by a miner, after expensive work, the solution is sent along in the broadcast to the other nodes to easily and cheaply verify the solution of the problem.
+\\[5mm]
+To address this issue, some blockchains have opted to use the Proof of Stake (PoS) consensus algorithm as it is more energy efficient and scalable. Unlike Proof of Work, Proof of Stake use validators to create new blocks. Validators stake an amount of cryptocurrency as collatoral and the creator of a block is chosen at random from the validators, with the probability of selection based on the amount they have staked. Due to the advantages that PoS has over PoW, Ethereum has transitioned from PoW to PoS in Ethereum 2.0.
 
 \subsection{Ethereum}
 One of them was proposed by Vitalik Buterin, the co-founder of Ethereum, in a whitepaper that proposed the idea of using smart contracts to create financial products and services that could operate independently of traditional financial institutions, hence decentralised finance was birthed~\cite{buterin2014next}.
@@ -49,8 +63,9 @@ Another difference between Ethereum and other cryptocurrencies is that rather th
 \end{figure}
 
 \subsubsection{Smart Contracts}
+% 7. Smart Contracts: Smart contracts are self-executing contracts with the terms of the agreement directly written into code. They are stored and executed on the blockchain, allowing for the automation of contractual agreements and the execution of predefined actions when certain conditions are met.
 Smart contracts are programs that are self-executing contracts between buyers and sellers that deploy on the Ethereum network. It allows for the automation of a contract's execution and can be used to facilitate, verify, and enforce the negotiation or performance of a contract~\cite{noauthor_introduction_nodate, noauthor_smart_nodate}.
-
+        
 \subsection{Decentralised Finance}
 One of the applications of Ethereum and smart contracts is Decentralised Exchanges (DEXes). Before delving into DEXes it is important to understand centralized exchanges.
 
