@@ -11,7 +11,6 @@ def get_block_data():
     drop_table('liquidity_pools')
     create_table('liquidity_pools', [('pool_address', 'VARCHAR(255)'), ('token0', 'VARCHAR(255)'), ('token1', 'VARCHAR(255)'), ('volume_USD', 'NUMERIC(80,60)'), ('created_At_Timestamp', 'BIGINT'), ('feeTier', 'BIGINT')])
 
-    max_start_time = 1630450800 # 2021-08-31 00:00:00
     rows_set = {}
 
     result = gq_client.execute(
@@ -44,8 +43,8 @@ def get_block_data():
 
         result = gq_client.execute(
             query="""
-                query pools($prev_max_time: BigInt!, $max_start_time: BigInt!) {
-                    pools(orderBy: createdAtTimestamp, where: {createdAtTimestamp_gte: $prev_max_time, createdAtTimestamp_lt: $max_start_time}, first: 1000, orderDirection: asc) {
+                query pools($prev_max_time: BigInt!) {
+                    pools(orderBy: createdAtTimestamp, where: {createdAtTimestamp_gte: $prev_max_time}, first: 1000, orderDirection: asc) {
                         id
                         token0 {
                             symbol
@@ -62,7 +61,7 @@ def get_block_data():
                 }
             """,
             operation_name='foo',
-            variables={"prev_max_time": prev_max_time, "max_start_time": max_start_time})
+            variables={"prev_max_time": prev_max_time})
         
         try:
             pools = json.loads(result)['data']['pools']
