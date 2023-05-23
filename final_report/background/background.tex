@@ -38,8 +38,22 @@ To address this issue, some blockchains have opted to use the Proof of Stake (Po
 
 \subsection{Ethereum}
 One of them was proposed by Vitalik Buterin, the co-founder of Ethereum, in a whitepaper that proposed the idea of using smart contracts to create financial products and services that could operate independently of traditional financial institutions, hence decentralised finance was birthed~\cite{buterin2014next}.
+
+\subsubsection{Smart Contracts}
+Smart contracts are programs that are self-executing contracts between buyers and sellers that deploy on a blockchain. The programs are reactive in the sense that they are only executed on the blockchain providing that certain conditions are met~\cite{noauthor_what_nodate}. These conditions are set in the lines of code in the smart contract. To posses the reactive property smart contracts are stored and executed on every participating node on the network as part of the state $\sigma$. They are also immutable and decentralised which make smart contract advantageous as they can be used to facilitate, verify, and enforce the negotiation or performance of a contract~\cite{noauthor_introduction_nodate, noauthor_smart_nodate}.
+
+\subsubsection{Ethereum's Architecture}
+Ethereum's architecture is similar to bitcoin's but has a few differences, one of which is rather than managing a distributed ledger, it uses a distributed state machine. The Ethereum Virtual Machine (EVM) defines the rules of changing states from block to block. Each node on the Ethereum blockchain contains an immutable instance of the EVM~\cite{noauthor_ethereum_nodate}.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{background/Images/evm.png}
+    \caption{EVM components~\cite{noauthor_ethereum_nodate}}
+\end{figure}
+
+\noindent Ethereum's state $\sigma$ consists of the states of all accounts where the state of an account is represented by four components: balance of ETH (the native cryptocurrency on Ethereum), a nonce, hash of the smart contract code (if account is a smart contract) and the Merkle root of smart contract storage which maintains the contracts variables (again, if account is a smart contract)~\cite{ethereum_yellowpaper}.
 \\[5mm]
-Ethereum's architecture is similar to bitcoin's but has a few differences, one of which is the blockchain contains a copy of the transaction list and the most recent state. The process of how transactions are validated is below:
+Ethereum supports two types of transactions: contract creation and message calls. Message calls are used to transfer ETH from account to account and also for invoking smart contract. The process of how transactions are validated is below:
 \begin{enumerate}
     \itemsep0em
     \item Validate the parent block
@@ -50,30 +64,19 @@ Ethereum's architecture is similar to bitcoin's but has a few differences, one o
     \item Validate the final state
 \end{enumerate}
 
-\noindent Proof-of-Stake (PoS) is a consensus protocol that is used by Ethereum for the entire network to agree on the state of the blockchain. This provides security for malicious users to attempt to alter, add/remove transactions or maintain a second chain, the blockchain as it requires 66\% of the network to agree on the alteration.
+\subsubsection{Gas Fees}
+Due to the capability of expressing loops in EVM bytecode, there is a possibility that smart contract execution could continue indefinitely. This presents a challenge as invoking a contract with an infinite loop would cause all Ethereum network nodes to become stuck executing it, resulting in a denial of service. To mitigate this issue, Ethereum has implemented a pricing mechanism. Every computation performed by a smart contract requires the payment of a fee called gas, which is denominated in ether.
 \\[5mm]
 To measure how much computational effort is required to execute operations on the Ethereum network, gas is used~\cite{noauthor_gas_nodate}. Every block has a base fee, derived from the demand for the block space, which is burnt. Therefore, users of the network are expected to set a tip (priority fee) to reimburse miners for adding their transaction in blocks, thus the higher the tip, the greater the incentive for miners to validate the transaction. Using gas means that the Ethereum network is tolerant to spam and also has a maximum gas fee to make Ethereum tolerant to malicious code that would be used to waste resources.
-\\[5mm]
-Another difference between Ethereum and other cryptocurrencies is that rather than managing a distributed ledger, it uses a distributed state machine. The Ethereum Virtual Machine (EVM) defines the rules of changing states from block to block. Each node on the Ethereum blockchain contains an immutable instance of the EVM~\cite{noauthor_ethereum_nodate}.
 
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[width=0.8\textwidth]{background/Images/evm.png}
-    \caption{EVM components~\cite{noauthor_ethereum_nodate}}
-\end{figure}
-
-\subsubsection{Smart Contracts}
-% 7. Smart Contracts: Smart contracts are self-executing contracts with the terms of the agreement directly written into code. They are stored and executed on the blockchain, allowing for the automation of contractual agreements and the execution of predefined actions when certain conditions are met.
-Smart contracts are programs that are self-executing contracts between buyers and sellers that deploy on the Ethereum network. It allows for the automation of a contract's execution and can be used to facilitate, verify, and enforce the negotiation or performance of a contract~\cite{noauthor_introduction_nodate, noauthor_smart_nodate}.
-        
 \subsection{Decentralised Finance}
 One of the applications of Ethereum and smart contracts is Decentralised Exchanges (DEXes). Before delving into DEXes it is important to understand centralized exchanges.
 
 \subsubsection{Centralized Exchanges}
-Centralized exchanges allow agents to discover and trade assets. CEXes facilitate trading between buyers and sellers by proving an online platform that manages and maintains an order book. An order book aggregates buy and sell orders and execute matching buy and sell orders. The order book and transactions are typically managed on a database as opposed to interacting with the blockchain. When trading, exchanges charge trading fees for the maker and the taker to operate the exchange and do not charge any gas fees as there is no interaction with the blockchain. 
+Centralized exchanges(CEXes) allow agents to discover and trade assets. CEXes facilitate trading between buyers and sellers by proving an online platform that manages and maintains an order book. An order book aggregates buy and sell orders and execute matching buy and sell orders. The order book and transactions are typically managed on a central database. When trading, exchanges charge trading fees for the maker and the taker to operate the exchange and do not charge any gas fees as there is no interaction with the blockchain. 
 
 \subsubsection{Decentralized Exchanges}
-In contrast, DEXes utilize blockchain technology and smart contracts to execute trades thus providing a high level of determinism. These trades are executed on the blockchain via smart contracts and on-chain transactions. There are two types of DEX, order book DEXes and Automated Market Makers (AMMs). An order book DEX is less common and is similar to CEXes however, the order book is stored on the blockchain rather than on a central database. This means each order placed requires the order book to be posted on the blockchain at each transaction. Automated Market Makers are more common and provide instant liquidity by using liquidity pools so that users can swap their tokens for a price that is determined by the portions within the liquidity pool~\cite{DEXes}. DEXes have multiple pros including lower transaction fees, privacy, diversity and trustless transactions but they also have their drawbacks such as scalability and poor liquidity a lot of the DEXes are quite new~\cite{DEXvsCEX}.
+In contrast, DEXes utilize blockchain technology and smart contracts to execute trades thus providing a high level of determinism, by nature of the technology. These trades are executed on the blockchain via smart contracts and on-chain transactions. There are two types of DEX: order book DEXes and Automated Market Makers (AMMs). An order book DEX is less common and is akin to a CEX, an order book is stored on the blockchain rather than on a central database. This means each order placed requires the order book to be posted on the blockchain at each transaction. Automated Market Makers are more common and provide instant liquidity by using liquidity pools so that users can swap their tokens for a price that is determined by the portions within the liquidity pool~\cite{DEXes}. DEXes have multiple pros including lower transaction fees, privacy, diversity and trustless transactions but they also have their drawbacks such as scalability and poor liquidity a lot of the DEXes are quite new~\cite{DEXvsCEX}.
 
 \section{Arbitrage}
 Arbitrage is the process in which a trader simultaneously buys and sells an asset to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
