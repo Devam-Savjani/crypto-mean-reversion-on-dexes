@@ -1,6 +1,6 @@
 \chapter{Key Decisions and Outline of Trading Strategies}
 
-\section{Liquidity Pools}
+\section{Liquidity Pools} \label{sec:liquidity-pools}
 As previously mentioned, Uniswap is a decentralized exchange protocol that facilitates swapping of cryptocurrencies through the use of liquidity pools. One of the remarkable features of Uniswap is its support for even the smallest cryptocurrencies. In fact, it currently possesses an impressive number of 12,182 liquidity pools, as obtained via the Uniswap V3 subgraph. The subgraph provides valuable insights into the liquidity pools within the Uniswap ecosystem.
 \\[5mm]
 Table \ref{tab:liquidity_pools} showcases the diversity of these pools. Some pools exhibit high trading volumes, indicating significant activity and demand for those specific pairs. On the other hand, there are also pools with zero liquidity, which could be attributed to various reasons. It could be due to a lack of demand for one of the token pairs offered in the pool, or it may indicate that the pool is relatively new and has not attracted significant participation yet.
@@ -51,8 +51,8 @@ Subsequently, a unit root test is conducted on the residuals obtained from the r
 By following the aforementioned sequence of steps in the Engle-Granger test, it enables us to determine which liquidity pools demonstrate cointegration, thereby emphasizing their interconnectedness and mutual relationship over time. The outcome of the cointegration tests for all possible combinations of liquidity pools is presented in Table \ref{tab:coin_pools}. This table provides a comprehensive list of the liquidity pool pairs along with the results of their respective cointegration tests.
 \begin{table}[!ht]
     \centering
-    \begin{adjustwidth}{-1.1in}{-0.9in}
-        \begin{tabular}{|p{12em}|p{12em}|p{5em}|p{4.5em}|p{4.5em}|p{4.5em}|p{3em}|}\hline
+    \begin{adjustwidth}{-1in}{-0.9in}
+        \begin{tabular}{|p{12em}|p{12em}|p{5em}|p{4.5em}|p{4.5em}|p{4.5em}|p{2.5em}|}\hline
             pool1 & pool2 & t-statistic of unit-root test on residuals & \multicolumn{3}{|c|}{Critical Values} & is cointegrated?\\[-1ex]\cline{4-6}
             &   &   & 1\% & 5\% & 10\% &   \\\hline
             \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & -18.689411 & -3.897093 & -3.336494 & -3.044703 & Yes\\\hline
@@ -90,12 +90,53 @@ By following the aforementioned sequence of steps in the Engle-Granger test, it 
 
 \noindent Based on the results obtained, we focus our further investigation solely on the pairs of liquidity pools that exhibit cointegration. This filtering process allows us to narrow down our analysis to those pairs where a long-term relationship exists, suggesting that they move together in a concerted manner.
 \\[5mm]
-By concentrating on the cointegrated pairs, we can delve deeper into exploring their dynamics, assessing their behavior, and  leverage the interconnectedness between these liquidity pools. This approach enables us to prioritize our analysis and concentrate on the most relevant liquidity pool combinations that offer potential opportunities for profitable trading or other related activities.
+By concentrating on the cointegrated pairs, we can delve deeper into exploring their dynamics, assessing their behavior, and leverage the interconnectedness between these liquidity pools. This approach enables us to prioritize our analysis and concentrate on the most relevant liquidity pool combinations that offer potential opportunities for profitable trading or other related activities.
  
 \section{Strategy}
+
+As previously mentioned, the strategy I employ is the mean reversion trading strategy. The basic concept of a mean reversion strategy identifying two closely related assets or securities, typically referred to as a pair, and taking advantage of deviations from their historical price relationship. This works by initially identifying a pair of assets that have a historically stable relationship as I have done in Section \ref{sec:liquidity-pools}. Then as prices change you calculate the spread, which is the difference between their prices. Look for deviations from the historical mean spread, upon a deviation one buys the undervalued asset and sells the other. The positions are then closed once the spread reverts back to its historical mean.
+
+\subsection{Buying and Selling}
+The process of buying and selling in traditional markets is relatively straightforward as brokers and exchanges play a crucial role in executing orders on behalf of individuals. However, when it comes to trading cryptocurrencies, the responsibility falls directly on the trader, such as myself. Therefore, it becomes essential to clearly define what buying and selling entail in the context of cryptocurrency trading.
+
+\subsubsection{Buying}
+Prices on Uniswap are represented as ratios for example 1 USDC = $P$ WETH. With this understanding, let's delve into the process of buying one unit of USDC/WETH on Uniswap:
+\begin{itemize}
+    \item Opening a Buy position:\begin{itemize}
+        \item Starts with $P_{0}$ WETH
+        \item Swaps the WETH for USDC, hence ends with 1 USDC
+    \end{itemize}
+    \item Closing a Buy position:\begin{itemize}
+        \item Starts with 1 USDC
+        \item Swaps the USDC for WETH, hence ends with $P_1$ WETH
+    \end{itemize}
+\end{itemize}
+\noindent Consequently, if the price of USDC/WETH increases from the moment the buy position is opened to the time it is closed, the trader realizes a profit. On the other hand, if the price declines during this period, the trader incurs a loss.
+
+\subsubsection{Selling}
+Selling an asset is a more complex process compared to buying because it involves trading an asset that the trader doesn't initially possess. In traditional markets, this is facilitated by the trader borrowing the desired asset from a broker or another party. When the trader decides to close the position, they repurchase the same amount of the borrowed asset and return it to the lender, hoping that its value has declined. This borrowing and returning process is typically managed automatically by brokers and exchanges. However, in decentralized exchanges (DEXes), such mechanisms are not in place.
+\\[5mm]
+To simplify this process, I have opted to utilize Aave as a lending platform to borrow any required assets. It is worth noting that Aave supports only a limited range of tokens available for borrowing, namely DAI, EURS, USDC, USDT, AAVE, LINK, WBTC, and WETH. Therefore, shorting would be feasible only if I focus on liquidity pools that involve these cryptocurrencies. By leveraging Aave as a lending platform, I can access the necessary assets for shorting. The process of selling is as follows:
+\begin{itemize}
+    \item Opening a Sell position:\begin{itemize}
+        \item Borrow 1 USDC
+        \item Swaps the USDC for WETH, hence ends with $P_0$ WETH
+    \end{itemize}
+    \item Closing a Sell position:\begin{itemize}
+        \item Starts with $P_0$ WETH
+        \item Swaps the WETH for USDC, hence ends with $\frac{P_0}{P_1}$ USDC
+        \item Return the borrowed USDC, leaving $\frac{P_0}{P_1} - 1$ USDC
+    \end{itemize}
+\end{itemize}
+Consequently, if the price of USDC/WETH decreases, i.e. $P_1 < P_0$ from the moment the sell position is opened to the time it is closed, the trader realizes a profit. On the other hand, if the price increases during this period, the trader incurs a loss.
+\\[5mm]
+Note that this is is merely an illustrative example and does not account for any potential fees that the trader might incur.
 
 \subsection{Hedge Ratio}
 \subsubsection{Mean Reversion Strategy}
 \subsubsection{Kalman Filter}
 
-\subsection{Volume of Trades}
+\subsection{Fees that are incurred}
+
+
+\subsection{Volume of Trades - TODO}
