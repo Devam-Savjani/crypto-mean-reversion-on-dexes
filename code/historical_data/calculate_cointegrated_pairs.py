@@ -19,18 +19,11 @@ def calculate_pairs_sum_of_squared_differences(should_save=True):
                 ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price <> 0 AND p2.token1_price <> 0;
                 """)
 
-            ssd_1 = np.sum((merged['p1_token1_price'].to_numpy() - merged['p2_token1_price'].to_numpy())**2)
-            ssd_2 = np.sum((merged['p1_token1_price'].to_numpy() - (1 / merged['p2_token1_price']).to_numpy())**2)
-            
-            if ssd_1 < ssd_2:
-                key = (valid_pools_that_include_weth[i], valid_pools_that_include_weth[j])
-            else:
-                if valid_pools_that_include_weth[i][:4] == 'WETH':
-                    key = (valid_pools_that_include_weth[j], f'{valid_pools_that_include_weth[i]}_swapped')
-                else:
-                    key = (valid_pools_that_include_weth[i], f'{valid_pools_that_include_weth[j]}_swapped')
+            pool1_data = merged['p1_token1_price'].to_numpy() if valid_pools_that_include_weth[i].split('_')[1] == 'WETH' else (1 / merged['p1_token1_price'].to_numpy())
+            pool2_data = merged['p2_token1_price'].to_numpy() if valid_pools_that_include_weth[j].split('_')[1] == 'WETH' else (1 / merged['p2_token1_price'].to_numpy())
 
-            liquidity_pool_pair_ssds[key] = min(ssd_1, ssd_2)
+            ssd = np.sum((pool1_data - pool2_data)**2)
+            liquidity_pool_pair_ssds[(valid_pools_that_include_weth[i], valid_pools_that_include_weth[j])] = ssd
 
     liquidity_pool_pair_ssds = sorted(liquidity_pool_pair_ssds.items(), key=lambda x:x[1])
 
@@ -40,22 +33,22 @@ def calculate_pairs_sum_of_squared_differences(should_save=True):
     return liquidity_pool_pair_ssds
 
 def is_cointegrated(p1, p2):
-    swapped = False
-    p2_split = p2.split('_')
-    if len(p2_split) == 4:
-        swapped = True
-        p2 = p2_split[0] + '_' + p2_split[1] + '_' + p2_split[2]
+    swapped_p1 = p1.split('_')[0] == 'WETH'
+    swapped_p2 = p2.split('_')[0] == 'WETH'
 
     merged = table_to_df(command=f"""
                 SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price
                 FROM "{p1}" as p1 INNER JOIN "{p2}" as p2
-                ON p1.period_start_unix = p2.period_start_unix {'WHERE p2.token1_price <> 0' if swapped else ''};
+                ON p1.period_start_unix = p2.period_start_unix {'WHERE p1.token1_price <> 0' if swapped_p1 else ''} {'AND p2.token1_price <> 0' if swapped_p1 and swapped_p2 else ('WHERE p2.token1_price <> 0' if swapped_p2 else '')};
                 """)
     
     df1 = merged['p1_token1_price']
     df2 = merged['p2_token1_price']
 
-    if swapped:
+    if swapped_p1:
+        df1 = 1 / merged['p1_token1_price']
+
+    if swapped_p2:
         df2 = 1 / merged['p2_token1_price']
 
     result = sm.tsa.stattools.coint(df1, df2)
