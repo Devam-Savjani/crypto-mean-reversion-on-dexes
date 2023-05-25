@@ -196,7 +196,6 @@ During the transition from PoW to PoS, there are fundamental changes in how the 
         \makebox[\textwidth]{\includegraphics[width=1.15\textwidth]{project/Images/plots_1.png}}
     \end{subfigure}
     \hfill
-    \vspace{-0.5in}
     \begin{subfigure}[b]{\textwidth}
         \centering
         \makebox[\textwidth]{\includegraphics[width=1.15\textwidth]{project/Images/plots_2.png}}
@@ -206,7 +205,38 @@ During the transition from PoW to PoS, there are fundamental changes in how the 
     \label{fig:ratios_kf}
 \end{figure}
 
-\subsection{Fees that are incurred}
+\subsection{Fees}
+As previously mentioned, when engaging in trading activities, there are several fees that are deducted. These fees serve multiple purposes, including compensating the liquidity providers and addressing the potential lack of access to assets from the lender. Therefore, in this section, we will delve into the various costs associated with implementing and executing the strategy.
 
+\subsubsection{Gas Fees}
+Gas fees in Ethereum are a crucial component of the network's operation. They serve two main purposes: to prevent spam and denial-of-service attacks and to incentivize miners to include transactions in the blockchain. They are a measure of computational effort required to execute a transaction or perform a smart contract operation on the Ethereum network. Each operation, such as sending tokens, executing a smart contract function, or interacting with decentralized applications, consumes a certain amount of gas.
+\\[5mm]
+The fee is calculated by multiplying the gas price (expressed in Gwei, where 1 Gwei is equal to 0.000000001 ETH) by the gas used~\cite{noauthor_gas_nodate}. As mentioned in previous sections, when a transaction is initiated by a user, the user specifies the gas limit which defines the maximum amount of gas that a user is willing to pay for a transaction, if the gas limit is too low and the gas used is greater than its limit, the transaction will fail and be reverted. This means that the state changes made by the transaction will not be recorded on Ethereum, and the fees paid for that transaction will be lost.
+
+\begin{figure}[!htb]
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \makebox[\textwidth]{\includegraphics[width=1.15\textwidth]{project/Images/gas_price_1.png}}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \makebox[\textwidth]{\includegraphics[width=1.15\textwidth]{project/Images/gas_price_2.png}}
+    \end{subfigure}
+    \vspace{-0.8cm}
+    \caption{The top picture shows the gas price over time, while the bottom picture is a zoomed-in plot.}
+    \label{fig:gwei_over_time}
+\end{figure}
+
+\noindent Figure \ref{fig:gwei_over_time} the gas price history over time, showing the price surges and trophs. The reason for these fluctuations that it is determined by the market forces of supply and demand. It is the amount of Ether (ETH) that a user is willing to pay for each unit of gas consumed in a transaction. Miners have the option to prioritize transactions with higher gas prices, and thus are incentivized to include transactions with higher gas prices because they receive the gas fees as a reward for their mining efforts. Therefore, setting a higher gas price increases the chances of a transaction being executed.
+\\[5mm]
+The second part of the gas fee is how much gas is used, it is calculated by multiplying the gas cost of each operation in the transaction by the corresponding gas price. Each operation has a predefined gas cost associated with it, which reflects the complexity and resource requirements of that operation. When a transaction or smart contract execution is initiated, the Ethereum Virtual Machine (EVM) processes each operation and deducts the corresponding gas cost from the gas limit. In addition to this, Ethereum also has a base fee with all of their transactions thus having multiple small transaction becomes more costly than using a large combined transaction~\cite{noauthor_gas_nodate}.
+
+\subsubsection{Uniswap Fees}
+\subsubsection{Aave Fees \& Collatoral}
+\subsubsection{Maintaining a Positive Balance on all currencies}
 
 \subsection{Volume of Trades - TODO}
+
+\subsection{Overall Strategy - TODO}
+
