@@ -1,6 +1,5 @@
 import numpy as np
 from pykalman import KalmanFilter
-from sklearn.preprocessing import StandardScaler
 import sys
 sys.path.append('./strategies')
 import abstract_strategy
@@ -24,20 +23,21 @@ class Kalman_Filter_Strategy(abstract_strategy.Abstract_Strategy):
     def initialise_kalman_filter_and_thresholds(self):
         p1, p2 = self.history_p1, self.history_p2
 
-        # observation matrix F is 2-dimensional, containing sym_a price and 1
-        # there are data.shape[0] observations
-        obs_mat = sm.add_constant(np.log(p1), prepend=False)[:, np.newaxis]
+        obs_mat = sm.add_constant(p1, prepend=False)[:, np.newaxis]
         trans_cov = 1e-5 / (1 - 1e-5) * np.eye(2)
-        
+
+        model = sm.OLS(p2, sm.add_constant(p1))
+        initial_state = model.fit().params[::-1]
+
         kf = KalmanFilter(n_dim_obs=1, n_dim_state=2, 
-                  initial_state_mean=np.ones(2),
+                  initial_state_mean=initial_state,
                   initial_state_covariance=np.ones((2, 2)),
                   transition_matrices=np.eye(2),
                   observation_matrices=obs_mat,
                   observation_covariance=0.5,
-                  transition_covariance=0.000001 * np.eye(2))
+                  transition_covariance=trans_cov)
 
-        state_means, state_covs = kf.filter(np.log(p2))
+        state_means, state_covs = kf.filter(p2)
 
         self.means_trace = [state_means[-1]]
         self.covs_trace = [state_covs[-1]]
@@ -77,8 +77,8 @@ class Kalman_Filter_Strategy(abstract_strategy.Abstract_Strategy):
         x = p2[-1]
         y = p1[-1]
 
-        observation_matrix_stepwise = np.array([[np.log(y), 1]])
-        observation_stepwise = np.log(x)
+        observation_matrix_stepwise = np.array([[y, 1]])
+        observation_stepwise = x
 
         state_means_stepwise, state_covs_stepwise = self.kf.filter_update(
             filtered_state_mean=self.means_trace[-1],
