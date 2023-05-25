@@ -233,10 +233,32 @@ The fee is calculated by multiplying the gas price (expressed in Gwei, where 1 G
 The second part of the gas fee is how much gas is used, it is calculated by multiplying the gas cost of each operation in the transaction by the corresponding gas price. Each operation has a predefined gas cost associated with it, which reflects the complexity and resource requirements of that operation. When a transaction or smart contract execution is initiated, the Ethereum Virtual Machine (EVM) processes each operation and deducts the corresponding gas cost from the gas limit. In addition to this, Ethereum also has a base fee with all of their transactions thus having multiple small transaction becomes more costly than using a large combined transaction~\cite{noauthor_gas_nodate}.
 
 \subsubsection{Uniswap Fees}
+In addition to transaction fees, there is another fee mechanism in place within the system when swapping on Uniswap. This fee is designed to incentivize and reward liquidity providers on the platform. When a swap occurs, a fee is deducted from the amount of tokens expected to be returned to the user.
+\\[5mm]
+The fee is calculated as a percentage of the swap volume, meaning that the larger the swap, the higher the fee. For example, let's consider a scenario where the exchange price is 1 TKNA = 100 TKNB and the fee is set at 0.3\%. If someone exchanges 1 TKNA for TKNB, instead of receiving the full 100 TKNB based on the exchange rate, they will receive 100$\times$(1 - 0.3\%) TKNB = 99.7 TKNB. The fee reduces the total amount of tokens received in the swap.
+\\[5mm]
+It's important to note that the specific fee percentage may vary between different liquidity pools on Uniswap. Each liquidity pool can have its own fee tier, and the fees associated with each interested liquidity pools can be seen in the table below.
+
+\begin{table}[!htb]
+    \begin{tabular}{|l|l|l|r|}
+        \hline
+                                      Pool Address & Token0 & Token1 &  Fee Tier as a \% \\\hline\hline
+        0xcbcdf9626bc03e24f779434178a73a0b4bad62ed &   WBTC &   WETH &     0.30 \\\hline
+        0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8 &    DAI &   WETH &     0.30 \\\hline
+        0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8 &   USDC &   WETH &     0.30 \\\hline
+        0x4e68ccd3e89f51c3074ca5072bbac773960dfa36 &   WETH &   USDT &     0.30 \\\hline
+        0x60594a405d53811d3bc4766596efd80fd545a270 &    DAI &   WETH &     0.05 \\\hline
+        0x4585fe77225b41b697c938b018e2ac67ac5a20c0 &   WBTC &   WETH &     0.05 \\\hline
+        0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640 &   USDC &   WETH &     0.05 \\\hline
+        0x11b815efb8f581194ae79006d24e0d814b7697f6 &   WETH &   USDT &     0.05 \\\hline
+    \end{tabular}
+\end{table}
+
+
 \subsubsection{Aave Fees \& Collatoral}
-\subsubsection{Maintaining a Positive Balance on all currencies}
 
 \subsection{Volume of Trades - TODO}
 
 \subsection{Overall Strategy - TODO}
+\subsubsection{Maintaining a Positive Balance on all currencies}
 
