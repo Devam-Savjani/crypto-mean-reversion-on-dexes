@@ -73,9 +73,7 @@ class Abstract_Strategy():
             if spread < self.upper_threshold and spread > self.lower_threshold and gas_price_in_eth < self.gas_price_threshold:
                 self.account_history.append(account)
 
-                swap_for_a = []
                 swap_for_b = []
-                withdraw_amount = 0
 
                 if gas_price_in_eth > self.gas_price_threshold:
                     sell_token, sold_price, sell_volume, sell_timestamp = open_positions['SELL'].values()[
@@ -86,61 +84,7 @@ class Abstract_Strategy():
                                       liquidation_threshold) - account['collateral_WETH']
                     return [('DEPOSIT', deposit_amount)] if should_deposit_more else []
 
-                if 'BUY' in open_positions:
-                    for buy_position in open_positions['BUY'].values():
-                        buy_token, _, buy_volume, buy_timestamp = buy_position
-                        if account[buy_token] - buy_volume < 0:
-                            swap_for_a.append(
-                                (buy_token, abs(account[buy_token] - buy_volume)))
-
-                if 'SELL' in open_positions:
-                    for sell_position in open_positions['SELL'].values():
-                        sell_token, sold_price, sell_volume, sell_timestamp = sell_position
-                        position_token = account[sell_token]
-                        current_token_price = prices[f'P{sell_token[1]}']
-
-                        number_of_hours = (
-                            timestamp - sell_timestamp) / (60 * 60)
-                        hourly_yield = (
-                            1 + apy[sell_token])**(1 / (365*24)) - 1
-
-                        new_token_balance = position_token + \
-                            (sell_volume * ((sold_price / current_token_price) - 1)
-                             ) - sell_volume * (hourly_yield ** number_of_hours)
-
-                        if new_token_balance < 0:
-                            swap_for_a.append(
-                                (sell_token, abs(new_token_balance)))
-
-                        new_eth_balance = account['WETH'] + account['collateral_WETH'] - (
-                            sold_price * sell_volume) - ((GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth)
-
-                        if new_eth_balance < 0:
-                            n = len(open_positions['BUY'].values(
-                            )) + len(swap_for_a) + len(swap_for_b) + 1
-                            if account[sell_token] - (abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)) / prices[f'P{sell_token[1]}'] < 0:
-                                # NEVER GETS HERE, which is good
-                                swap_for_b.append(
-                                    (buy_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
-                            else:
-                                swap_for_b.append(
-                                    (sell_token, abs(new_eth_balance) + (n * GAS_USED_BY_SWAP * gas_price_in_eth)))
-
-                        withdraw_amount += account['collateral_WETH'] + withdraw_amount - (
-                            sell_volume * current_token_price) / liquidation_threshold
-
-                orders = []
-
-                for swap in swap_for_a:
-                    swap_token, swap_volume = swap
-                    swap_price = prices[f'P{swap_token[1]}']
-
-                    if account['WETH'] - (swap_volume * swap_price) - (GAS_USED_BY_SWAP * gas_price_in_eth) < 0:
-                        orders += [('WITHDRAW', withdraw_amount)]
-
-                return orders + [
-                    ('SWAP', ('A', swap_for_a)),
-                    ('SWAP', ('B', swap_for_b)),
+                return [
                     ('CLOSE', ('SELL', [
                      sell_position for sell_position in open_positions['SELL']])),
                     ('CLOSE', ('BUY', [
