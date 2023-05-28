@@ -8,7 +8,7 @@ from check_liquidity_pool_data import get_pools_max_timestamp
 
 def calculate_pairs_sum_of_squared_differences(should_save=True):
     liquidity_pool_pair_ssds = {}
-    valid_pools_that_include_weth = [pool for pool in get_pools_max_timestamp()['table_name'] if 'WETH' in pool]
+    valid_pools_that_include_weth = get_pools_max_timestamp()['table_name']
 
     for i in tqdm(range(len(valid_pools_that_include_weth))):
         for j in range(i+1, len(valid_pools_that_include_weth)):

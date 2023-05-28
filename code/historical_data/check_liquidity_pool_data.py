@@ -6,6 +6,18 @@ def get_pools_max_timestamp():
     ydays_date = datetime.now().date() - timedelta(days=1)
     ydays_timestamp = int(time.mktime(ydays_date.timetuple()))
 
+    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
+    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
+
+    query = f"""
+        Select CONCAT(pool.token0, '_', pool.token1, '_', pool.pool_address) as table_name from
+        (SELECT *
+        FROM liquidity_pools WHERE
+        (token0='WETH' or token1='WETH') AND
+        \t({filter_tokens}) AND volume_usd >= 10000000
+        ORDER BY volume_usd DESC) as pool
+    """
+
     df = table_to_df(command=f"""
             CREATE OR REPLACE FUNCTION get_max_timestamp()
                 RETURNS TABLE (table_name TEXT, max_timestamp BIGINT)
@@ -14,9 +26,9 @@ def get_pools_max_timestamp():
                 r RECORD;
             BEGIN
                 FOR r IN
-                (select i.table_name, i.table_schema from information_schema.tables i WHERE i.table_schema = 'public' AND i.table_name <> 'liquidity_pools' AND i.table_name NOT LIKE '%_borrowing_rates')
+                ({query})
             LOOP
-                EXECUTE FORMAT ('SELECT MAX(period_start_unix) FROM %I.%I', r.table_schema, r.table_name) INTO max_timestamp;
+                EXECUTE FORMAT ('SELECT MAX(period_start_unix) FROM %I', r.table_name) INTO max_timestamp;
                 table_name := r.table_name;
                 RETURN next;
             END LOOP;
