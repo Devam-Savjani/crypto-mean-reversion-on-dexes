@@ -69,3 +69,72 @@
 2023-05-18 23:45:21,031, urbanGUI INFO Completed: Refresh liquidity pool data tables
 2023-05-23 21:36:41,706, urbanGUI INFO Refreshing liquidity pool data tables
 2023-05-23 21:50:37,057, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-28 11:17:16,315, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-28 11:20:04,676, urbanGUI ERROR Failed to fetch some data for address 0xe0554a476a092703abdb3ef35c80e0d76d32939f : "USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f"
+2023-05-28 11:49:35,995, urbanGUI ERROR Failed to fetch some data for address 0x1353fe67fff8f376762b7034dc9066f0be15a723 : "AAVE_WETH_0x1353fe67fff8f376762b7034dc9066f0be15a723"
+2023-05-28 11:51:07,960, urbanGUI ERROR Failed to fetch some data for address 0xe6ff8b9a37b0fab776134636d9981aa778c4e718 : "WBTC_WETH_0xe6ff8b9a37b0fab776134636d9981aa778c4e718"
+2023-05-28 13:10:43,660, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-28 13:10:45,636, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-28 13:11:58,939, urbanGUI ERROR Failed to fetch some data for address 0xe0554a476a092703abdb3ef35c80e0d76d32939f : "USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f"
+2023-05-28 13:15:01,511, urbanGUI ERROR Failed to fetch some data for address 0xe6ff8b9a37b0fab776134636d9981aa778c4e718 : "WBTC_WETH_0xe6ff8b9a37b0fab776134636d9981aa778c4e718"
+2023-05-28 13:15:34,287, urbanGUI ERROR Failed to fetch some data for address 0x5d4f3c6fa16908609bac31ff148bd002aa6b8c83 : "LINK_WETH_0x5d4f3c6fa16908609bac31ff148bd002aa6b8c83"
+2023-05-28 13:27:41,677, urbanGUI ERROR Failed to fetch some data for address 0x3a0f221ea8b150f3d3d27de8928851ab5264bb65 : "LINK_WETH_0x3a0f221ea8b150f3d3d27de8928851ab5264bb65"
+2023-05-28 13:29:49,696, urbanGUI ERROR Failed to fetch some data for address 0xd8dec118e1215f02e10db846dcbbfe27d477ac19 : "DAI_WETH_0xd8dec118e1215f02e10db846dcbbfe27d477ac19"
+2023-05-28 13:29:50,412, urbanGUI ERROR Failed to fetch some data for address 0x4674abc5796e1334b5075326b39b748bee9eaa34 : "AAVE_WETH_0x4674abc5796e1334b5075326b39b748bee9eaa34"
+2023-05-28 13:29:50,415, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-28 13:29:56,745, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-28 13:32:33,771, urbanGUI ERROR Failed to fetch some data for address 0xe6ff8b9a37b0fab776134636d9981aa778c4e718 : "WBTC_WETH_0xe6ff8b9a37b0fab776134636d9981aa778c4e718"
+2023-05-28 13:34:15,684, urbanGUI ERROR Failed to fetch some data for address 0x5d4f3c6fa16908609bac31ff148bd002aa6b8c83 : "LINK_WETH_0x5d4f3c6fa16908609bac31ff148bd002aa6b8c83"
+2023-05-28 13:35:51,674, urbanGUI ERROR Failed to fetch some data for address 0xd8dec118e1215f02e10db846dcbbfe27d477ac19 : "DAI_WETH_0xd8dec118e1215f02e10db846dcbbfe27d477ac19"
+2023-05-28 13:35:51,980, urbanGUI ERROR Failed to fetch some data for address 0x4674abc5796e1334b5075326b39b748bee9eaa34 : "AAVE_WETH_0x4674abc5796e1334b5075326b39b748bee9eaa34"
+2023-05-28 13:35:51,983, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-28 13:35:56,873, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-28 13:37:32,329, urbanGUI ERROR Failed to fetch some data for address 0xe6ff8b9a37b0fab776134636d9981aa778c4e718 : "WBTC_WETH_0xe6ff8b9a37b0fab776134636d9981aa778c4e718"
+2023-05-28 13:38:09,092, urbanGUI ERROR Failed to fetch some data for address 0x5d4f3c6fa16908609bac31ff148bd002aa6b8c83 : "LINK_WETH_0x5d4f3c6fa16908609bac31ff148bd002aa6b8c83"
+2023-05-28 13:39:11,698, urbanGUI ERROR Failed to fetch some data for address 0xd8dec118e1215f02e10db846dcbbfe27d477ac19 : "DAI_WETH_0xd8dec118e1215f02e10db846dcbbfe27d477ac19"
+2023-05-28 13:40:04,802, urbanGUI ERROR Failed to fetch some data for address 0x4674abc5796e1334b5075326b39b748bee9eaa34 : "AAVE_WETH_0x4674abc5796e1334b5075326b39b748bee9eaa34"
+2023-05-28 13:40:04,803, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-28 13:40:09,352, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-28 13:40:57,947, urbanGUI ERROR Failed to fetch some data for address 0xe6ff8b9a37b0fab776134636d9981aa778c4e718 : "WBTC_WETH_0xe6ff8b9a37b0fab776134636d9981aa778c4e718"
+2023-05-28 13:41:20,474, urbanGUI ERROR Failed to fetch some data for address 0x5d4f3c6fa16908609bac31ff148bd002aa6b8c83 : "LINK_WETH_0x5d4f3c6fa16908609bac31ff148bd002aa6b8c83"
+2023-05-28 13:42:25,374, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-28 13:43:59,235, urbanGUI INFO Begining to reinitialise liquidity pool data tables
+2023-05-28 13:44:50,301, urbanGUI ERROR Failed to fetch some data for address 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640 : "USDC_WETH_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640"
+2023-05-28 13:45:26,341, urbanGUI ERROR Failed to fetch some data for address 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8 : "USDC_WETH_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8"
+2023-05-28 13:45:59,241, urbanGUI ERROR Failed to fetch some data for address 0x11b815efb8f581194ae79006d24e0d814b7697f6 : "WETH_USDT_0x11b815efb8f581194ae79006d24e0d814b7697f6"
+2023-05-28 13:49:40,090, urbanGUI ERROR Failed to fetch some data for address 0x4585fe77225b41b697c938b018e2ac67ac5a20c0 : "WBTC_WETH_0x4585fe77225b41b697c938b018e2ac67ac5a20c0"
+2023-05-28 13:49:45,195, urbanGUI ERROR Failed to fetch some data for address 0x4e68ccd3e89f51c3074ca5072bbac773960dfa36 : "WETH_USDT_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36"
+2023-05-28 13:50:30,994, urbanGUI ERROR Failed to fetch some data for address 0x60594a405d53811d3bc4766596efd80fd545a270 : "DAI_WETH_0x60594a405d53811d3bc4766596efd80fd545a270"
+2023-05-28 13:51:03,096, urbanGUI ERROR Failed to fetch some data for address 0xcbcdf9626bc03e24f779434178a73a0b4bad62ed : "WBTC_WETH_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed"
+2023-05-28 14:06:58,560, urbanGUI ERROR Failed to fetch some data for address 0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8 : "DAI_WETH_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8"
+2023-05-28 14:15:47,246, urbanGUI ERROR Failed to fetch some data for address 0x7bea39867e4169dbe237d55c8242a8f2fcdcc387 : "USDC_WETH_0x7bea39867e4169dbe237d55c8242a8f2fcdcc387"
+2023-05-28 14:18:50,499, urbanGUI ERROR Failed to fetch some data for address 0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb : "AAVE_WETH_0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb"
+2023-05-28 14:23:53,330, urbanGUI ERROR Failed to fetch some data for address 0xa80964c5bbd1a0e95777094420555fead1a26c1e : "DAI_WETH_0xa80964c5bbd1a0e95777094420555fead1a26c1e"
+2023-05-28 14:24:32,222, urbanGUI ERROR Failed to fetch some data for address 0x1353fe67fff8f376762b7034dc9066f0be15a723 : "AAVE_WETH_0x1353fe67fff8f376762b7034dc9066f0be15a723"
+2023-05-28 14:25:16,707, urbanGUI ERROR Failed to fetch some data for address 0xe6ff8b9a37b0fab776134636d9981aa778c4e718 : "WBTC_WETH_0xe6ff8b9a37b0fab776134636d9981aa778c4e718"
+2023-05-28 14:27:49,848, urbanGUI ERROR Failed to fetch some data for address 0x3a0f221ea8b150f3d3d27de8928851ab5264bb65 : "LINK_WETH_0x3a0f221ea8b150f3d3d27de8928851ab5264bb65"
+2023-05-28 14:30:10,755, urbanGUI INFO Completed: Reinitialise liquidity pool data tables
+2023-05-28 14:30:26,187, urbanGUI INFO Begining to reinitialise liquidity pool data tables
+2023-05-28 14:30:53,356, urbanGUI ERROR Failed to fetch some data for address 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640 : "USDC_WETH_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640"
+2023-05-28 14:31:19,915, urbanGUI ERROR Failed to fetch some data for address 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8 : "USDC_WETH_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8"
+2023-05-28 14:32:42,429, urbanGUI ERROR Failed to fetch some data for address 0x11b815efb8f581194ae79006d24e0d814b7697f6 : "WETH_USDT_0x11b815efb8f581194ae79006d24e0d814b7697f6"
+2023-05-28 14:32:43,623, urbanGUI ERROR Failed to fetch some data for address 0x4585fe77225b41b697c938b018e2ac67ac5a20c0 : "WBTC_WETH_0x4585fe77225b41b697c938b018e2ac67ac5a20c0"
+2023-05-28 14:36:19,095, urbanGUI ERROR Failed to fetch some data for address 0x60594a405d53811d3bc4766596efd80fd545a270 : "DAI_WETH_0x60594a405d53811d3bc4766596efd80fd545a270"
+2023-05-28 14:41:37,903, urbanGUI ERROR Failed to fetch some data for address 0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8 : "DAI_WETH_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8"
+2023-05-28 14:42:31,085, urbanGUI ERROR Failed to fetch some data for address 0xe0554a476a092703abdb3ef35c80e0d76d32939f : "USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f"
+2023-05-28 14:47:51,499, urbanGUI ERROR Failed to fetch some data for address 0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb : "AAVE_WETH_0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb"
+2023-05-28 14:48:40,589, urbanGUI ERROR Failed to fetch some data for address 0xc5af84701f98fa483ece78af83f11b6c38aca71d : "WETH_USDT_0xc5af84701f98fa483ece78af83f11b6c38aca71d"
+2023-05-28 14:48:41,163, urbanGUI ERROR Failed to fetch some data for address 0x6ab3bba2f41e7eaa262fa5a1a9b3932fa161526f : "WBTC_WETH_0x6ab3bba2f41e7eaa262fa5a1a9b3932fa161526f"
+2023-05-28 14:48:41,572, urbanGUI ERROR Failed to fetch some data for address 0xa80964c5bbd1a0e95777094420555fead1a26c1e : "DAI_WETH_0xa80964c5bbd1a0e95777094420555fead1a26c1e"
+2023-05-28 14:54:22,900, urbanGUI INFO Completed: Reinitialise liquidity pool data tables
+2023-05-28 14:54:29,204, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-28 15:04:49,764, urbanGUI ERROR Failed to fetch some data for address 0x4585fe77225b41b697c938b018e2ac67ac5a20c0 : "WBTC_WETH_0x4585fe77225b41b697c938b018e2ac67ac5a20c0"
+2023-05-28 15:05:02,575, urbanGUI ERROR Failed to fetch some data for address 0x60594a405d53811d3bc4766596efd80fd545a270 : "DAI_WETH_0x60594a405d53811d3bc4766596efd80fd545a270"
+2023-05-28 15:06:12,923, urbanGUI ERROR Failed to fetch some data for address 0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb : "AAVE_WETH_0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb"
+2023-05-28 15:06:13,641, urbanGUI ERROR Failed to fetch some data for address 0xc5af84701f98fa483ece78af83f11b6c38aca71d : "WETH_USDT_0xc5af84701f98fa483ece78af83f11b6c38aca71d"
+2023-05-28 15:08:30,143, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-28 15:09:10,786, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-28 15:13:25,832, urbanGUI ERROR Failed to fetch some data for address 0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb : "AAVE_WETH_0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb"
+2023-05-28 15:14:02,330, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-05-28 15:14:09,900, urbanGUI INFO Refreshing liquidity pool data tables
+2023-05-28 15:15:40,020, urbanGUI INFO Completed: Refresh liquidity pool data tables

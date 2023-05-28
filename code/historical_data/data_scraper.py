@@ -60,7 +60,7 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
                 swaps_data = gq_client.execute(
                     query="""
                             query pools($min_timestamp: Int!, $max_timestamp: Int!) {
-                                pools(where: {volumeUSD_gte: 10000000000}) {
+                                pools(where: {volumeUSD_gte: 1000000}) {
                                     id
                                     swaps(where: {timestamp_gte: $min_timestamp, timestamp_lt: $max_timestamp}) {
                                         id
@@ -110,8 +110,20 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
 
 def reinitialise_all_liquidity_pool_data():
     drop_all_tables_except_table('liquidity_pools')
-    df = table_to_df(
-        command="SELECT pool_address, token0, token1 FROM liquidity_pools WHERE volume_usd >= 10000000000;")
+
+    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
+
+    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
+
+    query = f"""
+        SELECT pool_address, token0, token1
+        FROM liquidity_pools WHERE
+        (token0='WETH' or token1='WETH') AND
+        \t({filter_tokens}) AND volume_usd >= 1000000
+        ORDER BY volume_usd DESC;
+    """
+    
+    df = table_to_df(command=query)
     logger.info('Begining to reinitialise liquidity pool data tables')
 
     for _, row in tqdm(df.iterrows(), total=df.shape[0]):
@@ -128,8 +140,20 @@ def reinitialise_all_liquidity_pool_data():
 
 
 def refresh_database():
-    df = table_to_df(
-        command="SELECT pool_address, token0, token1 FROM liquidity_pools WHERE volume_usd >= 10000000000;")
+
+    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
+    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
+
+    query = f"""
+        SELECT pool_address, token0, token1
+        FROM liquidity_pools WHERE
+        (token0='WETH' or token1='WETH') AND
+        \t({filter_tokens}) AND volume_usd >= 1000000
+        ORDER BY volume_usd DESC;
+    """
+    
+    df = table_to_df(command=query)
+
     df_liquidity_pool_tables = list(table_to_df(
         command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'liquidity_pools'")['tablename'])
     df_liquidity_pool_tables = ['"' + tn +

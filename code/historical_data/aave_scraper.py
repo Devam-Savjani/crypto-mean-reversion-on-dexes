@@ -55,9 +55,20 @@ def get_block_data(symbol, gq_client, prev_max_time=0):
 
 
 def reinitialise_borrowing_rates_data():
+    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
 
-    df = table_to_df(
-        command="SELECT token0, token1 FROM liquidity_pools WHERE volume_usd >= 10000000000;")
+    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
+
+    query = f"""
+        SELECT pool_address, token0, token1
+        FROM liquidity_pools WHERE
+        (token0='WETH' or token1='WETH') AND
+        \t({filter_tokens}) AND volume_usd >= 1000000
+        ORDER BY volume_usd DESC;
+    """
+
+    df = table_to_df(command=query)
+    
     tokens = np.unique(pd.concat([df['token0'], df['token1']]))
 
     gq_client_aave_v2 = GraphqlClient(
@@ -84,8 +95,21 @@ def reinitialise_borrowing_rates_data():
 
 
 def refresh_database():
-    df = table_to_df(
-        command="SELECT token0, token1 FROM liquidity_pools WHERE volume_usd >= 10000000000;")
+    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
+
+    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
+
+    query = f"""
+        SELECT pool_address, token0, token1
+        FROM liquidity_pools WHERE
+        (token0='WETH' or token1='WETH') AND
+        \t({filter_tokens}) AND volume_usd >= 1000000
+        ORDER BY volume_usd DESC;
+    """
+
+    df = table_to_df(command=query)
+    print(df)
+
     tokens = np.unique(pd.concat([df['token0'], df['token1']]))
 
     gq_client_aave_v3 = GraphqlClient(
@@ -119,5 +143,5 @@ def refresh_database():
 
 
 if __name__ == "__main__":
-    # reinitialise_borrowing_rates_data()
-    refresh_database()
+    reinitialise_borrowing_rates_data()
+    # refresh_database()
