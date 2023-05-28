@@ -10,12 +10,7 @@ import sys
 sys.path.append('./historical_data')
 from database_interactions import table_to_df
 from calculate_cointegrated_pairs import load_cointegrated_pairs
-
-
-GAS_USED_BY_SWAP = 150000
-GAS_USED_BY_LOAN = 100000
-GAS_USED = (2 * GAS_USED_BY_SWAP) + GAS_USED_BY_LOAN
-
+from constants import GAS_USED_BY_LOAN, GAS_USED_BY_SWAP
 
 def days_to_seconds(days): return int(days * 24 * 60 * 60)
 
@@ -25,7 +20,6 @@ class Backtest():
         self.trades = None
         self.account_value_history = []
         self.times = []
-        self.v_before = 0
 
     def initialise_account(self, account_size_in_WETH):
         return {
@@ -37,17 +31,10 @@ class Backtest():
 
     def fetch_and_preprocess_data(self, cointegrated_pair, window_size_in_seconds):
         merged = table_to_df(command=f"""
-                        SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price, p1.gas_price_wei as p1_gas_price_wei, p2.gas_price_wei as p2_gas_price_wei
+                        SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price, p1.gas_price_wei as p1_gas_price_wei, p2.gas_price_wei as p2_gas_price_wei, p1.liquidity, p2.liquidity
                         FROM "{cointegrated_pair[0]}" as p1 INNER JOIN "{cointegrated_pair[1]}" as p2 ON p1.period_start_unix = p2.period_start_unix
                         WHERE p1.token1_price <> 0 AND p2.token1_price <> 0 ORDER BY p1.period_start_unix;
                         """, path_to_config='historical_data/database.ini')
-
-        # DELETE THE FOLLOWING LINES
-        # prices_1 = merged['p1_token1_price'].to_numpy() if cointegrated_pair[0].split('_')[1] == 'WETH' else (1 / merged['p1_token1_price'].to_numpy())
-        # prices_2 = merged['p2_token1_price'].to_numpy() if cointegrated_pair[1].split('_')[1] == 'WETH' else (1 / merged['p2_token1_price'].to_numpy())
-        # self.history_p1 = prices_1
-        # self.history_p2 = prices_2
-        # self.history_times = merged['period_start_unix'].to_numpy()
 
         history_arg = merged.loc[merged['period_start_unix'] <
                                  window_size_in_seconds + merged['period_start_unix'][0]]
@@ -128,15 +115,18 @@ class Backtest():
             'T2': swap_fee2
         }
 
-        swap_fees = {
-            'T1': 0,
-            'T2': 0
-        }
+        # swap_fees = {
+        #     'T1': 0,
+        #     'T2': 0
+        # }
 
         strategy.initialise_historical_data(
             history_p1=history_arg['p1_token1_price'], history_p2=history_arg['p2_token1_price'])
         history_remaining_p1, history_remaining_p2 = history_remaining[
             'p1_token1_price'], history_remaining['p2_token1_price']
+        
+        self.history_remaining_p1 = history_remaining_p1
+        self.history_remaining_p2 = history_remaining_p2
 
         self.history_remaining = history_remaining
 
@@ -321,6 +311,10 @@ class Backtest():
 
                         self.check_account('OPEN', f'SELL {token}')
 
+            # if 'CLOSE' in [t[0] for t in signal]:
+            #     self.account_value_history.append(self.get_account_value_in_WETH(prices))
+            #     self.times.append(history_remaining['period_start_unix'][i])
+
             for sell_trade in self.open_positions['SELL'].values():
                 sell_token, sold_price, sell_volume, _ = sell_trade
                 current_token_price = prices[f'P{sell_token[1]}']
@@ -357,7 +351,7 @@ pairs = cointegrated_pairs[particular_idx:particular_idx +
 
 bad_pairs = []
 
-number_of_sds_from_mean = 1
+number_of_sds_from_mean = 2
 window_size_in_seconds = days_to_seconds(30)
 percent_to_invest = 1.00
 initial_investment = 100
@@ -368,20 +362,25 @@ for cointegrated_pair in pairs:
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
 
-        # table = table_to_df(
-        #     command=f"SELECT pool_address, token0, token1, feetier FROM liquidity_pools where volume_usd >= 10000000000 and (token0='WETH' OR token1='WETH');", path_to_config='historical_data/database.ini')
-        # table['feetier'] = table['feetier'].apply(lambda x: x*1e-4)
+        # foo_strat = One_Sided_Mean_Reversion(number_of_sds_from_mean=number_of_sds_from_mean,
+        #                                                   window_size_in_seconds=window_size_in_seconds,
+        #                                                   percent_to_invest=percent_to_invest,
+        #                                                   gas_price_threshold=1.25e-07,
+        #                                                   rebalance_threshold_as_percent_of_initial_investment=0.5,
+        #                                                   strategy_name='FOO')
+        # backtest_foo = Backtest()
+        # return_percent = backtest_foo.backtest_pair(
+        #     cointegrated_pair, foo_strat, initial_investment)
 
-        # print(table.to_latex(index=False))
-
-        # table = table_to_df(
-        #     command=f'SELECT * FROM "{cointegrated_pair[0]}" where gas_price_wei > 0 ORDER BY period_start_unix;', path_to_config='historical_data/database.ini')
-
-        # f = table['gas_price_wei'].to_numpy()*1e-9
-        # print(f)
-        # plt.plot(table['period_start_unix'], f)
-        # plt.ylabel('Gas Price in Gwei')
-        # plt.xlabel('UNIX Timestamp')
+        # if return_percent > 0:
+        #     print(
+        #         f"\033[95mFoo Strat\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_foo.times[0])} to {datetime.fromtimestamp(backtest_foo.times[-1])} with {len(backtest_foo.trades)} trades")
+        # else:
+        #     print(
+        #         f"\033[95mFoo Strat\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_foo.times[0])} to {datetime.fromtimestamp(backtest_foo.times[-1])} with {len(backtest_foo.trades)} trades")
+         
+        
+        # plt.plot(backtest_foo.times, backtest_foo.account_value_history)
         # plt.show()
 
         mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
@@ -401,6 +400,21 @@ for cointegrated_pair in pairs:
             print(
                 f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
 
+
+
+        # fig, axs = plt.subplots(4, sharex=True,)
+        # fig.suptitle('Vertically stacked subplots')
+        # axs[0].plot(backtest_mean_reversion.history_remaining_p1.to_list())
+        # axs[1].plot(backtest_mean_reversion.history_remaining_p2.to_list())
+
+        # axs[2].plot(mean_reversion_strategy.upper_thresholds, label='upper')
+        # axs[2].plot(mean_reversion_strategy.spreads, label='spread')
+        # axs[2].plot(mean_reversion_strategy.lower_thresholds, label='lower')
+        # axs[2].legend()
+
+        # axs[3].plot(backtest_mean_reversion.account_value_history)
+        # plt.show()
+
         kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest,
@@ -410,6 +424,32 @@ for cointegrated_pair in pairs:
         backtest_kalman_filter = Backtest()
         return_percent = backtest_kalman_filter.backtest_pair(
             cointegrated_pair, kalman_filter_strategy, initial_investment)
+
+        if return_percent > 0:
+            print(
+                f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+        else:
+            print(
+                f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+            
+        # plt.plot(backtest_kalman_filter.times, backtest_kalman_filter.account_value_history)
+        # plt.show()
+
+        # table = table_to_df(
+        #     command=f"SELECT pool_address, token0, token1, feetier FROM liquidity_pools where volume_usd >= 10000000000 and (token0='WETH' OR token1='WETH');", path_to_config='historical_data/database.ini')
+        # table['feetier'] = table['feetier'].apply(lambda x: x*1e-4)
+
+        # print(table.to_latex(index=False))
+
+        # table = table_to_df(
+        #     command=f'SELECT * FROM "{cointegrated_pair[0]}" where gas_price_wei > 0 ORDER BY period_start_unix;', path_to_config='historical_data/database.ini')
+
+        # f = table['gas_price_wei'].to_numpy()*1e-9
+        # print(f)
+        # plt.plot(table['period_start_unix'], f)
+        # plt.ylabel('Gas Price in Gwei')
+        # plt.xlabel('UNIX Timestamp')
+        # plt.show()
 
         # plt.plot(backtest_kalman_filter.times, kalman_filter_strategy.hedge_ratio_history, label='hedge ratio')
         # plt.xlabel('Unix timestamp')
@@ -446,21 +486,14 @@ for cointegrated_pair in pairs:
 
         # plt.show()
 
-        if return_percent > 0:
-            print(
-                f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
-        else:
-            print(
-                f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
-
         # print(*backtest_mean_reversion.trades, sep='\n')
 
-    except Exception as e:
-        # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
-        # plt.show()
-        # bad_pairs.append((cointegrated_pair))
-        print(e)
-        # print(kalman_filter_strategy.account_history[-1])
-        print()
+    # except Exception as e:
+    #     bad_pairs.append((cointegrated_pair))
+    #     # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
+    #     # plt.show()
+    #     print(e)
+    #     # print(kalman_filter_strategy.account_history[-1])
+    #     print()
     finally:
         pass
