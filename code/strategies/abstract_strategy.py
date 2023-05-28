@@ -1,9 +1,5 @@
 import numpy as np
-
-GAS_USED_BY_SWAP = 150000
-GAS_USED_BY_LOAN = 100000
-GAS_USED = (2 * GAS_USED_BY_SWAP) + GAS_USED_BY_LOAN
-
+from constants import GAS_USED_BY_SWAP, GAS_USED_BY_LOAN
 
 class Abstract_Strategy():
     def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold=1.25e-07, rebalance_threshold_as_percent_of_initial_investment=0.001):
@@ -17,6 +13,7 @@ class Abstract_Strategy():
         self.gas_price_threshold = gas_price_threshold
         self.initial_WETH = None
         self.rebalance_threshold_as_percent_of_initial_investment = rebalance_threshold_as_percent_of_initial_investment
+        self.spreads = []
 
     def initialise_historical_data(self, history_p1, history_p2):
         self.history_p1 = history_p1.to_numpy()
@@ -59,6 +56,7 @@ class Abstract_Strategy():
 
         self.new_tick(price_of_pair1, price_of_pair2, has_trade)
         spread = price_of_pair1 - self.hedge_ratio * price_of_pair2
+        self.spreads.append(spread)
 
         if has_trade:
             should_deposit_more = False
@@ -110,6 +108,7 @@ class Abstract_Strategy():
                 swap_for_b.append(('T2', account['T2'] * prices['P2']))
 
             if spread > self.upper_threshold:
+                # return []
                 tx_cost = ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP +
                            GAS_USED_BY_LOAN) * gas_price_in_eth)
 
@@ -139,7 +138,7 @@ class Abstract_Strategy():
                            GAS_USED_BY_LOAN) * gas_price_in_eth)
 
                 if account['WETH'] < tx_cost:
-                    return {}
+                    return []
 
                 volume_ratio_coeff = volume_ratios_of_pairs['T1'] / \
                     volume_ratios_of_pairs['T2']
@@ -157,7 +156,7 @@ class Abstract_Strategy():
 
                 return orders + [
                     ('OPEN', ('BUY', 'T1', volume_a * self.percent_to_invest)),
-                    ('OPEN', ('SELL', 'T2', volume_b * self.percent_to_invest)),
+                    ('OPEN', ('SELL', 'T2', volume_b * self.percent_to_invest))
                 ]
 
             else:
