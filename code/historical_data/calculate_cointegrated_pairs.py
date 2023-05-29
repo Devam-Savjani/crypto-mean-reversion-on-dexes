@@ -6,31 +6,36 @@ from statsmodels.tsa.stattools import adfuller
 from database_interactions import table_to_df
 from check_liquidity_pool_data import get_pools_max_timestamp
 
-def calculate_pairs_sum_of_squared_differences(should_save=True):
-    liquidity_pool_pair_ssds = {}
-    valid_pools_that_include_weth = get_pools_max_timestamp()['table_name']
+def get_correlation_matrix():
+    liquidity_pools = get_pools_max_timestamp()['table_name'].to_list()
 
-    for i in tqdm(range(len(valid_pools_that_include_weth))):
-        for j in range(i+1, len(valid_pools_that_include_weth)):
-    
-            merged = table_to_df(command=f"""
-                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price
-                FROM "{valid_pools_that_include_weth[i]}" as p1 INNER JOIN "{valid_pools_that_include_weth[j]}" as p2
-                ON p1.period_start_unix = p2.period_start_unix WHERE p1.token1_price <> 0 AND p2.token1_price <> 0;
-                """)
+    columns = ',\n\t'.join([f'p{i}.{"token1_price" if liquidity_pools[i][:4] != "WETH" else "token0_price"} as "{liquidity_pools[i]}"' for i in range(0, len(liquidity_pools))])
+    joins = '\n\t'.join([f'INNER JOIN "{liquidity_pools[i]}" as p{i} ON p0.period_start_unix = p{i}.period_start_unix' for i in range(1, len(liquidity_pools))])
+    where = ' AND \n\t'.join([f'p{i}.token1_price <> 0' for i in range(len(liquidity_pools))])
 
-            pool1_data = merged['p1_token1_price'].to_numpy() if valid_pools_that_include_weth[i].split('_')[1] == 'WETH' else (1 / merged['p1_token1_price'].to_numpy())
-            pool2_data = merged['p2_token1_price'].to_numpy() if valid_pools_that_include_weth[j].split('_')[1] == 'WETH' else (1 / merged['p2_token1_price'].to_numpy())
+    query = f"""
+        SELECT \n\t{columns}
+        FROM "{liquidity_pools[0]}" as p0
+        \t{joins}
+        WHERE 
+        \t{where}
+        ORDER BY p1.period_start_unix;
+    """
 
-            ssd = np.sum((pool1_data - pool2_data)**2)
-            liquidity_pool_pair_ssds[(valid_pools_that_include_weth[i], valid_pools_that_include_weth[j])] = ssd
+    # corr_matrix = table_to_df(command=query).corr()
+    # sn.heatmap(corr_matrix, annot = True)
+    # plt.show() 
 
-    liquidity_pool_pair_ssds = sorted(liquidity_pool_pair_ssds.items(), key=lambda x:x[1])
+    return table_to_df(command=query).corr()
+
+def get_correlated_pairs(should_save=True):
+    corr_matrix = get_correlation_matrix()
+    filteredDf = corr_matrix[((0.9 < corr_matrix)) & (corr_matrix < np.float64(0.997))]
 
     if should_save:
-        return save_pairs_sum_of_squared_differences(liquidity_pool_pair_ssds)
+        return save_correlated_pairs(list(filteredDf.unstack().dropna().index))
     
-    return liquidity_pool_pair_ssds
+    return list(filteredDf.unstack().dropna().index)
 
 def is_cointegrated(p1, p2):
     swapped_p1 = p1.split('_')[0] == 'WETH'
@@ -54,14 +59,14 @@ def is_cointegrated(p1, p2):
     result = sm.tsa.stattools.coint(df1, df2)
     return result[0] < result[2][0]
 
-def get_top_n_cointegrated_pairs(ssds, n=-1, should_save=False):
+def get_top_n_cointegrated_pairs(correlated_pairs, n=-1, should_save=False):
     cointegrated_pairs = []
-    n = n if n != -1 else len(ssds)
-    for pair in tqdm(ssds):
-        p1, p2 = pair[0]
+    n = n if n != -1 else len(correlated_pairs)
+    for pair in tqdm(correlated_pairs):
+        p1, p2 = pair
         is_pair_cointegrated = is_cointegrated(p1, p2)
         if is_pair_cointegrated:
-            cointegrated_pairs.append(pair[0])
+            cointegrated_pairs.append(pair)
             if len(cointegrated_pairs) == n:
                 if should_save:
                     return save_cointegrated_pairs(cointegrated_pairs)
@@ -73,19 +78,19 @@ def get_top_n_cointegrated_pairs(ssds, n=-1, should_save=False):
     else:
         return cointegrated_pairs
 
-def save_pairs_sum_of_squared_differences(ssds):
-    with open('historical_data/sum_square_differences.pickle', 'wb') as f:
-        pickle.dump(ssds, f)
+def save_correlated_pairs(correlated_pairs):
+    with open('historical_data/correlated_pairs.pickle', 'wb') as f:
+        pickle.dump(correlated_pairs, f)
 
     f.close()
-    return ssds
+    return correlated_pairs
 
-def load_pairs_sum_of_squared_differences():
-    with open('sum_square_differences.pickle', 'rb') as f:
-        liquidity_pool_pair_ssds = pickle.load(f)
+def load_correlated_pairs():
+    with open('correlated_pairs.pickle', 'rb') as f:
+        correlated_pairs = pickle.load(f)
         f.close()
 
-    return liquidity_pool_pair_ssds
+    return correlated_pairs
 
 def save_cointegrated_pairs(cointegrated_pairs):
     with open('historical_data/cointegrated_pairs.pickle', 'wb') as f:
@@ -103,13 +108,13 @@ def load_cointegrated_pairs(path='historical_data/cointegrated_pairs.pickle'):
 
 if __name__ == "__main__":
     use_pickled_cointegrated_pairs = False
-    should_save = True
+    should_save = False
 
     if use_pickled_cointegrated_pairs:
         cointegrated_pairs = load_cointegrated_pairs()
     else:
-        ssds = calculate_pairs_sum_of_squared_differences(should_save=should_save)
-        cointegrated_pairs = get_top_n_cointegrated_pairs(ssds=ssds, should_save=should_save)
+        correlated_pairs = get_correlated_pairs(should_save=should_save)
+        cointegrated_pairs = get_top_n_cointegrated_pairs(correlated_pairs=correlated_pairs, should_save=should_save)
 
     print(*cointegrated_pairs, sep="\n")
     print(len(cointegrated_pairs))

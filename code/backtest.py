@@ -11,6 +11,7 @@ sys.path.append('./historical_data')
 from database_interactions import table_to_df
 from calculate_cointegrated_pairs import load_cointegrated_pairs
 from constants import GAS_USED_BY_LOAN, GAS_USED_BY_SWAP
+from correlation_plot import get_correlation_matrix
 
 def days_to_seconds(days): return int(days * 24 * 60 * 60)
 
@@ -31,24 +32,16 @@ class Backtest():
 
     def fetch_and_preprocess_data(self, cointegrated_pair, window_size_in_seconds):
         merged = table_to_df(command=f"""
-                        SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price, p1.gas_price_wei as p1_gas_price_wei, p2.gas_price_wei as p2_gas_price_wei, p1.liquidity, p2.liquidity
+                        SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.{'token1_price' if cointegrated_pair[0].split('_')[1] == 'WETH' else 'token0_price'} as p1_token_price, p2.id as p2_id, p2.{'token1_price' if cointegrated_pair[1].split('_')[1] == 'WETH' else 'token0_price'} as p2_token_price, p1.gas_price_wei as p1_gas_price_wei, p2.gas_price_wei as p2_gas_price_wei, p1.liquidity, p2.liquidity
                         FROM "{cointegrated_pair[0]}" as p1 INNER JOIN "{cointegrated_pair[1]}" as p2 ON p1.period_start_unix = p2.period_start_unix
                         WHERE p1.token1_price <> 0 AND p2.token1_price <> 0 ORDER BY p1.period_start_unix;
                         """, path_to_config='historical_data/database.ini')
 
         history_arg = merged.loc[merged['period_start_unix'] <
                                  window_size_in_seconds + merged['period_start_unix'][0]]
-        history_arg = history_arg.assign(
-            p1_token1_price=history_arg['p1_token1_price'] if cointegrated_pair[0].split(
-                '_')[1] == 'WETH' else (1 / history_arg['p1_token1_price']),
-            p2_token1_price=history_arg['p2_token1_price'] if cointegrated_pair[1].split('_')[1] == 'WETH' else (1 / history_arg['p2_token1_price']))
 
         history_remaining = merged.loc[merged['period_start_unix']
                                        >= window_size_in_seconds + merged['period_start_unix'][0]]
-        history_remaining = history_remaining.assign(
-            p1_token1_price=history_remaining['p1_token1_price'] if cointegrated_pair[0].split(
-                '_')[1] == 'WETH' else (1 / history_remaining['p1_token1_price']),
-            p2_token1_price=history_remaining['p2_token1_price'] if cointegrated_pair[1].split('_')[1] == 'WETH' else (1 / history_remaining['p2_token1_price']))
 
         return history_arg, history_remaining
 
@@ -115,15 +108,10 @@ class Backtest():
             'T2': swap_fee2
         }
 
-        # swap_fees = {
-        #     'T1': 0,
-        #     'T2': 0
-        # }
-
         strategy.initialise_historical_data(
-            history_p1=history_arg['p1_token1_price'], history_p2=history_arg['p2_token1_price'])
+            history_p1=history_arg['p1_token_price'], history_p2=history_arg['p2_token_price'])
         history_remaining_p1, history_remaining_p2 = history_remaining[
-            'p1_token1_price'], history_remaining['p2_token1_price']
+            'p1_token_price'], history_remaining['p2_token_price']
         
         self.history_remaining_p1 = history_remaining_p1
         self.history_remaining_p2 = history_remaining_p2
@@ -342,6 +330,20 @@ class Backtest():
 cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
+corr_matrix = get_correlation_matrix()
+# print(corr_matrix['usdc_weth_0xe05'])
+print(corr_matrix)
+
+ps_with_corr = []
+for pair in cointegrated_pairs:
+    corr = corr_matrix[pair[0][:15].lower()][pair[1][:15].lower()]
+    ps_with_corr.append((pair[0], pair[1], corr))
+
+ps_with_corr = sorted(ps_with_corr, key=lambda x:x[2])
+
+print(*ps_with_corr, sep='\n')
+cointegrated_pairs = ps_with_corr
+
 particular_idx = 0
 particular_idx = None
 
@@ -488,12 +490,12 @@ for cointegrated_pair in pairs:
 
         # print(*backtest_mean_reversion.trades, sep='\n')
 
-    # except Exception as e:
-    #     bad_pairs.append((cointegrated_pair))
-    #     # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
-    #     # plt.show()
-    #     print(e)
-    #     # print(kalman_filter_strategy.account_history[-1])
-    #     print()
+    except Exception as e:
+        bad_pairs.append((cointegrated_pair))
+        # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
+        # plt.show()
+        print(e)
+        # print(kalman_filter_strategy.account_history[-1])
+        print()
     finally:
         pass

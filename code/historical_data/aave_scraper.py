@@ -4,7 +4,12 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from datetime import datetime
-from database_interactions import table_to_df, drop_table, create_table, insert_rows, drop_all_tables_except_table
+from database_interactions import table_to_df, drop_table, create_table, insert_rows
+import sys
+import os
+current = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(current))
+from constants import LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY
 
 
 def get_block_data(symbol, gq_client, prev_max_time=0):
@@ -55,20 +60,9 @@ def get_block_data(symbol, gq_client, prev_max_time=0):
 
 
 def reinitialise_borrowing_rates_data():
-    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
 
-    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
+    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
 
-    query = f"""
-        SELECT pool_address, token0, token1
-        FROM liquidity_pools WHERE
-        (token0='WETH' or token1='WETH') AND
-        \t({filter_tokens}) AND volume_usd >= 1000000
-        ORDER BY volume_usd DESC;
-    """
-
-    df = table_to_df(command=query)
-    
     tokens = np.unique(pd.concat([df['token0'], df['token1']]))
 
     gq_client_aave_v2 = GraphqlClient(
@@ -95,30 +89,16 @@ def reinitialise_borrowing_rates_data():
 
 
 def refresh_database():
-    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
-
-    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
-
-    query = f"""
-        SELECT pool_address, token0, token1
-        FROM liquidity_pools WHERE
-        (token0='WETH' or token1='WETH') AND
-        \t({filter_tokens}) AND volume_usd >= 1000000
-        ORDER BY volume_usd DESC;
-    """
-
-    df = table_to_df(command=query)
-    print(df)
-
-    tokens = np.unique(pd.concat([df['token0'], df['token1']]))
-
     gq_client_aave_v3 = GraphqlClient(
         endpoint='https://api.thegraph.com/subgraphs/name/aave/protocol-v3',
         headers={}
     )
 
+    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
+    tokens = np.unique(pd.concat([df['token0'], df['token1']]))
+
     tables = list(table_to_df(
-        command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'liquidity_pools'")['tablename'])
+        command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public'")['tablename'])
 
     for token in tqdm(tokens):
         token_lower = token.lower()
@@ -136,12 +116,11 @@ def refresh_database():
             rows_v3 = get_block_data(token, gq_client=gq_client_aave_v3)
 
             if len(rows_v3) > 0:
-                drop_table(table_name)
-                create_table(table_name, [('id', 'VARCHAR(255)'), ('timestamp',
-                                                                   'BIGINT'), ('borrow_rate', 'NUMERIC'), ('LTV', 'NUMERIC')])
+                create_table(table_name, [('id', 'VARCHAR(255)'), (
+                    'timestamp', 'BIGINT'), ('borrow_rate', 'NUMERIC'), ('LTV', 'NUMERIC')])
                 insert_rows(table_name, rows_v3)
 
 
 if __name__ == "__main__":
-    reinitialise_borrowing_rates_data()
-    # refresh_database()
+    # reinitialise_borrowing_rates_data()
+    refresh_database()

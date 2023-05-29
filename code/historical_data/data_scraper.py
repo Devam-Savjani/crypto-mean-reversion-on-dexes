@@ -4,6 +4,11 @@ import logging
 import pandas as pd
 from tqdm import tqdm
 from database_interactions import table_to_df, drop_table, create_table, insert_rows, drop_all_tables_except_table
+import sys
+import os
+current = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(current))
+from constants import LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY
 
 header = ['id', 'periodStartUnix', 'token0Price',
           'token1Price', 'liquidity', 'gasPrice']
@@ -110,20 +115,8 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
 
 def reinitialise_all_liquidity_pool_data():
     drop_all_tables_except_table('liquidity_pools')
-
-    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
-
-    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
-
-    query = f"""
-        SELECT pool_address, token0, token1
-        FROM liquidity_pools WHERE
-        (token0='WETH' or token1='WETH') AND
-        \t({filter_tokens}) AND volume_usd >= 1000000
-        ORDER BY volume_usd DESC;
-    """
     
-    df = table_to_df(command=query)
+    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
     logger.info('Begining to reinitialise liquidity pool data tables')
 
     for _, row in tqdm(df.iterrows(), total=df.shape[0]):
@@ -141,18 +134,7 @@ def reinitialise_all_liquidity_pool_data():
 
 def refresh_database():
 
-    tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
-    filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
-
-    query = f"""
-        SELECT pool_address, token0, token1
-        FROM liquidity_pools WHERE
-        (token0='WETH' or token1='WETH') AND
-        \t({filter_tokens}) AND volume_usd >= 1000000
-        ORDER BY volume_usd DESC;
-    """
-    
-    df = table_to_df(command=query)
+    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
 
     df_liquidity_pool_tables = list(table_to_df(
         command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'liquidity_pools'")['tablename'])
