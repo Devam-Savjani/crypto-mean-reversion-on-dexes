@@ -1,5 +1,15 @@
-# GAS_USED_BY_SWAP = 150000
-# GAS_USED_BY_LOAN = 100000
-GAS_USED_BY_SWAP = 0
-GAS_USED_BY_LOAN = 0
+GAS_USED_BY_SWAP = 150000
+GAS_USED_BY_LOAN = 100000
 GAS_USED = (2 * GAS_USED_BY_SWAP) + GAS_USED_BY_LOAN
+
+tokens_supported_by_aave = ['DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC']
+filter_tokens = ' OR \n\t'.join([f"token0 = '{token}' OR token1 = '{token}'" for token in tokens_supported_by_aave])
+
+liquidity_pools_query = f"""
+    Select CONCAT(pool.token0, '_', pool.token1, '_', pool.pool_address) as table_name from
+    (SELECT *
+    FROM liquidity_pools WHERE
+    (token0='WETH' or token1='WETH') AND
+    \t({filter_tokens}) AND volume_usd >= 10000000
+    ORDER BY volume_usd DESC) as pool
+"""
