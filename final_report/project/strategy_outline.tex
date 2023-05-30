@@ -5,7 +5,7 @@ As previously mentioned, Uniswap is a decentralized exchange protocol that facil
 \\[5mm]
 Table \ref{tab:liquidity_pools} showcases the diversity of these pools. Some pools exhibit high trading volumes, indicating significant activity and demand for those specific pairs. On the other hand, there are also pools with zero liquidity, which could be attributed to various reasons. It could be due to a lack of demand for one of the token pairs offered in the pool, or it may indicate that the pool is relatively new and has not attracted significant participation yet.
 \\[5mm]
-To enhance the chances of successful swaps and maximize potential profitability, my strategy is centered on liquidity pools with a trading volume surpassing \$10,000,000,000 (or \$10 billion). These pools, listed as the top 12 rows in Table \ref{tab:liquidity_pools}, are my primary focus. Additionally, I exclude any liquidity pools that do not involve WETH, which is a tokenized form of ETH (Ethereum's native cryptocurrency). WETH's key advantage lies in its ability to align with ERC-20 standards, enabling broader compatibility and utilization across the Ethereum ecosystem. This additional condition narrows my focus onto 8 liquidity pools.
+To enhance the chances of successful swaps and maximize potential profitability, my strategy is centered on liquidity pools with a trading volume surpassing \$10,000,000 (or \$10 million) and pools that include tokens supported by AAVE. Additionally, I exclude any liquidity pools that do not involve WETH, which is a tokenized form of ETH (Ethereum's native cryptocurrency). WETH's key advantage lies in its ability to align with ERC-20 standards, enabling broader compatibility and utilization across the Ethereum ecosystem.
 
 \begin{table}[!ht]
     \centering
@@ -41,54 +41,39 @@ To enhance the chances of successful swaps and maximize potential profitability,
     \caption{A selection of liquidity pools on Uniswap \label{tab:liquidity_pools}}
 \end{table}
 
-\subsection{Cointegrated Liquidity Pools}
-After selecting the liquidity pools of interest, I employed the Engle-Granger approach to determine which liquidity pools are cointegrated. The Engle-Granger test for cointegration involves several steps. Firstly, a unit root test is performed individually on each time series using methods like the Augmented Dickey-Fuller (ADF) test or the Phillips-Perron (PP) test. These tests assess whether the time series are stationary or exhibit unit roots (non-stationary) individually. For cointegration to hold, both time series must be non-stationary.
+\subsection{Correlated and Cointegrated Liquidity Pools}
+Once the liquidity pools of interested in have been identified, it is crucial to filter the pool pairs based on their correlation. This is because correlated pairs tend to exhibit similar pricing movements thus would be possible to apply the mean reversion trading strategies. However, it is important to strike a balance between a highly correlated pair and a low correlated pair, as excessively high correlation can result in minimal price deviations, leading to fees that exceed the deviations and resulting in overall losses instead of profits. To address this, I have set a condition where the correlation coefficient ($\rho$) should fall within the range of $0.900 \leq \rho \leq 0.997$.
+\\[5mm]
+To determine which liquidity pools are cointegrated, I employed the Engle-Granger approach. The Engle-Granger test for cointegration involves several steps. Firstly, a unit root test is performed individually on each time series using methods like the Augmented Dickey-Fuller (ADF) test or the Phillips-Perron (PP) test. These tests assess whether the time series are stationary or exhibit unit roots (non-stationary) individually. For cointegration to hold, both time series must be non-stationary.
 \\[5mm]
 Once it is established that both time series are non-stationary, an estimation of the cointegration equation is derived. Typically, a linear regression model is employed to capture the long-term relationship between the time series variables. This equation provides an understanding of how the variables are linked over a long period.
 \\[5mm]
 Subsequently, a unit root test is conducted on the residuals obtained from the regression analysis. If the residuals are stationary (indicating the absence of unit roots), it suggests the presence of cointegration between the time series. This implies that the variables move together in the long run, even if short-term deviations occur.
 \\[5mm]
-By following the aforementioned sequence of steps in the Engle-Granger test, it enables us to determine which liquidity pools demonstrate cointegration, thereby emphasizing their interconnectedness and mutual relationship over time. The outcome of the cointegration tests for all possible combinations of liquidity pools is presented in Table \ref{tab:coin_pools}. This table provides a comprehensive list of the liquidity pool pairs along with the results of their respective cointegration tests.
+By following the aforementioned sequence of steps in the Engle-Granger test, it enables us to determine which liquidity pools demonstrate cointegration, thereby emphasizing their interconnectedness and mutual relationship over time. The outcome of the cointegration tests for all possible combinations of liquidity pools is presented in Table \ref{tab:coin_pools}. This table provides a comprehensive list of the liquidity pool pairs along with the results of their respective cointegration tests and the correlation coefficient of each combination.
 \begin{table}[!ht]
     \centering
     \begin{adjustwidth}{-1in}{-0.9in}
-        \begin{tabular}{|p{12em}|p{12em}|p{5em}|p{4.5em}|p{4.5em}|p{4.5em}|p{2.5em}|}\hline
-            pool1 & pool2 & t-statistic of unit-root test on residuals & \multicolumn{3}{|c|}{Critical Values} & is cointegrated?\\[-1ex]\cline{4-6}
-            &   &   & 1\% & 5\% & 10\% &   \\\hline
-            \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & -18.689411 & -3.897093 & -3.336494 & -3.044703 & Yes\\\hline
-            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & -22.393573 & -3.897052 & -3.336471 & -3.044687 & Yes\\\hline
-            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & -24.790648 & -3.897092 & -3.336494 & -3.044703 & Yes\\\hline
-            \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & -17.898356 & -3.897054 & -3.336472 & -3.044688 & Yes\\\hline
-            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & -17.033741 & -3.897053 & -3.336472 & -3.044687 & Yes\\\hline
-            \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & -18.025344 & -3.897054 & -3.336473 & -3.044688 & Yes\\\hline
-            \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & -17.881524 & -3.897095 & -3.336495 & -3.044704 & Yes\\\hline
-            \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & -14.009485 & -3.897094 & -3.336495 & -3.044703 & Yes\\\hline
-            \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & -15.492844 & -3.897053 & -3.336472 & -3.044687 & Yes\\\hline
-            \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & -14.038615 & -3.897055 & -3.336473 & -3.044688 & Yes\\\hline
-            \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & -14.655817 & -3.897093 & -3.336494 & -3.044703 & Yes\\\hline
-            \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & -14.730817 & -3.897055 & -3.336473 & -3.044688 & Yes\\\hline
-            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & -14.970259 & -3.897051 & -3.336471 & -3.044686 & Yes\\\hline
-            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & -14.770755 & -3.897053 & -3.336472 & -3.044687 & Yes\\\hline
-            \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & -15.109113 & -3.897052 & -3.336472 & -3.044687 & Yes\\\hline
-            \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & -12.08617 & -3.897092 & -3.336494 & -3.044702 & Yes\\\hline
-            \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & -1.781012 & -3.897126 & -3.336512 & -3.044715 & No\\\hline
-            \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & -1.843999 & -3.897101 & -3.336499 & -3.044706 & No\\\hline
-            \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & -1.78484 & -3.897086 & -3.33649 & -3.0447 & No\\\hline
-            \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & -1.770875 & -3.897086 & -3.33649 & -3.0447 & No\\\hline
-            \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & -1.762308 & -3.897085 & -3.33649 & -3.0447 & No\\\hline
-            \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & -1.819248 & -3.897084 & -3.336489 & -3.044699 & No\\\hline
-            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & -1.7743 & -3.897083 & -3.336489 & -3.044699 & No\\\hline
-            \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & -1.90415 & -3.897061 & -3.336476 & -3.04469 & No\\\hline
-            \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & -1.879725 & -3.897059 & -3.336475 & -3.04469 & No\\\hline
-            \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & -1.906453 & -3.897059 & -3.336475 & -3.04469 & No\\\hline
-            \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & -1.934329 & -3.897058 & -3.336475 & -3.044689 & No\\\hline
-            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & -1.925396 & -3.897058 & -3.336475 & -3.044689 & No\\\hline
+        \begin{tabular}{|p{12em}|p{12em}|p{5em}|p{4.2em}|p{4.2em}|p{4.2em}|p{3.5em}|}\hline
+            pool1 & pool2 & t-statistic of unit-root test on residuals & \multicolumn{3}{|c|}{Critical Values} & Corr Coeff\\[-1ex]\cline{4-6}
+            &   &   & 1\% & 5\% & 10\% & \\\hline
+            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & -11.127453 & -3.898122 & -3.337068 & -3.045101 & 0.995244\\\hline
+            \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & -11.03532 & -3.898133 & -3.337074 & -3.045105 & 0.995049\\\hline
+            \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & -9.854324 & -3.898122 & -3.337068 & -3.045101 & 0.995075\\\hline
+            \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & \truncate{12em}{WBTC\_WETH\_0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & -3.605026 & -3.906553 & -3.341762 & -3.048358 & 0.989254\\\hline
+            \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & -9.755006 & -3.898135 & -3.337075 & -3.045106 & 0.994951\\\hline
+            \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & -11.214813 & -3.898122 & -3.337068 & -3.045101 & 0.995187\\\hline
+            \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & \truncate{12em}{WBTC\_WETH\_0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & -3.595502 & -3.906931 & -3.341972 & -3.048503 & 0.987008\\\hline
+            \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & -10.110674 & -3.898362 & -3.337202 & -3.045194 & 0.995004\\\hline
+            \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -7.490116 & -3.901269 & -3.338822 & -3.046318 & 0.994488\\\hline
+            \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -9.59846 & -3.901587 & -3.338999 & -3.046441 & 0.994551\\\hline
+            \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -6.810871 & -3.906022 & -3.341467 & -3.048153 & 0.994107\\\hline
         \end{tabular}
     \end{adjustwidth}
     \caption{Cointegration test on Liquidity Pool pairs \label{tab:coin_pools}}
 \end{table}
 
-\noindent Based on the results obtained, we focus our further investigation solely on the pairs of liquidity pools that exhibit cointegration. This filtering process allows us to narrow down our analysis to those pairs where a long-term relationship exists, suggesting that they move together in a concerted manner.
+\noindent Based on the results obtained, we focus our further investigation solely on the pairs of liquidity pools that exhibit cointegration under a 1\% confidence level. This filtering process allows us to narrow down our analysis to those pairs where a long-term relationship exists, suggesting that they move together in a concerted manner.
 \\[5mm]
 By concentrating on the cointegrated pairs, we can delve deeper into exploring their dynamics, assessing their behavior, and leverage the interconnectedness between these liquidity pools. This approach enables us to prioritize our analysis and concentrate on the most relevant liquidity pool combinations that offer potential opportunities for profitable trading or other related activities.
  
