@@ -2,7 +2,6 @@ import numpy as np
 from tqdm import tqdm
 import pickle
 import statsmodels.api as sm
-from statsmodels.tsa.stattools import adfuller
 from database_interactions import table_to_df
 from check_liquidity_pool_data import get_pools_max_timestamp
 
@@ -30,7 +29,7 @@ def get_correlation_matrix():
 
 def get_correlated_pairs(should_save=True):
     corr_matrix = get_correlation_matrix()
-    filteredDf = corr_matrix[((0.9 < corr_matrix)) & (corr_matrix < np.float64(0.997))]
+    filteredDf = corr_matrix[((0.9 < corr_matrix)) & (corr_matrix < 0.997)]
 
     if should_save:
         return save_correlated_pairs(list(filteredDf.unstack().dropna().index))
@@ -108,7 +107,7 @@ def load_cointegrated_pairs(path='historical_data/cointegrated_pairs.pickle'):
 
 if __name__ == "__main__":
     use_pickled_cointegrated_pairs = False
-    should_save = False
+    should_save = True
 
     if use_pickled_cointegrated_pairs:
         cointegrated_pairs = load_cointegrated_pairs()

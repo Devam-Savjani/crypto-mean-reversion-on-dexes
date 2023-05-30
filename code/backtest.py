@@ -336,7 +336,7 @@ print(corr_matrix)
 
 ps_with_corr = []
 for pair in cointegrated_pairs:
-    corr = corr_matrix[pair[0][:15].lower()][pair[1][:15].lower()]
+    corr = corr_matrix[pair[0].lower()][pair[1].lower()]
     ps_with_corr.append((pair[0], pair[1], corr))
 
 ps_with_corr = sorted(ps_with_corr, key=lambda x:x[2])
