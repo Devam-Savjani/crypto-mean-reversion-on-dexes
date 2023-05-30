@@ -299,10 +299,6 @@ class Backtest():
 
                         self.check_account('OPEN', f'SELL {token}')
 
-            # if 'CLOSE' in [t[0] for t in signal]:
-            #     self.account_value_history.append(self.get_account_value_in_WETH(prices))
-            #     self.times.append(history_remaining['period_start_unix'][i])
-
             for sell_trade in self.open_positions['SELL'].values():
                 sell_token, sold_price, sell_volume, _ = sell_trade
                 current_token_price = prices[f'P{sell_token[1]}']
@@ -331,8 +327,6 @@ cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
 corr_matrix = get_correlation_matrix()
-# print(corr_matrix['usdc_weth_0xe05'])
-print(corr_matrix)
 
 ps_with_corr = []
 for pair in cointegrated_pairs:
@@ -364,27 +358,6 @@ for cointegrated_pair in pairs:
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
 
-        # foo_strat = One_Sided_Mean_Reversion(number_of_sds_from_mean=number_of_sds_from_mean,
-        #                                                   window_size_in_seconds=window_size_in_seconds,
-        #                                                   percent_to_invest=percent_to_invest,
-        #                                                   gas_price_threshold=1.25e-07,
-        #                                                   rebalance_threshold_as_percent_of_initial_investment=0.5,
-        #                                                   strategy_name='FOO')
-        # backtest_foo = Backtest()
-        # return_percent = backtest_foo.backtest_pair(
-        #     cointegrated_pair, foo_strat, initial_investment)
-
-        # if return_percent > 0:
-        #     print(
-        #         f"\033[95mFoo Strat\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_foo.times[0])} to {datetime.fromtimestamp(backtest_foo.times[-1])} with {len(backtest_foo.trades)} trades")
-        # else:
-        #     print(
-        #         f"\033[95mFoo Strat\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_foo.times[0])} to {datetime.fromtimestamp(backtest_foo.times[-1])} with {len(backtest_foo.trades)} trades")
-         
-        
-        # plt.plot(backtest_foo.times, backtest_foo.account_value_history)
-        # plt.show()
-
         mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                           window_size_in_seconds=window_size_in_seconds,
                                                           percent_to_invest=percent_to_invest,
@@ -402,10 +375,7 @@ for cointegrated_pair in pairs:
             print(
                 f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
 
-
-
         # fig, axs = plt.subplots(4, sharex=True,)
-        # fig.suptitle('Vertically stacked subplots')
         # axs[0].plot(backtest_mean_reversion.history_remaining_p1.to_list())
         # axs[1].plot(backtest_mean_reversion.history_remaining_p2.to_list())
 

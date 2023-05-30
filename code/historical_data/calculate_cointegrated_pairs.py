@@ -4,6 +4,8 @@ import pickle
 import statsmodels.api as sm
 from database_interactions import table_to_df
 from check_liquidity_pool_data import get_pools_max_timestamp
+# import seaborn as sn
+# import matplotlib.pyplot as plt
 
 def get_correlation_matrix():
     liquidity_pools = get_pools_max_timestamp()['table_name'].to_list()
@@ -21,41 +23,33 @@ def get_correlation_matrix():
         ORDER BY p1.period_start_unix;
     """
 
-    # corr_matrix = table_to_df(command=query).corr()
-    # sn.heatmap(corr_matrix, annot = True)
-    # plt.show() 
-
     return table_to_df(command=query).corr()
 
 def get_correlated_pairs(should_save=True):
     corr_matrix = get_correlation_matrix()
+    # sn.heatmap(corr_matrix, annot = True)
+    # plt.show()
     filteredDf = corr_matrix[((0.9 < corr_matrix)) & (corr_matrix < 0.997)]
 
     if should_save:
-        return save_correlated_pairs(list(filteredDf.unstack().dropna().index))
+        return save_correlated_pairs(list(filteredDf.unstack().dropna().drop_duplicates().index))
     
-    return list(filteredDf.unstack().dropna().index)
+    return list(filteredDf.unstack().dropna().drop_duplicates().index)
 
 def is_cointegrated(p1, p2):
-    swapped_p1 = p1.split('_')[0] == 'WETH'
-    swapped_p2 = p2.split('_')[0] == 'WETH'
-
     merged = table_to_df(command=f"""
-                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.token1_price as p1_token1_price, p2.id as p2_id, p2.token1_price as p2_token1_price
+                SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.{'token1_price' if p1.split('_')[0] != 'WETH' else 'token0_price'} as p1_token_price, p2.id as p2_id, p2.{'token1_price' if p2.split('_')[0] != 'WETH' else 'token0_price'} as p2_token_price
                 FROM "{p1}" as p1 INNER JOIN "{p2}" as p2
-                ON p1.period_start_unix = p2.period_start_unix {'WHERE p1.token1_price <> 0' if swapped_p1 else ''} {'AND p2.token1_price <> 0' if swapped_p1 and swapped_p2 else ('WHERE p2.token1_price <> 0' if swapped_p2 else '')};
+                ON p1.period_start_unix = p2.period_start_unix;
                 """)
-    
-    df1 = merged['p1_token1_price']
-    df2 = merged['p2_token1_price']
 
-    if swapped_p1:
-        df1 = 1 / merged['p1_token1_price']
+    result = sm.tsa.stattools.coint(merged['p1_token_price'], merged['p2_token_price'])
 
-    if swapped_p2:
-        df2 = 1 / merged['p2_token1_price']
-
-    result = sm.tsa.stattools.coint(df1, df2)
+    # corr_matrix = get_correlation_matrix()
+    # p1_name = p1.replace("_", "\_")
+    # p2_name = p1.replace("_", "\_")
+    # rounding_num = 6
+    # print(f'\\truncate{{12em}}{{{p1_name}}} & \\truncate{{12em}}{{{p2_name}}} & {round(result[0], rounding_num)} & {round(result[2][0], rounding_num)} & {round(result[2][1], rounding_num)} & {round(result[2][2], rounding_num)} & {round(corr_matrix[p1][p2], rounding_num)}\\\\\\hline')
     return result[0] < result[2][0]
 
 def get_top_n_cointegrated_pairs(correlated_pairs, n=-1, should_save=False):
