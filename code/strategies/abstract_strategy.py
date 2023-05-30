@@ -58,6 +58,8 @@ class Abstract_Strategy():
         spread = price_of_pair1 - self.hedge_ratio * price_of_pair2
         self.spreads.append(spread)
 
+        orders = []
+
         if has_trade:
             should_deposit_more = False
             for sell_trade in open_positions['SELL'].values():
@@ -82,7 +84,11 @@ class Abstract_Strategy():
                                       liquidation_threshold) - account['collateral_WETH']
                     return [('DEPOSIT', deposit_amount)] if should_deposit_more else []
 
-                return [
+                if account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth) < 0:
+                    print('gets here')
+                    orders += [('BUY ETH', 0.1)]
+
+                return orders + [
                     ('CLOSE', ('SELL', [
                      sell_position for sell_position in open_positions['SELL']])),
                     ('CLOSE', ('BUY', [
@@ -108,23 +114,18 @@ class Abstract_Strategy():
                 swap_for_b.append(('T2', account['T2'] * prices['P2']))
 
             if spread > self.upper_threshold:
-                # return []
-                tx_cost = ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP +
-                           GAS_USED_BY_LOAN) * gas_price_in_eth)
-
-                if account['WETH'] < tx_cost:
-                    return []
-
                 volume_ratio_coeff = (
                     volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1'])
-                volume_a = (account['WETH'] - tx_cost) / \
+                volume_a = account['WETH'] / \
                     ((volume_ratio_coeff *
                      prices['P2']) + (prices['P1'] / vtl_eth))
                 volume_b = volume_ratio_coeff * volume_a
 
                 self.account_history.append(account)
 
-                orders = []
+                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_b) + 2)) + GAS_USED_BY_LOAN) * gas_price_in_eth) < 0:
+                    orders += [('BUY ETH', 0.1)]
+
                 if len(swap_for_b) > 0:
                     orders += [('SWAP', swap_for_b)]
 
@@ -134,23 +135,19 @@ class Abstract_Strategy():
                 ]
 
             elif spread < self.lower_threshold:
-                tx_cost = ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP +
-                           GAS_USED_BY_LOAN) * gas_price_in_eth)
-
-                if account['WETH'] < tx_cost:
-                    return []
-
                 volume_ratio_coeff = volume_ratios_of_pairs['T1'] / \
                     volume_ratios_of_pairs['T2']
 
-                volume_b = (account['WETH'] - tx_cost) / \
+                volume_b = account['WETH'] / \
                     ((volume_ratio_coeff *
                      prices['P1']) + (prices['P2'] / vtl_eth))
                 volume_a = volume_ratio_coeff * volume_b
 
                 self.account_history.append(account)
 
-                orders = []
+                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_b) + 2)) + GAS_USED_BY_LOAN) * gas_price_in_eth) < 0:
+                    orders += [('BUY ETH', 0.1)]
+
                 if len(swap_for_b) > 0:
                     orders += [('SWAP', swap_for_b)]
 
