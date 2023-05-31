@@ -29,7 +29,7 @@ def get_correlated_pairs(should_save=True):
     corr_matrix = get_correlation_matrix()
     # sn.heatmap(corr_matrix, annot = True)
     # plt.show()
-    filteredDf = corr_matrix[((0.9 < corr_matrix)) & (corr_matrix < 0.997)]
+    filteredDf = corr_matrix[((0.990 < corr_matrix)) & (corr_matrix < 0.997)]
 
     if should_save:
         return save_correlated_pairs(list(filteredDf.unstack().dropna().drop_duplicates().index))
