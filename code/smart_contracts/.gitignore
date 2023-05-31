@@ -1,0 +1,11 @@
+# build files
+artifacts
+cache
+/typechain
+
+# test coverage
+coverage.json
+coverage
+
+# packages
+node_modules
