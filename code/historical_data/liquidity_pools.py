@@ -9,7 +9,7 @@ gq_client = GraphqlClient(
 
 def get_block_data():
     drop_table('liquidity_pools')
-    create_table('liquidity_pools', [('pool_address', 'VARCHAR(255)'), ('token0', 'VARCHAR(255)'), ('token1', 'VARCHAR(255)'), ('volume_USD', 'NUMERIC(80,60)'), ('created_At_Timestamp', 'BIGINT'), ('feeTier', 'BIGINT')])
+    create_table('liquidity_pools', [('pool_address', 'VARCHAR(255)'), ('token0', 'VARCHAR(255)'), ('token0_address', 'VARCHAR(255)'), ('token1', 'VARCHAR(255)'), ('tokenq_address', 'VARCHAR(255)'), ('volume_USD', 'NUMERIC(80,60)'), ('created_At_Timestamp', 'BIGINT'), ('feeTier', 'BIGINT')])
 
     rows_set = {}
 
@@ -19,10 +19,12 @@ def get_block_data():
                 pools(orderBy: createdAtTimestamp, first: 1000, orderDirection: asc) {
                     id
                     token0 {
+                        id
                         symbol
                         decimals
                     }
                     token1 {
+                        id
                         symbol
                         decimals
                     }
@@ -36,7 +38,7 @@ def get_block_data():
         variables={})
     
     pools = json.loads(result)['data']['pools']
-    rows_set.update({pool['id'] : (pool['id'], pool['token0']['symbol'], pool['token1']['symbol'], pool['volumeUSD'], pool['createdAtTimestamp'], pool['feeTier']) for pool in pools})
+    rows_set.update({pool['id'] : (pool['id'], pool['token0']['symbol'], pool['token0']['id'], pool['token1']['symbol'], pool['token1']['id'], pool['volumeUSD'], pool['createdAtTimestamp'], pool['feeTier']) for pool in pools})
 
     while len(pools) >= 1000:
         prev_max_time = pools[-1]['createdAtTimestamp']
@@ -47,10 +49,12 @@ def get_block_data():
                     pools(orderBy: createdAtTimestamp, where: {createdAtTimestamp_gte: $prev_max_time}, first: 1000, orderDirection: asc) {
                         id
                         token0 {
+                            id
                             symbol
                             decimals
                         }
                         token1 {
+                            id
                             symbol
                             decimals
                         }
@@ -65,7 +69,7 @@ def get_block_data():
         
         try:
             pools = json.loads(result)['data']['pools']
-            rows_set.update({pool['id'] : (pool['id'], pool['token0']['symbol'], pool['token1']['symbol'], pool['volumeUSD'], pool['createdAtTimestamp'], pool['feeTier']) for pool in pools})
+            rows_set.update({pool['id'] : (pool['id'], pool['token0']['symbol'], pool['token0']['id'], pool['token1']['symbol'], pool['token1']['id'], pool['volumeUSD'], pool['createdAtTimestamp'], pool['feeTier']) for pool in pools})
 
         except Exception as e:
             print(e)
