@@ -9,7 +9,7 @@ gq_client = GraphqlClient(
 
 def get_block_data():
     drop_table('liquidity_pools')
-    create_table('liquidity_pools', [('pool_address', 'VARCHAR(255)'), ('token0', 'VARCHAR(255)'), ('token0_address', 'VARCHAR(255)'), ('token1', 'VARCHAR(255)'), ('tokenq_address', 'VARCHAR(255)'), ('volume_USD', 'NUMERIC(80,60)'), ('created_At_Timestamp', 'BIGINT'), ('feeTier', 'BIGINT')])
+    create_table('liquidity_pools', [('pool_address', 'VARCHAR(255)'), ('token0', 'VARCHAR(255)'), ('token0_address', 'VARCHAR(255)'), ('token1', 'VARCHAR(255)'), ('token1_address', 'VARCHAR(255)'), ('volume_USD', 'NUMERIC(80,60)'), ('created_At_Timestamp', 'BIGINT'), ('fee_tier', 'BIGINT')])
 
     rows_set = {}
 
