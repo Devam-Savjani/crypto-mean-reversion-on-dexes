@@ -8,6 +8,8 @@ import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current))
+from constants import VOLUME_LOWER_LIMIT
+
 
 gq_client = GraphqlClient(
     endpoint='https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',
@@ -29,32 +31,29 @@ def get_block_data(table_name, prev_max_time=0):
         while data_length >= 1000:
             print(prev_max_time)
             result = gq_client.execute(
-                query="""
-                        query ($prev_max_time: Int!) {
-                            swaps(where: {timestamp_gt: $prev_max_time}, first:1000, orderBy: timestamp, orderDirection: asc) {
+                query=f"""
+                        query ($prev_max_time: Int!) {{
+                            transactions(where: {{timestamp_gt: $prev_max_time}}, first:1000, orderBy: timestamp, orderDirection: asc) {{
                                 id
                                 timestamp
-                                transaction {
-                                    id
-                                    gasPrice
-                                }
-                            }
-                        }
+                                gasPrice
+                            }}
+                        }}
                         """,
                 operation_name='foo',
                 variables={"prev_max_time": int(prev_max_time)})
 
-            swapsData = json.loads(result)
-            if 'data' in swapsData:
-                swapsData = swapsData['data']['swaps']
+            transactionsData = json.loads(result)
+            if 'data' in transactionsData:
+                transactionsData = transactionsData['data']['transactions']
             else:
-                raise Exception(f'Error fetching pool data: {str(swapsData)}')
+                raise Exception(f'Error fetching transaction data: {str(transactionsData)}')
 
-            if len(swapsData) != 0:
-                rows_set.update({swap['id']: (swap['id'], swap['timestamp'], swap['transaction']['gasPrice']) for swap in swapsData})
-                data_length = len(swapsData)
-                prev_max_time = swapsData[-1]['timestamp'] if data_length > 0 else prev_max_time
-                insert_rows(table_name, [(swap['id'], swap['timestamp'], swap['transaction']['gasPrice']) for swap in swapsData])
+            if len(transactionsData) != 0:
+                rows_set.update({txn['id']: (txn['id'], txn['timestamp'], txn['gasPrice']) for txn in transactionsData})
+                data_length = len(transactionsData)
+                prev_max_time = transactionsData[-1]['timestamp'] if data_length > 0 else prev_max_time
+                insert_rows(table_name, [(txn['id'], txn['timestamp'], txn['gasPrice']) for txn in transactionsData])
             else:
                 return []
 
