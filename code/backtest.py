@@ -88,15 +88,10 @@ class Backtest():
     def get_account_value_in_WETH(self, prices):
         return (self.account['T1'] * prices['P1']) + (self.account['T2'] * prices['P2']) + self.account['WETH'] + self.account['ETH']
 
-    def get_apy_at_timestamp(self, timestamp):
-        apy1 = self.aave1_df.iloc[(
-            self.aave1_df['timestamp'] - timestamp).abs().argsort()[:1]]['borrow_rate'].iloc[0]
-        apy2 = self.aave2_df.iloc[(
-            self.aave2_df['timestamp'] - timestamp).abs().argsort()[:1]]['borrow_rate'].iloc[0]
-
+    def get_apy_at_timestamp(self, start_timestamp, end_timestamp):
         return {
-            'T1': apy1,
-            'T2': apy2
+            'T1': self.aave1_df.loc[(self.aave1_df['timestamp'] >= start_timestamp) & (self.aave1_df['timestamp'] <= end_timestamp)][['timestamp', 'borrow_rate']],
+            'T2': self.aave2_df.loc[(self.aave2_df['timestamp'] >= start_timestamp) & (self.aave2_df['timestamp'] <= end_timestamp)][['timestamp', 'borrow_rate']]
         }
 
     def backtest_pair(self, cointegrated_pair, strategy, initial_investment_in_weth=100):
@@ -163,11 +158,16 @@ class Backtest():
                 'SELL'][sell_id]
 
             # Swap WETH back to Token
-            number_of_hours = (curr_timestamp - sell_timestamp) / (60 * 60)
-            hourly_yield = (1 + apy[sell_token])**(1 / (365*24))
+            volume_required_to_return = sell_volume
+            previous_timestamp = sell_timestamp
 
-            volume_required_to_return = sell_volume * (hourly_yield ** number_of_hours)
-
+            for apy_idx in apy[sell_token].index:
+                local_apy = apy[sell_token].loc[apy_idx]['borrow_rate']
+                number_of_seconds = apy[sell_token].loc[apy_idx]['timestamp'] - previous_timestamp
+                secondly_yield = (1 + local_apy)**(1 / (365*24*60*60))
+                volume_required_to_return *= secondly_yield ** number_of_seconds
+                previous_timestamp = apy[sell_token].loc[apy_idx]['timestamp']
+            
             self.account['WETH'] = self.account['WETH'] - (sold_price * volume_required_to_return / (1 - swap_fees[sell_token])) 
             self.account[sell_token] = self.account[sell_token] + volume_required_to_return
             # Deduct Swap Gas Fee
@@ -198,7 +198,11 @@ class Backtest():
             timestamp = history_remaining['period_start_unix'][i]
 
             gas_price_in_eth = (self.gas_prices_df.iloc[(self.gas_prices_df['timestamp'] - timestamp).abs().argsort()[:1]]['gas_price_wei'].iloc[0]) * 1e-18
-            apy =self.get_apy_at_timestamp(timestamp)
+
+            if len(self.open_positions['SELL']) > 0:
+                apy = self.get_apy_at_timestamp(list(self.open_positions['SELL'].values())[0][3], timestamp)
+            else:
+                apy = None
 
             signal = strategy.generate_signal(
                 {
@@ -374,7 +378,8 @@ percent_to_invest = 1.00
 initial_investment = 100
 
 for cointegrated_pair in pairs:
-    try:
+    # try:
+    if True:
         print(num)
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
@@ -492,12 +497,12 @@ for cointegrated_pair in pairs:
 
         # print(*backtest_mean_reversion.trades, sep='\n')
 
-    except Exception as e:
-        bad_pairs.append((cointegrated_pair))
-        # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
-        # plt.show()
-        print(e)
-        # print(kalman_filter_strategy.account_history[-1])
-        print()
-    finally:
-        pass
+    # except Exception as e:
+    #     bad_pairs.append((cointegrated_pair))
+    #     # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
+    #     # plt.show()
+    #     print(e)
+    #     # print(kalman_filter_strategy.account_history[-1])
+    #     print()
+    # finally:
+    #     pass
