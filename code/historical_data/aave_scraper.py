@@ -116,8 +116,8 @@ def refresh_database():
             rows_v3 = get_block_data(token, gq_client=gq_client_aave_v3)
 
             if len(rows_v3) > 0:
-                create_table(table_name, [('id', 'VARCHAR(255)'), (
-                    'timestamp', 'BIGINT'), ('borrow_rate', 'NUMERIC'), ('LTV', 'NUMERIC')])
+                create_table(table_name, [('id', 'VARCHAR(255)'), ('timestamp',
+                         'BIGINT'), ('borrow_rate', 'NUMERIC'), ('LTV', 'NUMERIC'), ('liquidation_threshold', 'NUMERIC')])
                 insert_rows(table_name, rows_v3)
 
 
