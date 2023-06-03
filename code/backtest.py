@@ -33,7 +33,7 @@ class Backtest():
 
     def fetch_and_preprocess_data(self, cointegrated_pair, window_size_in_seconds):
         merged = table_to_df(command=f"""
-                        SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.{'token1_price' if cointegrated_pair[0].split('_')[1] == 'WETH' else 'token0_price'} as p1_token_price, p2.id as p2_id, p2.{'token1_price' if cointegrated_pair[1].split('_')[1] == 'WETH' else 'token0_price'} as p2_token_price, p1.gas_price_wei as p1_gas_price_wei, p2.gas_price_wei as p2_gas_price_wei, p1.liquidity, p2.liquidity
+                        SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.{'token1_price' if cointegrated_pair[0].split('_')[1] == 'WETH' else 'token0_price'} as p1_token_price, p2.id as p2_id, p2.{'token1_price' if cointegrated_pair[1].split('_')[1] == 'WETH' else 'token0_price'} as p2_token_price
                         FROM "{cointegrated_pair[0]}" as p1 INNER JOIN "{cointegrated_pair[1]}" as p2 ON p1.period_start_unix = p2.period_start_unix
                         WHERE p1.token1_price <> 0 AND p2.token1_price <> 0 ORDER BY p1.period_start_unix;
                         """, path_to_config='historical_data/database.ini')
@@ -57,7 +57,7 @@ class Backtest():
                         SELECT * FROM liquidity_pools where pool_address='{pool_addr1}' or pool_address='{pool_addr2}';
                         """, path_to_config='historical_data/database.ini')
 
-        return pools[pools['pool_address'] == pool_addr1]['feetier'].iloc[0] * 1e-6, pools[pools['pool_address'] == pool_addr2]['feetier'].iloc[0] * 1e-6
+        return pools[pools['pool_address'] == pool_addr1]['fee_tier'].iloc[0] * 1e-6, pools[pools['pool_address'] == pool_addr2]['fee_tier'].iloc[0] * 1e-6
 
     def check_account(self, open_or_close, buy_or_sell, should_print_account=True, signal=None):
         negative_threshold = -1e-10
@@ -112,6 +112,8 @@ class Backtest():
 
         self.aave2_df = table_to_df(
             command=f"SELECT * FROM {token2_symbol}_borrowing_rates ORDER BY timestamp;", path_to_config='historical_data/database.ini')
+
+        self.gas_prices_df = table_to_df(command=f"SELECT * FROM gas_prices ORDER BY timestamp;", path_to_config='historical_data/database.ini')        
 
         swap_fee1, swap_fee2 = self.get_uniswap_fee(cointegrated_pair)
         swap_fees = {
@@ -193,19 +195,17 @@ class Backtest():
                 'P1': history_remaining_p1[i],
                 'P2': history_remaining_p2[i]
             }
+            timestamp = history_remaining['period_start_unix'][i]
 
-            gas_price_in_eth = (
-                (history_remaining.loc[i]['p1_gas_price_wei'] + history_remaining.loc[i]['p2_gas_price_wei']) / 2) * 1e-18
-
-            apy = self.get_apy_at_timestamp(
-                history_remaining['period_start_unix'][i])
+            gas_price_in_eth = (self.gas_prices_df.iloc[(self.gas_prices_df['timestamp'] - timestamp).abs().argsort()[:1]]['gas_price_wei'].iloc[0]) * 1e-18
+            apy =self.get_apy_at_timestamp(timestamp)
 
             signal = strategy.generate_signal(
                 {
                     'open_positions': self.open_positions,
                     'account': self.account,
                     'gas_price_in_eth': gas_price_in_eth,
-                    'timestamp': history_remaining['period_start_unix'][i],
+                    'timestamp': timestamp,
                     'apy': apy,
                     'vtl_eth': vtl_eth,
                     'liquidation_threshold': liquidation_threshold,
@@ -213,7 +213,7 @@ class Backtest():
                 }, prices)
 
             self.account_value_history.append(self.get_account_value_in_WETH(prices))
-            self.times.append(history_remaining['period_start_unix'][i])
+            self.times.append(timestamp)
 
             for order in signal:
                 order_type = order[0]
@@ -252,7 +252,7 @@ class Backtest():
                             self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                             self.trades.append(
-                                (str(len(self.trades)), 'SWAP FOR A', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
+                                (str(len(self.trades)), 'SWAP FOR A', swap_token, swap_price, swap_volume, timestamp))
                             self.check_account(
                                 'SWAP', f'A {swap_token}', signal=signal)
 
@@ -265,7 +265,7 @@ class Backtest():
                             # Deduct Gas fee from swapping
                             self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
                             self.trades.append(
-                                (str(len(self.trades)), 'SWAP FOR B', swap_token, swap_price, swap_volume, history_remaining['period_start_unix'][i]))
+                                (str(len(self.trades)), 'SWAP FOR B', swap_token, swap_price, swap_volume, timestamp))
                             self.check_account('SWAP', f'B {swap_token}', signal=signal)
 
                 elif order_type == 'CLOSE':
@@ -279,7 +279,7 @@ class Backtest():
                     if position_type == 'SELL':
                         for sell_id in position_ids:
                             close_sell_position(
-                                sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=history_remaining['period_start_unix'][i])
+                                sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=timestamp)
                             self.check_account('CLOSE', f'SELL {sell_id}', signal=signal)
 
                 elif order_type == 'OPEN':
@@ -292,9 +292,9 @@ class Backtest():
                         self.account['WETH'] = self.account['WETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                         self.open_positions['BUY'][str(next_id)] = (
-                            token, buy_price, volume, history_remaining['period_start_unix'][i])
+                            token, buy_price, volume, timestamp)
                         self.trades.append(
-                            (str(next_id), 'BUY', token, buy_price, volume, history_remaining['period_start_unix'][i]))
+                            (str(next_id), 'BUY', token, buy_price, volume, timestamp))
 
                         self.check_account('OPEN', f'BUY {token}', signal=signal)
                     elif open_type == 'SELL':
@@ -315,9 +315,9 @@ class Backtest():
                         self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                         self.open_positions['SELL'][str(next_id)] = (
-                            token, sell_price, volume, history_remaining['period_start_unix'][i])
+                            token, sell_price, volume, timestamp)
                         self.trades.append(
-                            (str(next_id), 'SELL', token, sell_price, volume, history_remaining['period_start_unix'][i]))
+                            (str(next_id), 'SELL', token, sell_price, volume, timestamp))
 
                         self.check_account('OPEN', f'SELL {token}', signal=signal)
 
