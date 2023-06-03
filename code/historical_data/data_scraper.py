@@ -3,15 +3,14 @@ import json
 import logging
 import pandas as pd
 from tqdm import tqdm
-from database_interactions import table_to_df, drop_table, create_table, insert_rows, drop_all_tables_except_table
+from database_interactions import table_to_df, drop_table, create_table, insert_rows, drop_all_tables_given_condition
 import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current))
 from constants import LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY
 
-header = ['id', 'periodStartUnix', 'token0Price',
-          'token1Price', 'liquidity', 'gasPrice']
+header = ['id', 'periodStartUnix', 'token0Price', 'token1Price', 'liquidity']
 
 gq_client = GraphqlClient(
     endpoint='https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',
@@ -62,39 +61,6 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
                 raise Exception(f'Error fetching pool data: {str(hourlyData)}')
 
             if len(hourlyData) != 0:
-                swaps_data = gq_client.execute(
-                    query="""
-                            query pools($min_timestamp: Int!, $max_timestamp: Int!) {
-                                pools(where: {volumeUSD_gte: 1000000}) {
-                                    id
-                                    swaps(where: {timestamp_gte: $min_timestamp, timestamp_lt: $max_timestamp}) {
-                                        id
-                                        timestamp
-                                        transaction {
-                                            id
-                                            gasPrice
-                                        }
-                                    }
-                                }
-                            }
-                        """,
-                    operation_name='foo',
-                    variables={"min_timestamp": int(hourlyData[0]['periodStartUnix']) - (7*60*60), "max_timestamp": int(hourlyData[-1]['periodStartUnix']) + (7*60*60)})
-
-                swaps_data = json.loads(swaps_data)
-
-                if 'data' in swaps_data:
-                    swaps = sum([pool_data['swaps'] for pool_data in swaps_data['data']['pools']], [])
-                    df = pd.DataFrame(data={'timestamp': [int(swap['timestamp']) for swap in swaps], 'gasPrice': [
-                                      int(swap['transaction']['gasPrice']) for swap in swaps]})
-                    for i in range(len(hourlyData)):
-                        hourlyData[i]['gasPrice'] = int(df.iloc[(
-                            df['timestamp'] - hourlyData[i]['periodStartUnix']).abs().argsort()[:1]]['gasPrice'].values[0])
-
-                else:
-                    raise Exception(
-                        f'Error fetching gas price data: {str(swaps_data)}')
-
                 rows_set.update({hourData['id']: tuple(
                     [hourData[key] for key in header]) for hourData in hourlyData})
 
@@ -114,8 +80,8 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
 
 
 def reinitialise_all_liquidity_pool_data():
-    drop_all_tables_except_table('liquidity_pools')
-    
+    drop_all_tables_given_condition("tablename LIKE '%_%_0x%'")
+
     df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
     logger.info('Begining to reinitialise liquidity pool data tables')
 
@@ -126,7 +92,7 @@ def reinitialise_all_liquidity_pool_data():
         if len(rows) > 0:
             drop_table(table_name)
             create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), (
-                'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('gas_price_wei', 'NUMERIC')])
+                'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC')])
             insert_rows(table_name, rows)
 
     logger.info('Completed: Reinitialise liquidity pool data tables')
@@ -137,7 +103,7 @@ def refresh_database():
     df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
 
     df_liquidity_pool_tables = list(table_to_df(
-        command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'liquidity_pools'")['tablename'])
+        command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%_%_0x%'")['tablename'])
     df_liquidity_pool_tables = ['"' + tn +
                                 '"' for tn in df_liquidity_pool_tables]
     logger.info('Refreshing liquidity pool data tables')
@@ -159,7 +125,7 @@ def refresh_database():
 
             if len(rows) > 0:
                 create_table(table_name, [('id', 'VARCHAR(255)'), ('period_start_unix', 'BIGINT'), ('token0_Price', 'NUMERIC'), (
-                    'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC'), ('gas_price_wei', 'NUMERIC')])
+                    'token1_Price', 'NUMERIC'), ('liquidity', 'NUMERIC')])
                 insert_rows(table_name, rows)
 
     logger.info('Completed: Refresh liquidity pool data tables')

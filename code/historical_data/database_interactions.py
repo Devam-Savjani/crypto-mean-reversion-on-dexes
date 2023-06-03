@@ -213,7 +213,7 @@ def table_to_df(table_name=None, command=None, should_print=False, path_to_confi
             if should_print:
                 print('Database connection closed.')
 
-def drop_all_tables_except_table(table_name=None, should_print=False):
+def drop_all_tables_given_condition(condition=None, should_print=False):
     conn = None
     try:
         # read connection parameters
@@ -226,27 +226,18 @@ def drop_all_tables_except_table(table_name=None, should_print=False):
 		
         # create a cursor
         cur = conn.cursor()
-        if table_name is not None:
-            command = f"""
-                        DO $$ DECLARE
-                        rec RECORD;
-                        BEGIN
-                            FOR rec IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '{table_name}')
-                        LOOP
-                            EXECUTE 'DROP TABLE IF EXISTS "' || rec.tablename || '" CASCADE';
-                        END LOOP;
-                        END $$;
-                        """
-        else:
-            command = f"""DO $$ DECLARE
-                        rec RECORD;
-                        BEGIN
-                        FOR rec IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+
+        command = f"""
+                    DO $$ DECLARE
+                    rec RECORD;
+                    BEGIN
+                        FOR rec IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' {f'AND {condition}' if condition is not None else ''})
+                    LOOP
                         EXECUTE 'DROP TABLE IF EXISTS "' || rec.tablename || '" CASCADE';
-                        END LOOP;
-                        END $$;
-                        """
-        
+                    END LOOP;
+                    END $$;
+                    """
+
         # execute a statement
         cur.execute(command)
 
