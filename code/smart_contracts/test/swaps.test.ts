@@ -3,6 +3,7 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import { IERC20, IWETH, Swaps } from "../typechain";
+import { Address } from "cluster";
 
 chai.use(solidity);
 
@@ -10,44 +11,46 @@ describe("Swaps", () => {
     let swapsContract: Swaps;
     let user: SignerWithAddress | undefined;
     let weth: IWETH;
-    let usdc: IERC20;
+    let dai: IERC20;
+    let wethAddress: string;
+    let daiAddress: string;
 
     before(async () => {
         const SwapsContract = await ethers.getContractFactory("Swaps");
-        const wethAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-        const usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        wethAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        daiAddress = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
         swapsContract = await SwapsContract.deploy();
         await swapsContract.deployed();
         [user] = await ethers.getSigners();
         weth = await ethers.getContractAt("IWETH", wethAddress, user);
-
-        usdc = await ethers.getContractAt("IERC20", usdcAddress, user);
+        dai = await ethers.getContractAt("IERC20", daiAddress, user);
     });
 
     describe('Swap Weth', ()=> {
         it('should get weth', async () => {
-            console.log(ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-            console.log(ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-            console.log(ethers.utils.formatEther(await usdc.balanceOf(user!.address)))
-            console.log()
-
-            await swapsContract.swapEthForWeth({
-                value: ethers.utils.parseEther('100')
+            const swapEthForWETH = await swapsContract.swapEthForWeth({
+                value: ethers.utils.parseEther('10')
             })
-
-            console.log(ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-            console.log(ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-            console.log(ethers.utils.formatEther(await usdc.balanceOf(user!.address)))
+            swapEthForWETH.wait()
+        
+            console.log('ETH BEFORE ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+            console.log('WETH BEFORE ',ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+            console.log('DAI BEFORE ',ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+            
+            // Swap WETH for DAI
+            // await weth.approve(swapsContract.address, ethers.utils.parseEther('1'))
+            // const swap = await swapsContract.swapWETHForDAI(ethers.utils.parseEther('0.1'), { gasLimit: 300000 })
+            // swap.wait()
+        
+            // Swap WETH for DAI
+            await weth.approve(swapsContract.address, ethers.utils.parseEther('1'))
+            const swap = await swapsContract.swapExact(wethAddress, daiAddress, 3000, ethers.utils.parseEther('0.1'), { gasLimit: 300000 })
+            swap.wait()
+        
+            console.log('ETH AFTER ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+            console.log('WETH AFTER ',ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+            console.log('DAI AFTER ',ethers.utils.formatEther(await dai.balanceOf(user!.address)))
             console.log()
-
-            // await swapsContract.swapExactInputSingle(weth.address, link.address, ethers.utils.parseEther('0.5'))
-            await swapsContract.swapExactInputSingle(ethers.utils.parseEther('0.5'))
-            // await swapsContract.swapExactInputSingleHop(weth.address, usdc.address, 3000, ethers.utils.parseEther('0.5'))
-            // await swapsContract.swapExactInputSingleHop(usdc.address, weth.address, 3000, ethers.utils.parseEther('0.5'))
-
-            console.log(ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-            console.log(ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-            console.log(ethers.utils.formatEther(await usdc.balanceOf(user!.address)))
 
         })
     })
