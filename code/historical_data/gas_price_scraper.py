@@ -3,12 +3,13 @@ import json
 import logging
 import pandas as pd
 from tqdm import tqdm
+import time
 from database_interactions import table_to_df, drop_table, create_table, insert_rows
 import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current))
-from constants import VOLUME_LOWER_LIMIT
+from constants import LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
 
 
 gq_client = GraphqlClient(
@@ -23,39 +24,41 @@ logging.basicConfig(filename='historical_data/data_scraper.log',
 
 logger = logging.getLogger('urbanGUI')
 
-def get_block_data(table_name, prev_max_time=0):
-    rows_set = None
+def get_block_data(table_name, min_time, max_time):
+    rows_set = {}
     try:
-        rows_set = {}
-        data_length = 1000
-        while data_length >= 1000:
-            print(prev_max_time)
-            result = gq_client.execute(
-                query=f"""
-                        query ($prev_max_time: Int!) {{
-                            transactions(where: {{timestamp_gt: $prev_max_time}}, first:1000, orderBy: timestamp, orderDirection: asc) {{
-                                id
-                                timestamp
-                                gasPrice
+        for timestamp in tqdm(range(min_time, max_time+(60*60), 60*60)):
+            found_result = False
+            window_size_in_minutes = 5
+
+            while not found_result:
+                result = gq_client.execute(
+                    query=f"""
+                            query ($min_time: Int!, $max_time: Int!) {{
+                                transactions(where: {{timestamp_gt: $min_time, timestamp_lt: $max_time}}, first:1000, orderBy: timestamp, orderDirection: asc) {{
+                                    id
+                                    timestamp
+                                    gasPrice
+                                }}
                             }}
-                        }}
-                        """,
-                operation_name='foo',
-                variables={"prev_max_time": int(prev_max_time)})
+                            """,
+                    operation_name='foo',
+                    variables={"min_time": timestamp - (60 * window_size_in_minutes), "max_time": timestamp + (60 * window_size_in_minutes)})
+            
+                transaction_data = json.loads(result)
+                if 'data' in transaction_data:
+                    transaction_data = transaction_data['data']['transactions']
 
-            transactionsData = json.loads(result)
-            if 'data' in transactionsData:
-                transactionsData = transactionsData['data']['transactions']
-            else:
-                raise Exception(f'Error fetching transaction data: {str(transactionsData)}')
-
-            if len(transactionsData) != 0:
-                rows_set.update({txn['id']: (txn['id'], txn['timestamp'], txn['gasPrice']) for txn in transactionsData})
-                data_length = len(transactionsData)
-                prev_max_time = transactionsData[-1]['timestamp'] if data_length > 0 else prev_max_time
-                insert_rows(table_name, [(txn['id'], txn['timestamp'], txn['gasPrice']) for txn in transactionsData])
-            else:
-                return []
+                    if len(transaction_data) != 0:
+                        transaction_data_sorted = sorted(transaction_data, key=lambda x:abs(timestamp - int(x['timestamp'])))
+                        rows_set.update({timestamp: (timestamp, transaction_data_sorted[0]['gasPrice'])})
+                        found_result = True
+                    else:
+                        window_size_in_minutes += 5
+                else:
+                    raise Exception(f'Error fetching transaction data: {str(transaction_data)}')
+            
+            insert_rows(table_name, [rows_set[timestamp]])
 
     except Exception as e:
         print(f'ERROR: {table_name} {e}')
@@ -66,13 +69,32 @@ def get_block_data(table_name, prev_max_time=0):
 
 def reinitialise_all_liquidity_pool_data():
     table_name = 'gas_prices'
-    
-    rows = get_block_data(table_name)
-    if len(rows) > 0:
-        drop_table(table_name)
-        create_table(table_name, [('id', 'VARCHAR(255)'), ('timestamp', 'BIGINT'), ('gas_price_wei', 'NUMERIC')])
-        insert_rows(table_name, rows)
 
+    df = table_to_df(
+        command=f"""
+            CREATE OR REPLACE FUNCTION get_min_timestamp()
+                RETURNS TABLE (table_name TEXT, min_timestamp BIGINT)
+                LANGUAGE plpgsql AS $$
+            DECLARE
+                r RECORD;
+            BEGIN
+                FOR r IN
+                ({LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY})
+            LOOP
+                EXECUTE FORMAT ('SELECT MIN(period_start_unix) FROM %I', r.table_name) INTO min_timestamp;
+                table_name := r.table_name;
+                RETURN next;
+            END LOOP;
+            END $$;
+
+            SELECT min_timestamp FROM get_min_timestamp();
+        """)
+    
+    drop_table(table_name)
+    create_table(table_name, [('timestamp', 'BIGINT'), ('gas_price_wei', 'NUMERIC')])
+    rows = get_block_data(table_name, min(df['min_timestamp']), int(time.time() - (time.time() % (60 * 60))))
+    # if len(rows) > 0:
+    #     insert_rows(table_name, rows)
 
 def refresh_database():
     table_name = 'gas_prices'
@@ -80,10 +102,7 @@ def refresh_database():
     df = table_to_df(
         command=f'SELECT max(timestamp) as max_period_start_unix FROM {table_name};')
     
-    rows = get_block_data(table_name, df['max_period_start_unix'].iloc[0] if df['max_period_start_unix'].iloc[0] is not None else 0)
-
-    if len(rows) > 0:
-        insert_rows(table_name, rows)
+    rows = get_block_data(table_name, df['max_period_start_unix'].iloc[0] if df['max_period_start_unix'].iloc[0] is not None else 0, int(time.time() - (time.time() % (60 * 60))))
 
 if __name__ == "__main__":
     # reinitialise_all_liquidity_pool_data()
