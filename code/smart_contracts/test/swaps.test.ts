@@ -36,11 +36,7 @@ describe("Swaps", () => {
             console.log('ETH BEFORE ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
             console.log('WETH BEFORE ',ethers.utils.formatEther(await weth.balanceOf(user!.address)))
             console.log('DAI BEFORE ',ethers.utils.formatEther(await dai.balanceOf(user!.address)))
-            
-            // Swap WETH for DAI
-            // await weth.approve(swapsContract.address, ethers.utils.parseEther('1'))
-            // const swap = await swapsContract.swapWETHForDAI(ethers.utils.parseEther('0.1'), { gasLimit: 300000 })
-            // swap.wait()
+            console.log()
         
             // Swap WETH for DAI
             await weth.approve(swapsContract.address, ethers.utils.parseEther('1'))
@@ -50,7 +46,6 @@ describe("Swaps", () => {
             console.log('ETH AFTER ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
             console.log('WETH AFTER ',ethers.utils.formatEther(await weth.balanceOf(user!.address)))
             console.log('DAI AFTER ',ethers.utils.formatEther(await dai.balanceOf(user!.address)))
-            console.log()
 
         })
     })
