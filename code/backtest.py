@@ -97,10 +97,12 @@ class Backtest():
     def backtest_pair(self, cointegrated_pair, strategy, initial_investment_in_weth=100):
         history_arg, history_remaining = self.fetch_and_preprocess_data(
             cointegrated_pair, strategy.window_size_in_seconds)
+        
+        cointegrated_pair_0_split = cointegrated_pair[0].split('_')
+        cointegrated_pair_1_split = cointegrated_pair[1].split('_')
 
-        token1_symbol = cointegrated_pair[0].split('_')[0]
-        token2_symbol = cointegrated_pair[1].split('_')[0] if len(
-            cointegrated_pair[1].split('_')) == 3 else cointegrated_pair[1].split('_')[1]
+        token1_symbol = cointegrated_pair_0_split[0] if cointegrated_pair_0_split[1] == 'WETH' else cointegrated_pair_0_split[1]
+        token2_symbol = cointegrated_pair_1_split[0] if cointegrated_pair_1_split[1] == 'WETH' else cointegrated_pair_1_split[1]
 
         self.aave1_df = table_to_df(
             command=f"SELECT * FROM {token1_symbol}_borrowing_rates ORDER BY timestamp;", path_to_config='historical_data/database.ini')
@@ -108,7 +110,7 @@ class Backtest():
         self.aave2_df = table_to_df(
             command=f"SELECT * FROM {token2_symbol}_borrowing_rates ORDER BY timestamp;", path_to_config='historical_data/database.ini')
 
-        self.gas_prices_df = table_to_df(command=f"SELECT * FROM gas_prices ORDER BY timestamp;", path_to_config='historical_data/database.ini')        
+        self.gas_prices_df = table_to_df(command=f"SELECT * FROM gas_prices ORDER BY timestamp;", path_to_config='historical_data/database.ini')
 
         swap_fee1, swap_fee2 = self.get_uniswap_fee(cointegrated_pair)
         swap_fees = {
@@ -197,7 +199,10 @@ class Backtest():
             }
             timestamp = history_remaining['period_start_unix'][i]
 
-            gas_price_in_eth = (self.gas_prices_df.iloc[(self.gas_prices_df['timestamp'] - timestamp).abs().argsort()[:1]]['gas_price_wei'].iloc[0]) * 1e-18
+            # print(timestamp)
+            # gas_price_in_eth = (self.gas_prices_df.iloc[(self.gas_prices_df['timestamp'] - timestamp).abs().argsort()[:1]]['gas_price_wei'].iloc[0]) * 1e-18
+            # print(self.gas_prices_df.loc[self.gas_prices_df['timestamp'] == timestamp])
+            gas_price_in_eth = (self.gas_prices_df.loc[self.gas_prices_df['timestamp'] == timestamp]['gas_price_wei'].iloc[0]) * 1e-18
 
             if len(self.open_positions['SELL']) > 0:
                 apy = self.get_apy_at_timestamp(list(self.open_positions['SELL'].values())[0][3], timestamp)
@@ -338,7 +343,7 @@ class Backtest():
             sell_positions = self.open_positions['SELL'].keys()
             for sell_id in list(sell_positions):
                 apy = self.get_apy_at_timestamp(
-                    history_remaining['period_start_unix'].iloc[-1])
+                    history_remaining['period_start_unix'].iloc[-2], history_remaining['period_start_unix'].iloc[-1])
                 close_sell_position(sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy,
                                     curr_timestamp=history_remaining['period_start_unix'].iloc[-1])
 
@@ -378,8 +383,8 @@ percent_to_invest = 1.00
 initial_investment = 100
 
 for cointegrated_pair in pairs:
-    # try:
-    if True:
+    try:
+    # if True:
         print(num)
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
@@ -497,12 +502,12 @@ for cointegrated_pair in pairs:
 
         # print(*backtest_mean_reversion.trades, sep='\n')
 
-    # except Exception as e:
-    #     bad_pairs.append((cointegrated_pair))
-    #     # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
-    #     # plt.show()
-    #     print(e)
-    #     # print(kalman_filter_strategy.account_history[-1])
-    #     print()
-    # finally:
-    #     pass
+    except Exception as e:
+        bad_pairs.append((cointegrated_pair))
+        # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
+        # plt.show()
+        print(e)
+        # print(kalman_filter_strategy.account_history[-1])
+        print()
+    finally:
+        pass
