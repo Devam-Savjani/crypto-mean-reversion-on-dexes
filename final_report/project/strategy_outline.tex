@@ -1,7 +1,7 @@
 \chapter{Key Decisions and Outline of Trading Strategies}
 
 \section{Liquidity Pools} \label{sec:liquidity-pools}
-As previously mentioned, Uniswap is a decentralized exchange protocol that facilitates swapping of cryptocurrencies through the use of liquidity pools. One of the remarkable features of Uniswap is its support for even the smallest cryptocurrencies. In fact, it currently possesses an impressive number of 12,182 liquidity pools, as obtained via the Uniswap V3 subgraph. The subgraph provides valuable insights into the liquidity pools within the Uniswap ecosystem.
+As previously mentioned, Uniswap is a decentralized exchange protocol that facilitates swapping of cryptocurrencies through the use of liquidity pools. One of the remarkable features of Uniswap is its support for even the smallest cryptocurrencies. In fact, it currently possesses 12,182 liquidity pools, as obtained via the Uniswap V3 subgraph. The subgraph provides valuable insights into the liquidity pools within the Uniswap ecosystem.
 \\[5mm]
 Table \ref{tab:liquidity_pools} showcases the diversity of these pools. Some pools exhibit high trading volumes, indicating significant activity and demand for those specific pairs. On the other hand, there are also pools with zero liquidity, which could be attributed to various reasons. It could be due to a lack of demand for one of the token pairs offered in the pool, or it may indicate that the pool is relatively new and has not attracted significant participation yet.
 \\[5mm]
@@ -235,7 +235,34 @@ Aave facilitates lending and borrowing transactions among users, and as part of 
 \\[5mm]
 Another aspect of Aave for the trading strategy is collateralization and the avoidance of liquidation. Liquidation occurs when a borrower's position is forcibly closed, and their collateral assets are sold off in cases of default or insufficient collateral. When borrowing from Aave, borrowers are required to allocate a certain percentage of the loan value as collateral, known as the Loan-to-Value (LTV) ratio~\cite{aave_risk}. For instance, if a token has a 75\% LTV, borrowers can borrow 0.75 ETH worth of the corresponding token for every 1 ETH worth of collateral provided. However, as token prices fluctuate, the ratio between the borrowed token value and the collateral value changes, posing risks for both lenders and Aave. To safeguard lenders and maintain protocol solvency, a liquidation threshold is established. If the collateral value falls below this threshold, the borrower's position becomes vulnerable to liquidation. In such cases, the collateral is auctioned off to repay the outstanding debt to the lenders. Typically, the liquidation threshold is set 5-10\% higher than the asset's LTV. For WETH, the Loan-to-Value ratio is 82.5\%, and the liquidation threshold is 86\%.
 
-\subsection{Overall Strategy - TODO}
+\subsection{Overall Strategy}
+The implementation of these strategies is intricate, as it is designed to be scalable and highly customizable with various parameters. Additionally, since the strategies being investigated are based on mean reversion, an abstract strategy is created to allow for quick exploration and research into different approaches and the impact of hedge ratio calculations on returns. This abstract strategy encompasses the core logic of generating trading signals, determining optimal trade timing and volumes, and transmitting them to the live or backtesting system. The strategy-specific classes contain operations that calculate the hedge ratio and establish the thresholds that trigger the generation of trading signals. Below shows the functions that the abstract strategy possesses.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+class Abstract_Strategy():
+    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment):
+        ...
+
+    def initialise_historical_data(self, history_p1, history_p2):
+        ...
+
+    def recalculate_thresholds(self, has_trade=False):
+        raise NotImplementedError("recalculate_thresholds not implemented")
+
+    def new_tick(self, price_of_pair1, price_of_pair2, has_trade):
+        ...
+
+    def generate_signal(self, ctx, prices):
+        ...
+
+\end{lstlisting}
+\vspace{5mm}
+
+The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} and \texttt{generate\_signal} are all inheritted by each strategy and \texttt{recalculate\_thresholds} is implemented in each instance of the strategy. \texttt{\_\_init\_\_,\ initialise\_historical\_data} are self explanatory. \texttt{new\_tick} is called in \texttt{generate\_signal} to update the strategy's knowledge of historical prices, this function also triggers a call to \texttt{recalculate\_thresholds} which re-calculates the hedge ratio and determines the thresholds at which an arbitrage opportunity becomes apparent. \texttt{generate\_signal} is the function that is called by the trading system at each price update, it first invokes \texttt{new\_tick} which in turn updates the thresholds, finally the updated hedge ratio and thresholds are used in the process of generating a signal. The steps of \texttt{generate\_signal} are outlined below: TODO fishis after backtesting system
+\begin{enumerate}
+    \item The first step is to check whether, a position is currently held, for this the open positions
+
+\end{enumerate}
 
 \subsubsection{Volume of Trades - TODO}
 

@@ -8,5 +8,6 @@
 *.lot
 *.out
 *.toc
+*.pyg
 title/logo-eps-converted-to.pdf
 *.synctex.gz
