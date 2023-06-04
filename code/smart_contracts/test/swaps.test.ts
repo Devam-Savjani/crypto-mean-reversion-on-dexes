@@ -40,7 +40,7 @@ describe("Swaps", () => {
         
             // Swap WETH for DAI
             await weth.approve(swapsContract.address, ethers.utils.parseEther('1'))
-            const swap = await swapsContract.swapExact(wethAddress, daiAddress, 3000, ethers.utils.parseEther('0.1'), { gasLimit: 300000 })
+            const swap = await swapsContract.swapExactUsingRouter(wethAddress, daiAddress, 3000, ethers.utils.parseEther('0.1'), { gasLimit: 300000 })
             swap.wait()
         
             console.log('ETH AFTER ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))

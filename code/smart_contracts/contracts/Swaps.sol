@@ -1,38 +1,39 @@
-pragma solidity 0.8.11;
+pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
+import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "./IWETH.sol";
 
-contract Swaps {
+contract Swaps is IUniswapV3SwapCallback {
   ISwapRouter public immutable swapRouter =
     ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
-  // This example swaps DAI/WETH9 for single path swaps and DAI/USDC/WETH9 for multi path swaps.
-
-  // ISwapRouter public immutable swapRouter;
-  // address public constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-  // address public constant WETH9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-  // uint24 public constant feeTier = 3000;
-
   constructor() {}
 
-  function swapEthForWeth() public payable {
+  function swapEthForWeth() external payable {
     IWETH weth = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     weth.deposit{ value: msg.value }();
     weth.transfer(msg.sender, msg.value);
   }
 
-  function swapExact(
+  function swapExactUsingRouter(
     address tokenFrom,
     address tokenTo,
     uint24 feeTier,
     uint256 amountIn
   ) external returns (uint256 amountOut) {
     // Transfer the specified amount of WETH9 to this contract.
-    TransferHelper.safeTransferFrom(tokenFrom, msg.sender, address(this), amountIn);
+    TransferHelper.safeTransferFrom(
+      tokenFrom,
+      msg.sender,
+      address(this),
+      amountIn
+    );
 
     // Approve the router to spend WETH9.
     TransferHelper.safeApprove(tokenFrom, address(swapRouter), amountIn);
@@ -51,5 +52,45 @@ contract Swaps {
     // The call to `exactInputSingle` executes the swap.
     amountOut = swapRouter.exactInputSingle(params);
     return amountOut;
+  }
+
+  function swapExactUsingPool(
+    int256 amountIn
+  ) external returns (int256, int256) {
+    address poolAddress = 0x60594a405d53811d3BC4766596EFD80fd545A270;
+
+    bool zeroForOne = false;
+
+    IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
+    address token0Address = pool.token0();
+    address token1Address = pool.token1();
+
+    return
+      pool.swap(
+        msg.sender,
+        zeroForOne,
+        amountIn,
+        zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
+        abi.encode(poolAddress, token0Address, token1Address, msg.sender)
+      );
+  }
+
+  function uniswapV3SwapCallback(
+    int256 amount0Delta,
+    int256 amount1Delta,
+    bytes calldata data
+  ) external override {
+    (address poolAddress, address token0, address token1, address userAddress) = abi.decode(
+      data,
+      (address, address, address, address)
+    );
+
+    require(msg.sender == address(poolAddress));
+    if (amount0Delta > 0) {
+      IERC20(token0).transferFrom(userAddress, msg.sender, uint256(amount0Delta));
+    }
+    if (amount1Delta > 0) {
+      IERC20(token1).transferFrom(userAddress, msg.sender, uint256(amount1Delta));
+    }
   }
 }
