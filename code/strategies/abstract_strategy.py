@@ -75,17 +75,7 @@ class Abstract_Strategy():
 
                 swap_for_b = []
 
-                if gas_price_in_eth > self.gas_price_threshold:
-                    sell_token, sold_price, sell_volume, sell_timestamp = open_positions['SELL'].values()[
-                        0]
-                    position_token = account[sell_token]
-                    current_token_price = prices[f'P{sell_token[1]}']
-                    deposit_amount = ((sell_volume * current_token_price) /
-                                      liquidation_threshold) - account['collateral_WETH']
-                    return [('DEPOSIT', deposit_amount)] if should_deposit_more else []
-
                 if account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth) < 0:
-                    print('gets here')
                     orders += [('BUY ETH', 0.1)]
 
                 return orders + [
