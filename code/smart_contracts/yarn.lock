@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@aave/core-v3@^1.17.2":
+  version "1.17.2"
+  resolved "https://registry.yarnpkg.com/@aave/core-v3/-/core-v3-1.17.2.tgz#dfb543da87d4d6429e0c277b46b84057349f590f"
+  integrity sha512-ztCyKTALoeOQy6MlWVRCvHgilh6vT+d6lwjXhIsmlEYlA0v3L6dQBIyTFIzHBUfcpEjs0T3tSmcVxGY+GAUZ1g==
+
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-consumer/-/source-map-consumer-0.8.0.tgz#33bf4b7b39c178821606f669bbc447a6a629786b"

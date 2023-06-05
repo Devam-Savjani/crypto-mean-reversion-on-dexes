@@ -3,6 +3,7 @@ import { IERC20, IUniswapV3Pool, IWETH, Swaps } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // npx hardhat node --fork https://eth-mainnet.g.alchemy.com/v2/F5gSnV_OJ77nOQWI6VKUq6t2l4Pxp2ts --hostname 127.0.0.1
+// npx hardhat run scripts/foo.ts
 async function main() {
     let swapsContract: Swaps;
     let user: SignerWithAddress | undefined;
@@ -37,10 +38,19 @@ async function main() {
     console.log()
     
     // Swap WETH for DAI
-    await weth.approve(swapsContract.address, ethers.utils.parseEther('1'))
+    await weth.approve(swapsContract.address, ethers.utils.parseEther('10'));
+    await dai.approve(swapsContract.address, ethers.utils.parseEther('150'));
 
     const swap = await swapsContract.swapExactUsingPool(poolAddress, false, ethers.utils.parseEther('0.1'), { gasLimit: 300000 })
     swap.wait()
+
+    console.log('ETH AFTER ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+    console.log('WETH AFTER ',ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+    console.log('DAI AFTER ',ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+    console.log()
+
+    const deposit = await swapsContract.borrow_token({ gasLimit: 800000 })
+    deposit.wait()
 
     console.log('ETH AFTER ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
     console.log('WETH AFTER ',ethers.utils.formatEther(await weth.balanceOf(user!.address)))

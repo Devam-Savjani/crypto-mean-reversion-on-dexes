@@ -8,6 +8,12 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "./IWETH.sol";
+import "./IPoolAddressesProvider.sol";
+import "./IPool.sol";
+import "./DataTypes.sol";
+
+// import '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
+// import '@aave/core-v3/contracts/interfaces/IPool.sol';
 
 contract Swaps is IUniswapV3SwapCallback {
   ISwapRouter public immutable swapRouter =
@@ -98,5 +104,36 @@ contract Swaps is IUniswapV3SwapCallback {
         uint256(amount1Delta)
       );
     }
+  }
+
+  function borrow_token() external {
+    IPoolAddressesProvider provider = IPoolAddressesProvider(
+      0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e
+    ); // mainnet address, for other addresses: https://docs.aave.com/developers/developing-on-aave/deployed-contract-instances  
+
+    IPool lendingPool = IPool(provider.getPool());
+
+    // Input variables
+    address daiAddress = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // mainnet DAI
+    address wethAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet WETH
+
+    uint256 amount = 5 * 1e18;
+    uint16 referral = 0;
+    address onBehalfOf = msg.sender;
+
+    IERC20(wethAddress).transferFrom(msg.sender, address(this), amount);
+
+    // Approve LendingPool contract to move your DAI
+    IERC20(wethAddress).approve(address(lendingPool), amount);
+
+    // Deposit 5 WETH
+    lendingPool.deposit(wethAddress, amount, address(this), referral);
+
+    lendingPool.setUserUseReserveAsCollateral(wethAddress, true);
+
+    uint256 borrowAmount = 5 * 1e18;
+    lendingPool.borrow(daiAddress, borrowAmount, 2, referral, address(this));
+
+    IERC20(daiAddress).transferFrom(address(this), msg.sender, borrowAmount);
   }
 }
