@@ -55,15 +55,11 @@ contract Swaps is IUniswapV3SwapCallback {
   }
 
   function swapExactUsingPool(
+    address poolAddress,
+    bool zeroForOne,
     int256 amountIn
   ) external returns (int256, int256) {
-    address poolAddress = 0x60594a405d53811d3BC4766596EFD80fd545A270;
-
-    bool zeroForOne = false;
-
     IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
-    address token0Address = pool.token0();
-    address token1Address = pool.token1();
 
     return
       pool.swap(
@@ -71,7 +67,7 @@ contract Swaps is IUniswapV3SwapCallback {
         zeroForOne,
         amountIn,
         zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
-        abi.encode(poolAddress, token0Address, token1Address, msg.sender)
+        abi.encode(poolAddress, pool.token0(), pool.token1(), msg.sender)
       );
   }
 
@@ -80,17 +76,27 @@ contract Swaps is IUniswapV3SwapCallback {
     int256 amount1Delta,
     bytes calldata data
   ) external override {
-    (address poolAddress, address token0, address token1, address userAddress) = abi.decode(
-      data,
-      (address, address, address, address)
-    );
+    (
+      address poolAddress,
+      address token0,
+      address token1,
+      address userAddress
+    ) = abi.decode(data, (address, address, address, address));
 
     require(msg.sender == address(poolAddress));
     if (amount0Delta > 0) {
-      IERC20(token0).transferFrom(userAddress, msg.sender, uint256(amount0Delta));
+      IERC20(token0).transferFrom(
+        userAddress,
+        msg.sender,
+        uint256(amount0Delta)
+      );
     }
     if (amount1Delta > 0) {
-      IERC20(token1).transferFrom(userAddress, msg.sender, uint256(amount1Delta));
+      IERC20(token1).transferFrom(
+        userAddress,
+        msg.sender,
+        uint256(amount1Delta)
+      );
     }
   }
 }
