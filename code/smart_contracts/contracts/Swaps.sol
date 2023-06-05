@@ -12,9 +12,6 @@ import "./IPoolAddressesProvider.sol";
 import "./IPool.sol";
 import "./DataTypes.sol";
 
-// import '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
-// import '@aave/core-v3/contracts/interfaces/IPool.sol';
-
 contract Swaps is IUniswapV3SwapCallback {
   ISwapRouter public immutable swapRouter =
     ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
@@ -109,7 +106,7 @@ contract Swaps is IUniswapV3SwapCallback {
   function borrow_token() external {
     IPoolAddressesProvider provider = IPoolAddressesProvider(
       0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e
-    ); // mainnet address, for other addresses: https://docs.aave.com/developers/developing-on-aave/deployed-contract-instances  
+    ); // mainnet address, https://docs.aave.com/developers/deployed-contracts/v3-mainnet/ethereum-mainnet
 
     IPool lendingPool = IPool(provider.getPool());
 
@@ -135,5 +132,27 @@ contract Swaps is IUniswapV3SwapCallback {
     lendingPool.borrow(daiAddress, borrowAmount, 2, referral, address(this));
 
     IERC20(daiAddress).transferFrom(address(this), msg.sender, borrowAmount);
+  }
+
+  function repay_borrowed_token() external {
+    IPoolAddressesProvider provider = IPoolAddressesProvider(
+      0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e
+    ); // mainnet address, https://docs.aave.com/developers/deployed-contracts/v3-mainnet/ethereum-mainnet
+
+    IPool lendingPool = IPool(provider.getPool());
+
+    // Input variables
+    address daiAddress = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // mainnet DAI
+    address wethAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet WETH
+
+    uint256 borrowAmount = 5 * 1e18;
+ 
+    IERC20(daiAddress).transferFrom(msg.sender, address(this), borrowAmount);
+
+    // Approve LendingPool contract to move your DAI
+    IERC20(daiAddress).approve(address(lendingPool), borrowAmount);
+
+    lendingPool.repay(daiAddress, borrowAmount, 2, address(this));
+    lendingPool.withdraw(wethAddress, borrowAmount, msg.sender);
   }
 }
