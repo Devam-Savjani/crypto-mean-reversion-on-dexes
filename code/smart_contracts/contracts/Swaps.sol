@@ -16,10 +16,19 @@ contract Swaps is IUniswapV3SwapCallback {
   ISwapRouter public immutable swapRouter =
     ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
+  IPool public immutable lendingPool =
+    IPool(
+      IPoolAddressesProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e)
+        .getPool()
+    ); // mainnet address, https://docs.aave.com/developers/deployed-contracts/v3-mainnet/ethereum-mainnet
+
+  address public immutable wethAddress =
+    0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
   constructor() {}
 
   function swapEthForWeth() external payable {
-    IWETH weth = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    IWETH weth = IWETH(wethAddress);
     weth.deposit{ value: msg.value }();
     weth.transfer(msg.sender, msg.value);
   }
@@ -103,56 +112,41 @@ contract Swaps is IUniswapV3SwapCallback {
     }
   }
 
-  function borrow_token() external {
-    IPoolAddressesProvider provider = IPoolAddressesProvider(
-      0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e
-    ); // mainnet address, https://docs.aave.com/developers/deployed-contracts/v3-mainnet/ethereum-mainnet
-
-    IPool lendingPool = IPool(provider.getPool());
-
-    // Input variables
-    address daiAddress = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // mainnet DAI
-    address wethAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet WETH
-
-    uint256 amount = 5 * 1e18;
+  function borrow_token(
+    address tokenAddress,
+    uint256 borrowAmount,
+    uint256 collatoralAmount
+  ) external {
     uint16 referral = 0;
-    address onBehalfOf = msg.sender;
 
-    IERC20(wethAddress).transferFrom(msg.sender, address(this), amount);
+    // Transfer 
+    IERC20(wethAddress).transferFrom(
+      msg.sender,
+      address(this),
+      collatoralAmount
+    );
 
-    // Approve LendingPool contract to move your DAI
-    IERC20(wethAddress).approve(address(lendingPool), amount);
+    // Approve LendingPool contract to move your WETH
+    IERC20(wethAddress).approve(address(lendingPool), collatoralAmount);
 
-    // Deposit 5 WETH
-    lendingPool.deposit(wethAddress, amount, address(this), referral);
-
+    // Deposit collatoralAmount WETH
+    lendingPool.deposit(wethAddress, collatoralAmount, address(this), referral);
+    // Allow WETH to serve as Collateral
     lendingPool.setUserUseReserveAsCollateral(wethAddress, true);
+    // Borrow token
+    lendingPool.borrow(tokenAddress, borrowAmount, 2, referral, address(this));
 
-    uint256 borrowAmount = 5 * 1e18;
-    lendingPool.borrow(daiAddress, borrowAmount, 2, referral, address(this));
-
-    IERC20(daiAddress).transferFrom(address(this), msg.sender, borrowAmount);
+    IERC20(tokenAddress).transferFrom(address(this), msg.sender, borrowAmount);
   }
 
-  function repay_borrowed_token() external {
-    IPoolAddressesProvider provider = IPoolAddressesProvider(
-      0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e
-    ); // mainnet address, https://docs.aave.com/developers/deployed-contracts/v3-mainnet/ethereum-mainnet
+  function repay_borrowed_token(address tokenAddress, uint256 repayAmount, uint256 collateralWithdrawAmount) external {
 
-    IPool lendingPool = IPool(provider.getPool());
-
-    // Input variables
-    address daiAddress = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // mainnet DAI
-    address wethAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet WETH
-
-    uint256 borrowAmount = 5 * 1e18;
- 
-    IERC20(daiAddress).transferFrom(msg.sender, address(this), borrowAmount);
+    IERC20(tokenAddress).transferFrom(msg.sender, address(this), repayAmount);
 
     // Approve LendingPool contract to move your DAI
-    IERC20(daiAddress).approve(address(lendingPool), borrowAmount);
+    IERC20(tokenAddress).approve(address(lendingPool), repayAmount);
 
-    lendingPool.repay(daiAddress, borrowAmount, 2, address(this));
-    lendingPool.withdraw(wethAddress, borrowAmount, msg.sender);
+    lendingPool.repay(tokenAddress, repayAmount, 2, address(this));
+    lendingPool.withdraw(wethAddress, collateralWithdrawAmount, msg.sender);
   }
 }

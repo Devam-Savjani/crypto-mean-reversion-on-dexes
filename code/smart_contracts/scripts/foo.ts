@@ -49,7 +49,7 @@ async function main() {
     console.log('DAI AFTER ',ethers.utils.formatEther(await dai.balanceOf(user!.address)))
     console.log()
 
-    const deposit = await swapsContract.borrow_token({ gasLimit: 800000 })
+    const deposit = await swapsContract.borrow_token(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('5'), { gasLimit: 800000 })
     deposit.wait()
 
     console.log('ETH AFTER ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
@@ -57,7 +57,7 @@ async function main() {
     console.log('DAI AFTER ',ethers.utils.formatEther(await dai.balanceOf(user!.address)))
     console.log()
 
-    const repay = await swapsContract.repay_borrowed_token({ gasLimit: 800000 })
+    const repay = await swapsContract.repay_borrowed_token(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('5'), { gasLimit: 800000 })
     repay.wait()
 
     console.log('ETH AFTER ',ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
