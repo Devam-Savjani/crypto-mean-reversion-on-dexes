@@ -33,6 +33,14 @@ contract Swaps is IUniswapV3SwapCallback {
     weth.transfer(msg.sender, msg.value);
   }
 
+  function swapWethForEth(uint256 amount) external payable {
+    IWETH(wethAddress).transferFrom(msg.sender, address(this), amount);
+    IWETH(wethAddress).withdraw(amount);
+    msg.sender.transfer(address(this).balance);
+  }
+
+  receive() external payable {}
+
   function swapExactUsingRouter(
     address tokenFrom,
     address tokenTo,
