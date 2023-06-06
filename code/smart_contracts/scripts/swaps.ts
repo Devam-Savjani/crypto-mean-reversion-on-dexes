@@ -57,20 +57,20 @@ async function main() {
     console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
     console.log()
 
-    // const deposit = await swapsContract.borrow_token(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('2'), { gasLimit: 800000 })
-    // deposit.wait()
+    const deposit = await swapsContract.borrowToken(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('2'), { gasLimit: 800000 })
+    deposit.wait()
 
-    // console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-    // console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-    // console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
-    // console.log()
+    console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+    console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+    console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+    console.log()
 
-    // const repay = await swapsContract.repay_borrowed_token(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('2'), { gasLimit: 800000 })
-    // repay.wait()
+    const repay = await swapsContract.repayBorrowedToken(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('2'), { gasLimit: 800000 })
+    repay.wait()
 
-    // console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-    // console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-    // console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+    console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+    console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+    console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
 }
 
 main()

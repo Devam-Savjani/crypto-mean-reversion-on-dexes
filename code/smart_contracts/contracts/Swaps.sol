@@ -47,7 +47,6 @@ contract Swaps is IUniswapV3SwapCallback {
     uint24 feeTier,
     uint256 amountIn
   ) external returns (uint256 amountOut) {
-    // Transfer the specified amount of WETH9 to this contract.
     TransferHelper.safeTransferFrom(
       tokenFrom,
       msg.sender,
@@ -55,7 +54,6 @@ contract Swaps is IUniswapV3SwapCallback {
       amountIn
     );
 
-    // Approve the router to spend WETH9.
     TransferHelper.safeApprove(tokenFrom, address(swapRouter), amountIn);
 
     ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
@@ -69,6 +67,7 @@ contract Swaps is IUniswapV3SwapCallback {
         amountOutMinimum: 0,
         sqrtPriceLimitX96: 0
       });
+
     // The call to `exactInputSingle` executes the swap.
     amountOut = swapRouter.exactInputSingle(params);
     return amountOut;
@@ -120,14 +119,24 @@ contract Swaps is IUniswapV3SwapCallback {
     }
   }
 
-  function borrow_token(
+  function depositCollateral(uint256 collatoralAmount) external {
+    IERC20(wethAddress).transferFrom(
+      msg.sender,
+      address(this),
+      collatoralAmount
+    );
+    IERC20(wethAddress).approve(address(lendingPool), collatoralAmount);
+    lendingPool.deposit(wethAddress, collatoralAmount, address(this), 0);
+    // Allow WETH to serve as Collateral
+    lendingPool.setUserUseReserveAsCollateral(wethAddress, true);
+  }
+
+  function borrowToken(
     address tokenAddress,
     uint256 borrowAmount,
     uint256 collatoralAmount
   ) external {
-    uint16 referral = 0;
-
-    // Transfer 
+    // Transfer
     IERC20(wethAddress).transferFrom(
       msg.sender,
       address(this),
@@ -138,17 +147,20 @@ contract Swaps is IUniswapV3SwapCallback {
     IERC20(wethAddress).approve(address(lendingPool), collatoralAmount);
 
     // Deposit collatoralAmount WETH
-    lendingPool.deposit(wethAddress, collatoralAmount, address(this), referral);
+    lendingPool.deposit(wethAddress, collatoralAmount, address(this), 0);
     // Allow WETH to serve as Collateral
     lendingPool.setUserUseReserveAsCollateral(wethAddress, true);
     // Borrow token
-    lendingPool.borrow(tokenAddress, borrowAmount, 2, referral, address(this));
+    lendingPool.borrow(tokenAddress, borrowAmount, 2, 0, address(this));
 
     IERC20(tokenAddress).transferFrom(address(this), msg.sender, borrowAmount);
   }
 
-  function repay_borrowed_token(address tokenAddress, uint256 repayAmount, uint256 collateralWithdrawAmount) external {
-
+  function repayBorrowedToken(
+    address tokenAddress,
+    uint256 repayAmount,
+    uint256 collateralWithdrawAmount
+  ) external {
     IERC20(tokenAddress).transferFrom(msg.sender, address(this), repayAmount);
 
     // Approve LendingPool contract to move your DAI
