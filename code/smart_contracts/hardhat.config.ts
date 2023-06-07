@@ -2,6 +2,7 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "solidity-coverage";
+import "hardhat-gas-reporter"
 
 export default {
   solidity: {
@@ -24,4 +25,7 @@ export default {
     target: "ethers-v5",
     alwaysGenerateOverloads: false,
   },
+  gasReporter: {
+    enabled: true,
+  }
 };
