@@ -169,4 +169,10 @@ contract Swaps is IUniswapV3SwapCallback {
     lendingPool.repay(tokenAddress, repayAmount, 2, address(this));
     lendingPool.withdraw(wethAddress, collateralWithdrawAmount, msg.sender);
   }
+
+  function withdrawCollateral(
+    uint256 collateralWithdrawAmount
+  ) external {
+    lendingPool.withdraw(wethAddress, collateralWithdrawAmount, msg.sender);
+  }
 }
