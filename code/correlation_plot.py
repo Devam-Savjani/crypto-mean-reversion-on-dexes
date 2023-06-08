@@ -5,6 +5,7 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 import numpy as np
 from check_liquidity_pool_data import get_pools_max_timestamp
+from constants import CORRELATION_LOWER_LIMIT, CORRELATION_UPPER_LIMIT
 
 def get_correlation_matrix():
     liquidity_pools = get_pools_max_timestamp()['table_name'].to_list()
@@ -32,10 +33,10 @@ def plot_heatmap():
 if __name__ == "__main__":
     corr_matrix = get_correlation_matrix()
 
-    filteredDf = corr_matrix[((0.9 < corr_matrix)) & (corr_matrix < np.float64(0.997))]
+    filteredDf = corr_matrix[((CORRELATION_LOWER_LIMIT < corr_matrix)) & (corr_matrix < CORRELATION_UPPER_LIMIT)]
     print(filteredDf)
 
     print(filteredDf.unstack().dropna())
     print(list(filteredDf.unstack().dropna().index))
 
-    # plot_heatmap()
+    plot_heatmap()

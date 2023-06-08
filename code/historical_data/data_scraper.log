@@ -163,3 +163,10 @@
 2023-06-03 11:00:03,577, urbanGUI INFO Completed: Reinitialise liquidity pool data tables
 2023-06-04 12:42:06,388, urbanGUI INFO Refreshing liquidity pool data tables
 2023-06-04 12:42:15,214, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-06-08 00:58:49,587, urbanGUI INFO Refreshing liquidity pool data tables
+2023-06-08 00:58:50,402, urbanGUI ERROR Failed to fetch some data for address 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8 : "USDC_WETH_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8"
+2023-06-08 00:58:57,295, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-06-08 00:58:58,781, urbanGUI INFO Refreshing liquidity pool data tables
+2023-06-08 00:59:05,578, urbanGUI INFO Completed: Refresh liquidity pool data tables
+2023-06-08 00:59:08,410, urbanGUI INFO Refreshing liquidity pool data tables
+2023-06-08 00:59:15,236, urbanGUI INFO Completed: Refresh liquidity pool data tables

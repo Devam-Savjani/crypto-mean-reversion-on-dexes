@@ -10,7 +10,7 @@ import sys
 sys.path.append('./historical_data')
 from database_interactions import table_to_df
 from calculate_cointegrated_pairs import load_cointegrated_pairs
-from constants import GAS_USED_BY_LOAN, GAS_USED_BY_SWAP
+from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BUYING_ETH, GAS_USED_BY_DEPOSITING_COLLATERAL, GAS_USED_BY_WITHDRAWING_COLLATERAL, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY
 from correlation_plot import get_correlation_matrix
 
 def days_to_seconds(days): return int(days * 24 * 60 * 60)
@@ -178,7 +178,7 @@ class Backtest():
             # Return Borrowed Tokens
             self.account[sell_token] = self.account[sell_token] - volume_required_to_return
             # Deduct Gas fee from loaning
-            self.account['ETH'] = self.account['ETH'] - GAS_USED_BY_LOAN * gas_price_in_eth
+            self.account['ETH'] = self.account['ETH'] - GAS_USED_BY_REPAY * gas_price_in_eth
             
             # Return Collatoral to WETH
             self.account['WETH'] = self.account['WETH'] + self.account['collateral_WETH']
@@ -191,7 +191,6 @@ class Backtest():
         vtl_eth = weth_borrowing_rates['ltv'].iloc[0]
         liquidation_threshold = weth_borrowing_rates['liquidation_threshold'].iloc[0]
 
-        # for i in history_remaining.index:
         for i in tqdm(history_remaining.index):
             prices = {
                 'P1': history_remaining_p1[i],
@@ -199,9 +198,6 @@ class Backtest():
             }
             timestamp = history_remaining['period_start_unix'][i]
 
-            # print(timestamp)
-            # gas_price_in_eth = (self.gas_prices_df.iloc[(self.gas_prices_df['timestamp'] - timestamp).abs().argsort()[:1]]['gas_price_wei'].iloc[0]) * 1e-18
-            # print(self.gas_prices_df.loc[self.gas_prices_df['timestamp'] == timestamp])
             gas_price_in_eth = (self.gas_prices_df.loc[self.gas_prices_df['timestamp'] == timestamp]['gas_price_wei'].iloc[0]) * 1e-18
 
             if len(self.open_positions['SELL']) > 0:
@@ -230,19 +226,19 @@ class Backtest():
                 if order_type == 'BUY ETH':
                     amount_to_swap = self.account['WETH'] * order[1]
                     self.account['WETH'] = self.account['WETH'] - amount_to_swap
-                    self.account['ETH'] = self.account['ETH'] + amount_to_swap
+                    self.account['ETH'] = self.account['ETH'] + amount_to_swap - (GAS_USED_BY_BUYING_ETH * gas_price_in_eth)
 
                 elif order_type == 'DEPOSIT':
                     deposit_amount = order[1]
                     self.account['WETH'] = self.account['WETH'] - \
-                        deposit_amount
+                        deposit_amount - (GAS_USED_BY_DEPOSITING_COLLATERAL * gas_price_in_eth)
                     self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
                     self.check_account('DEPOSIT', f'WETH', signal=signal)
 
                 if order_type == 'WITHDRAW':
                     withdraw_amount = order[1]
                     self.account['WETH'] = self.account['WETH'] + \
-                        withdraw_amount
+                        withdraw_amount - (GAS_USED_BY_WITHDRAWING_COLLATERAL * gas_price_in_eth)
                     self.account['collateral_WETH'] = self.account['collateral_WETH'] - \
                         withdraw_amount
                     self.check_account('WITHDRAW', f'WETH', signal=signal)
@@ -315,7 +311,7 @@ class Backtest():
                         self.account['WETH'] = self.account['WETH'] - amount_to_move_to_collateral_WETH
                         self.account['collateral_WETH'] = self.account['collateral_WETH'] + amount_to_move_to_collateral_WETH
                         # Deduct Gas fee from borrowing
-                        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_LOAN * gas_price_in_eth)
+                        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_BORROW * gas_price_in_eth)
 
                         # Swap borrowed tokens to WETH
                         self.account[token] = self.account[token] - volume
@@ -384,7 +380,6 @@ initial_investment = 100
 
 for cointegrated_pair in pairs:
     try:
-    # if True:
         print(num)
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')

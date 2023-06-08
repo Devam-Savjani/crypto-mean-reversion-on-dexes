@@ -1,5 +1,5 @@
 import numpy as np
-from constants import GAS_USED_BY_SWAP, GAS_USED_BY_LOAN
+from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY
 
 class Abstract_Strategy():
     def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold=1.25e-07, rebalance_threshold_as_percent_of_initial_investment=0.001):
@@ -75,7 +75,7 @@ class Abstract_Strategy():
 
                 swap_for_b = []
 
-                if account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_LOAN) * gas_price_in_eth) < 0:
+                if account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
                 return orders + [
@@ -113,7 +113,7 @@ class Abstract_Strategy():
 
                 self.account_history.append(account)
 
-                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_b) + 2)) + GAS_USED_BY_LOAN) * gas_price_in_eth) < 0:
+                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_b) + 2)) + GAS_USED_BY_BORROW) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
                 if len(swap_for_b) > 0:
@@ -135,7 +135,7 @@ class Abstract_Strategy():
 
                 self.account_history.append(account)
 
-                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_b) + 2)) + GAS_USED_BY_LOAN) * gas_price_in_eth) < 0:
+                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_b) + 2)) + GAS_USED_BY_BORROW) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
                 if len(swap_for_b) > 0:

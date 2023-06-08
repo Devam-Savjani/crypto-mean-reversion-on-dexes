@@ -4,6 +4,11 @@ import pickle
 import statsmodels.api as sm
 from database_interactions import table_to_df
 from check_liquidity_pool_data import get_pools_max_timestamp
+import sys
+import os
+current = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(current))
+from constants import CORRELATION_LOWER_LIMIT, CORRELATION_UPPER_LIMIT
 # import seaborn as sn
 # import matplotlib.pyplot as plt
 
@@ -29,7 +34,7 @@ def get_correlated_pairs(should_save=True):
     corr_matrix = get_correlation_matrix()
     # sn.heatmap(corr_matrix, annot = True)
     # plt.show()
-    filteredDf = corr_matrix[((0.990 < corr_matrix)) & (corr_matrix < 0.997)]
+    filteredDf = corr_matrix[((CORRELATION_LOWER_LIMIT < corr_matrix)) & (corr_matrix < CORRELATION_UPPER_LIMIT)]
 
     if should_save:
         return save_correlated_pairs(list(filteredDf.unstack().dropna().drop_duplicates().index))
@@ -47,7 +52,7 @@ def is_cointegrated(p1, p2):
 
     # corr_matrix = get_correlation_matrix()
     # p1_name = p1.replace("_", "\_")
-    # p2_name = p1.replace("_", "\_")
+    # p2_name = p2.replace("_", "\_")
     # rounding_num = 6
     # print(f'\\truncate{{12em}}{{{p1_name}}} & \\truncate{{12em}}{{{p2_name}}} & {round(result[0], rounding_num)} & {round(result[2][0], rounding_num)} & {round(result[2][1], rounding_num)} & {round(result[2][2], rounding_num)} & {round(corr_matrix[p1][p2], rounding_num)}\\\\\\hline')
     return result[0] < result[2][0]
