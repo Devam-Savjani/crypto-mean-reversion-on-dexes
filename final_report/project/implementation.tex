@@ -238,12 +238,34 @@ The \texttt{DEPOSIT} order's function is to deposit some additional collateral t
 self.account['WETH'] = self.account['WETH'] - deposit_amount
 self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
 \end{lstlisting}
-\vspace{5mm}
-
 
 \subsection{Gas Fees - TODO}
 
 \subsection{Validating Balance Health}
+To maintain the integrity and effectiveness of the trading strategy, it is crucial to incorporate various checks and safeguards after each trade and at each timestep. One key aspect involves monitoring the balance of each token to ensure that it remains positive. After every order execution, the balances of the tokens involved are checked, and if any of them fall below zero, an exception is triggered.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+if self.account['T1'] < negative_threshold:
+    raise Exception('Account balace goes below 0 - T1')
 
+if self.account['T2'] < negative_threshold:
+    raise Exception('Account balace goes below 0 - T2')
+
+if self.account['WETH'] < negative_threshold:
+    raise Exception('Account balace goes below 0 - WETH')
+
+if self.account['ETH'] < negative_threshold:
+    raise Exception('Account balace goes below 0 - ETH')
+\end{lstlisting}
+\vspace{5mm}    
+Furthermore, to simulate the potential liquidation of a sell position's loan, the value-to-loan ratio is calculated. This ratio serves as an indicator of the position's health and risk level. If the value-to-loan ratio breaches the predefined liquidation threshold, indicating that the position is approaching an unsustainable state, an exception is thrown.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+sell_token, sold_price, sell_volume, _ = sell_trade
+current_token_price = prices[f'P{sell_token[1]}']
+curr_value_of_loan_pct = (sell_volume * current_token_price) / self.account['collateral_WETH']
+if round(curr_value_of_loan_pct, 4) > liquidation_threshold:
+    raise Exception(f'Short position liquidated')
+\end{lstlisting}
 
 \section{Live Trading - TODO}
