@@ -3,7 +3,7 @@ import { IERC20, IUniswapV3Pool, IWETH, Swaps } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // npx hardhat node --fork https://eth-mainnet.g.alchemy.com/v2/F5gSnV_OJ77nOQWI6VKUq6t2l4Pxp2ts --hostname 127.0.0.1
-// npx hardhat run scripts/foo.ts
+// npx hardhat run scripts/swaps.ts
 async function main() {
     let swapsContract: Swaps;
     let user: SignerWithAddress | undefined;
@@ -23,54 +23,139 @@ async function main() {
     weth = await ethers.getContractAt("IWETH", wethAddress, user);
     dai = await ethers.getContractAt("IERC20", daiAddress, user);
 
+    await weth.approve(swapsContract.address, ethers.utils.parseEther('99999999999'));
+    await dai.approve(swapsContract.address, ethers.utils.parseEther('99999999999'));
+
     // Swap ETH FOR WETH
-    const swapEthForWETH = await swapsContract.swapEthForWeth({
-        value: ethers.utils.parseEther('10')
-    })
-    swapEthForWETH.wait()
+    // const swapEthForWETH = await swapsContract.swapEthForWeth({
+    //     value: ethers.utils.parseEther('10')
+    // })
+    // swapEthForWETH.wait()
 
-    console.log('ETH BEFORE ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-    console.log('WETH BEFORE ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-    console.log('DAI BEFORE ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
-    console.log()
+    // console.log('ETH BEFORE ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+    // console.log('WETH BEFORE ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+    // console.log('DAI BEFORE ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+    // console.log()
 
-    await weth.approve(swapsContract.address, ethers.utils.parseEther('10'));
-    await dai.approve(swapsContract.address, ethers.utils.parseEther('150'));
+
+    // // Swap WETH FOR ETH
+    // const swapWethForEth = await swapsContract.swapWethForEth(ethers.utils.parseEther('1'), { gasLimit: 3000000 });
+    // swapWethForEth.wait()
+
+    // console.log('WETH BEFORE in smart contract ', ethers.utils.formatEther(await weth.balanceOf(swapsContract.address)))
+    // console.log('ETH BEFORE in smart contract ', ethers.utils.formatEther(await ethers.provider.getBalance(swapsContract.address)))
+    // console.log('ETH BEFORE ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+    // console.log('WETH BEFORE ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+    // console.log('DAI BEFORE ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+    // console.log()
+
+    // // Swap WETH for DAI
+    // const swap = await swapsContract.swapExactUsingPool(poolAddress, false, ethers.utils.parseEther('0.1'), { gasLimit: 300000 })
+    // swap.wait()
+
+    // console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+    // console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+    // console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+    // console.log()
+
+    // const deposit = await swapsContract.borrowToken(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('2'), { gasLimit: 800000 })
+    // deposit.wait()
+
+    // console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+    // console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+    // console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+    // console.log()
+
+    // const repay = await swapsContract.repayBorrowedToken(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('2'), { gasLimit: 800000 })
+    // repay.wait()
+
+    // console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
+    // console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
+    // console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+
+    const values = ['0.1', '0.5', '1', '5', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55', '60', '65', '70', '75', '80', '85', '90', '100', '110', '120', '138', '150'];
     
-    // Swap WETH FOR ETH
-    const swapWethForEth = await swapsContract.swapWethForEth(ethers.utils.parseEther('1'), { gasLimit: 3000000 });
-    swapWethForEth.wait()
+    // let gasUsedUsingRouter: Number[] = []
+    // for (let index = 0; index < values.length; index++) {
+    //     let amount = values[index];
+        
+    //     let swapEthForWETH = await swapsContract.swapEthForWeth({
+    //         value: ethers.utils.parseEther(amount!)
+    //     })
+        
+    //     swapEthForWETH.wait();
+    //     let swapWethForDai = await swapsContract.swapExactUsingRouter(wethAddress, daiAddress, 3000, ethers.utils.parseEther(amount!));
+    //     let receipt = swapWethForDai.wait()
+    //     await gasUsedUsingRouter.push(Number((await receipt).gasUsed._hex))
+    // }
+    // console.log(gasUsedUsingRouter)
     
-    console.log('WETH BEFORE in smart contract ', ethers.utils.formatEther(await weth.balanceOf(swapsContract.address)))
-    console.log('ETH BEFORE in smart contract ', ethers.utils.formatEther(await ethers.provider.getBalance(swapsContract.address)))
-    console.log('ETH BEFORE ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-    console.log('WETH BEFORE ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-    console.log('DAI BEFORE ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
-    console.log()
+    // let gasUsedUsingPool: Number[] = []
+    // const wethDaiLiquidityPoolAddress = "0x60594a405d53811d3BC4766596EFD80fd545A270";
+    // for (let index = 0; index < values.length; index++) {
+    //     let amount = values[index];
+        
+    //     let swapEthForWETH = await swapsContract.swapEthForWeth({
+    //         value: ethers.utils.parseEther(amount!)
+    //     })
+    //     swapEthForWETH.wait();
 
-    // Swap WETH for DAI
-    const swap = await swapsContract.swapExactUsingPool(poolAddress, false, ethers.utils.parseEther('0.1'), { gasLimit: 300000 })
-    swap.wait()
+    //     let swapWethForDai = await swapsContract.swapExactUsingPool(wethDaiLiquidityPoolAddress, false, ethers.utils.parseEther(amount!));
+    //     let receipt = swapWethForDai.wait()
+    //     await gasUsedUsingPool.push(Number((await receipt).gasUsed._hex))
+    // }
+    // console.log(gasUsedUsingPool)
 
-    console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-    console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-    console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
-    console.log()
+    // let gasUsedDeposit: Number[] = []
+    // let gasUsedWithdraw: Number[] = []
+    // for (let index = 0; index < values.length; index++) {
+    //     let amount = values[index];
+        
+    //     let swapEthForWETH = await swapsContract.swapEthForWeth({
+    //         value: ethers.utils.parseEther(amount!)
+    //     })
 
-    const deposit = await swapsContract.borrowToken(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('2'), { gasLimit: 800000 })
-    deposit.wait()
+    //     swapEthForWETH.wait();
+    //     let deposit = await swapsContract.depositCollateral(ethers.utils.parseEther(amount!));
+    //     let depositReceipt = deposit.wait()
+    //     await gasUsedDeposit.push(Number((await depositReceipt).gasUsed._hex))
 
-    console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-    console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-    console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
-    console.log()
+    //     let withdraw = await swapsContract.withdrawCollateral(ethers.utils.parseEther(amount!))
+    //     let withdrawReceipt = withdraw.wait()
+    //     await gasUsedWithdraw.push(Number((await withdrawReceipt).gasUsed._hex))
+    // }
+    // console.log(gasUsedDeposit)
+    // console.log(gasUsedWithdraw)
 
-    const repay = await swapsContract.repayBorrowedToken(daiAddress, ethers.utils.parseEther('10'), ethers.utils.parseEther('2'), { gasLimit: 800000 })
-    repay.wait()
+    let gasUsedBorrow: Number[][] = []
+    let gasUsedRepay: Number[][] = []
 
-    console.log('ETH AFTER ', ethers.utils.formatEther(await ethers.provider.getBalance(user!.address)))
-    console.log('WETH AFTER ', ethers.utils.formatEther(await weth.balanceOf(user!.address)))
-    console.log('DAI AFTER ', ethers.utils.formatEther(await dai.balanceOf(user!.address)))
+    let collateralAmounts = ['5', '30', '66', '100'];
+    let borrowAmounts = ['0.5', '5', '10', '66', '100', '250', '500', '750', '1000', '1500', '2000'];
+
+    for (let withdrawIndex = 0; withdrawIndex < collateralAmounts.length; withdrawIndex++) {
+        let gasUsedBorrowTemp : Number[] = []
+        let gasUsedRepayTemp : Number[] = []
+        for (let borrowIndex = 0; borrowIndex < borrowAmounts.length; borrowIndex++) {
+        
+            let swapEthForWETH = await swapsContract.swapEthForWeth({
+                value: ethers.utils.parseEther(collateralAmounts[withdrawIndex]!)
+            })
+            swapEthForWETH.wait();
+    
+            let borrowDai = await swapsContract.borrowToken(daiAddress, ethers.utils.parseEther(borrowAmounts[borrowIndex]!), ethers.utils.parseEther(collateralAmounts[withdrawIndex]!));
+            let borrowReceipt = borrowDai.wait();
+            await gasUsedBorrowTemp.push(Number((await borrowReceipt).gasUsed._hex))
+
+            let repayBorrowedDai = await swapsContract.repayBorrowedToken(daiAddress, ethers.utils.parseEther(borrowAmounts[borrowIndex]!), ethers.utils.parseEther(collateralAmounts[withdrawIndex]!));
+            let repayReceipt = repayBorrowedDai.wait();
+            await gasUsedRepayTemp.push(Number((await repayReceipt).gasUsed._hex))
+        }
+        gasUsedBorrow.push(gasUsedBorrowTemp)
+        gasUsedRepay.push(gasUsedRepayTemp)
+    }
+    console.log(gasUsedBorrow)
+    console.log(gasUsedRepay)
 }
 
 main()

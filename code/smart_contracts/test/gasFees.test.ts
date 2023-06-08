@@ -14,7 +14,7 @@ describe("Swaps to get gas fees", () => {
     let dai: IERC20;
     let wethAddress: string;
     let daiAddress: string;
-    const values = ['0.1', '0.5', '1', '5', '10', '25', '40', '50', '60', '75', '90', '100'];
+    const values = ['0.1', '0.5', '1', '5', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55', '60', '65', '70', '75', '80', '85', '90', '100', '110', '120', '138', '150'];
 
     before(async () => {
         const SwapsContract = await ethers.getContractFactory("Swaps");
@@ -30,10 +30,6 @@ describe("Swaps to get gas fees", () => {
         await dai.approve(swapsContract.address, ethers.utils.parseEther('99999999999999999'));
     });
 
-    afterEach(async () => {
-        // await network.provider.send("hardhat_reset")
-    })
-
     for (let index = 0; index < values.length; index++) {
         let amount = values[index];
 
@@ -46,7 +42,7 @@ describe("Swaps to get gas fees", () => {
             swapEthForWETH.wait();
 
             let swapWethForEth = await swapsContract.swapWethForEth(ethers.utils.parseEther(amount!))
-            let receipt = swapWethForEth.wait()
+            swapWethForEth.wait()
         })
     }
 
@@ -61,8 +57,7 @@ describe("Swaps to get gas fees", () => {
 
             swapEthForWETH.wait();
             let swapWethForDai = await swapsContract.swapExactUsingRouter(wethAddress, daiAddress, 3000, ethers.utils.parseEther(amount!));
-            let receipt = swapWethForDai.wait()
-            // console.log('Swapping ' + amount + ' for ' + (await receipt).gasUsed)
+            swapWethForDai.wait()
         })
     }
 
@@ -78,8 +73,7 @@ describe("Swaps to get gas fees", () => {
 
             swapEthForWETH.wait();
             let swapWethForDai = await swapsContract.swapExactUsingPool(wethDaiLiquidityPoolAddress, false, ethers.utils.parseEther(amount!));
-            let receipt = swapWethForDai.wait()
-            // console.log('Swapping ' + amount + ' for ' + (await receipt).gasUsed)
+            swapWethForDai.wait()
         })
     }
 
