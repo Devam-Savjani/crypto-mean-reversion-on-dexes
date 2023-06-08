@@ -1,3 +1,7 @@
+from correlation_plot import get_correlation_matrix
+from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BUYING_ETH, GAS_USED_BY_DEPOSITING_COLLATERAL, GAS_USED_BY_WITHDRAWING_COLLATERAL, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY
+from calculate_cointegrated_pairs import load_cointegrated_pairs
+from database_interactions import table_to_df
 import matplotlib.pyplot as plt
 import warnings
 import statsmodels.api as sm
@@ -8,10 +12,7 @@ from strategies.kalman_filter import Kalman_Filter_Strategy
 from tqdm import tqdm
 import sys
 sys.path.append('./historical_data')
-from database_interactions import table_to_df
-from calculate_cointegrated_pairs import load_cointegrated_pairs
-from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BUYING_ETH, GAS_USED_BY_DEPOSITING_COLLATERAL, GAS_USED_BY_WITHDRAWING_COLLATERAL, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY
-from correlation_plot import get_correlation_matrix
+
 
 def days_to_seconds(days): return int(days * 24 * 60 * 60)
 
@@ -37,7 +38,7 @@ class Backtest():
                         FROM "{cointegrated_pair[0]}" as p1 INNER JOIN "{cointegrated_pair[1]}" as p2 ON p1.period_start_unix = p2.period_start_unix
                         WHERE p1.token1_price <> 0 AND p2.token1_price <> 0 ORDER BY p1.period_start_unix;
                         """, path_to_config='historical_data/database.ini')
-        
+
         self.history_p1 = merged['p1_token_price']
         self.history_p2 = merged['p2_token_price']
         self.history_times = merged['period_start_unix']
@@ -97,12 +98,14 @@ class Backtest():
     def backtest_pair(self, cointegrated_pair, strategy, initial_investment_in_weth=100):
         history_arg, history_remaining = self.fetch_and_preprocess_data(
             cointegrated_pair, strategy.window_size_in_seconds)
-        
+
         cointegrated_pair_0_split = cointegrated_pair[0].split('_')
         cointegrated_pair_1_split = cointegrated_pair[1].split('_')
 
-        token1_symbol = cointegrated_pair_0_split[0] if cointegrated_pair_0_split[1] == 'WETH' else cointegrated_pair_0_split[1]
-        token2_symbol = cointegrated_pair_1_split[0] if cointegrated_pair_1_split[1] == 'WETH' else cointegrated_pair_1_split[1]
+        token1_symbol = cointegrated_pair_0_split[0] if cointegrated_pair_0_split[
+            1] == 'WETH' else cointegrated_pair_0_split[1]
+        token2_symbol = cointegrated_pair_1_split[0] if cointegrated_pair_1_split[
+            1] == 'WETH' else cointegrated_pair_1_split[1]
 
         self.aave1_df = table_to_df(
             command=f"SELECT * FROM {token1_symbol}_borrowing_rates ORDER BY timestamp;", path_to_config='historical_data/database.ini')
@@ -110,7 +113,8 @@ class Backtest():
         self.aave2_df = table_to_df(
             command=f"SELECT * FROM {token2_symbol}_borrowing_rates ORDER BY timestamp;", path_to_config='historical_data/database.ini')
 
-        self.gas_prices_df = table_to_df(command=f"SELECT * FROM gas_prices ORDER BY timestamp;", path_to_config='historical_data/database.ini')
+        self.gas_prices_df = table_to_df(
+            command=f"SELECT * FROM gas_prices ORDER BY timestamp;", path_to_config='historical_data/database.ini')
 
         swap_fee1, swap_fee2 = self.get_uniswap_fee(cointegrated_pair)
         swap_fees = {
@@ -122,7 +126,7 @@ class Backtest():
             history_p1=history_arg['p1_token_price'], history_p2=history_arg['p2_token_price'])
         history_remaining_p1, history_remaining_p2 = history_remaining[
             'p1_token_price'], history_remaining['p2_token_price']
-        
+
         self.history_remaining_p1 = history_remaining_p1
         self.history_remaining_p2 = history_remaining_p2
 
@@ -150,9 +154,10 @@ class Backtest():
                 actual_volume_bought
             self.account['WETH'] = self.account['WETH'] + (prices[f'P{buy_token[1]}'] * (
                 actual_volume_bought * (1 - swap_fees[buy_token])))
-            
+
             # Deduct gas fees
-            self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
+            self.account['ETH'] = self.account['ETH'] - \
+                (GAS_USED_BY_SWAP * gas_price_in_eth)
             self.open_positions['BUY'].pop(buy_id)
 
         def close_sell_position(sell_id, gas_price_in_eth, apy, curr_timestamp):
@@ -165,23 +170,31 @@ class Backtest():
 
             for apy_idx in apy[sell_token].index:
                 local_apy = apy[sell_token].loc[apy_idx]['borrow_rate']
-                number_of_seconds = apy[sell_token].loc[apy_idx]['timestamp'] - previous_timestamp
+                number_of_seconds = apy[sell_token].loc[apy_idx]['timestamp'] - \
+                    previous_timestamp
                 secondly_yield = (1 + local_apy)**(1 / (365*24*60*60))
                 volume_required_to_return *= secondly_yield ** number_of_seconds
                 previous_timestamp = apy[sell_token].loc[apy_idx]['timestamp']
-            
-            self.account['WETH'] = self.account['WETH'] - (sold_price * volume_required_to_return / (1 - swap_fees[sell_token])) 
-            self.account[sell_token] = self.account[sell_token] + volume_required_to_return
+
+            self.account['WETH'] = self.account['WETH'] - \
+                (sold_price * volume_required_to_return /
+                 (1 - swap_fees[sell_token]))
+            self.account[sell_token] = self.account[sell_token] + \
+                volume_required_to_return
             # Deduct Swap Gas Fee
-            self.account['ETH'] = self.account['ETH'] - GAS_USED_BY_SWAP * gas_price_in_eth
+            self.account['ETH'] = self.account['ETH'] - \
+                GAS_USED_BY_SWAP * gas_price_in_eth
 
             # Return Borrowed Tokens
-            self.account[sell_token] = self.account[sell_token] - volume_required_to_return
+            self.account[sell_token] = self.account[sell_token] - \
+                volume_required_to_return
             # Deduct Gas fee from loaning
-            self.account['ETH'] = self.account['ETH'] - GAS_USED_BY_REPAY * gas_price_in_eth
-            
+            self.account['ETH'] = self.account['ETH'] - \
+                GAS_USED_BY_REPAY * gas_price_in_eth
+
             # Return Collatoral to WETH
-            self.account['WETH'] = self.account['WETH'] + self.account['collateral_WETH']
+            self.account['WETH'] = self.account['WETH'] + \
+                self.account['collateral_WETH']
             self.account['collateral_WETH'] = 0
             self.open_positions['SELL'].pop(sell_id)
 
@@ -198,10 +211,12 @@ class Backtest():
             }
             timestamp = history_remaining['period_start_unix'][i]
 
-            gas_price_in_eth = (self.gas_prices_df.loc[self.gas_prices_df['timestamp'] == timestamp]['gas_price_wei'].iloc[0]) * 1e-18
+            gas_price_in_eth = (
+                self.gas_prices_df.loc[self.gas_prices_df['timestamp'] == timestamp]['gas_price_wei'].iloc[0]) * 1e-18
 
             if len(self.open_positions['SELL']) > 0:
-                apy = self.get_apy_at_timestamp(list(self.open_positions['SELL'].values())[0][3], timestamp)
+                apy = self.get_apy_at_timestamp(
+                    list(self.open_positions['SELL'].values())[0][3], timestamp)
             else:
                 apy = None
 
@@ -217,7 +232,8 @@ class Backtest():
                     'uniswap_fees': swap_fees
                 }, prices)
 
-            self.account_value_history.append(self.get_account_value_in_WETH(prices))
+            self.account_value_history.append(
+                self.get_account_value_in_WETH(prices))
             self.times.append(timestamp)
 
             for order in signal:
@@ -225,22 +241,29 @@ class Backtest():
 
                 if order_type == 'BUY ETH':
                     amount_to_swap = self.account['WETH'] * order[1]
-                    self.account['WETH'] = self.account['WETH'] - amount_to_swap
-                    self.account['ETH'] = self.account['ETH'] + amount_to_swap - (GAS_USED_BY_BUYING_ETH * gas_price_in_eth)
+                    self.account['WETH'] = self.account['WETH'] - \
+                        amount_to_swap
+                    self.account['ETH'] = self.account['ETH'] + \
+                        amount_to_swap - \
+                        (GAS_USED_BY_BUYING_ETH * gas_price_in_eth)
 
                 elif order_type == 'DEPOSIT':
                     deposit_amount = order[1]
                     self.account['WETH'] = self.account['WETH'] - \
-                        deposit_amount - (GAS_USED_BY_DEPOSITING_COLLATERAL * gas_price_in_eth)
+                        deposit_amount
                     self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
+                    self.account['ETH'] = self.account['ETH'] - \
+                        (GAS_USED_BY_DEPOSITING_COLLATERAL * gas_price_in_eth)
                     self.check_account('DEPOSIT', f'WETH', signal=signal)
 
                 if order_type == 'WITHDRAW':
                     withdraw_amount = order[1]
                     self.account['WETH'] = self.account['WETH'] + \
-                        withdraw_amount - (GAS_USED_BY_WITHDRAWING_COLLATERAL * gas_price_in_eth)
+                        withdraw_amount
                     self.account['collateral_WETH'] = self.account['collateral_WETH'] - \
                         withdraw_amount
+                    self.account['ETH'] = self.account['ETH'] - \
+                        (GAS_USED_BY_WITHDRAWING_COLLATERAL * gas_price_in_eth)
                     self.check_account('WITHDRAW', f'WETH', signal=signal)
 
                 elif order_type == 'SWAP':
@@ -250,11 +273,14 @@ class Backtest():
                             swap_token, swap_volume = swap_for_token0
                             swap_price = prices[f'P{swap_token[1]}']
 
-                            self.account['WETH'] = self.account['WETH'] - (swap_volume * swap_price)
-                            self.account[swap_token] = self.account[swap_token] + (swap_volume * (1 - swap_fees[swap_token]))
-                            
+                            self.account['WETH'] = self.account['WETH'] - \
+                                (swap_volume * swap_price)
+                            self.account[swap_token] = self.account[swap_token] + \
+                                (swap_volume * (1 - swap_fees[swap_token]))
+
                             # Deduct Gas fee from swapping
-                            self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                            self.account['ETH'] = self.account['ETH'] - \
+                                (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                             self.trades.append(
                                 (str(len(self.trades)), 'SWAP FOR A', swap_token, swap_price, swap_volume, timestamp))
@@ -265,13 +291,17 @@ class Backtest():
                         for swap_for_token1 in swaps:
                             swap_token, swap_volume = swap_for_token1
                             swap_price = prices[f'P{swap_token[1]}']
-                            self.account[swap_token] = self.account[swap_token] - (swap_volume / swap_price)
-                            self.account['WETH'] = self.account['WETH'] + (swap_volume * (1 - swap_fees[swap_token]))
+                            self.account[swap_token] = self.account[swap_token] - \
+                                (swap_volume / swap_price)
+                            self.account['WETH'] = self.account['WETH'] + \
+                                (swap_volume * (1 - swap_fees[swap_token]))
                             # Deduct Gas fee from swapping
-                            self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                            self.account['ETH'] = self.account['ETH'] - \
+                                (GAS_USED_BY_SWAP * gas_price_in_eth)
                             self.trades.append(
                                 (str(len(self.trades)), 'SWAP FOR B', swap_token, swap_price, swap_volume, timestamp))
-                            self.check_account('SWAP', f'B {swap_token}', signal=signal)
+                            self.check_account(
+                                'SWAP', f'B {swap_token}', signal=signal)
 
                 elif order_type == 'CLOSE':
                     position_type, position_ids = order[1]
@@ -279,52 +309,65 @@ class Backtest():
                         for buy_id in position_ids:
                             close_buy_position(
                                 buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
-                            self.check_account('CLOSE', f'BUY {buy_id}', signal=signal)
+                            self.check_account(
+                                'CLOSE', f'BUY {buy_id}', signal=signal)
 
                     if position_type == 'SELL':
                         for sell_id in position_ids:
                             close_sell_position(
                                 sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=timestamp)
-                            self.check_account('CLOSE', f'SELL {sell_id}', signal=signal)
+                            self.check_account(
+                                'CLOSE', f'SELL {sell_id}', signal=signal)
 
                 elif order_type == 'OPEN':
                     open_type, token, volume = order[1]
                     next_id = len(self.trades)
                     if open_type == 'BUY':
                         buy_price = prices[f'P{token[1]}']
-                        self.account['WETH'] = self.account['WETH'] - (volume * buy_price)
-                        self.account[token] = self.account[token] + (volume * (1 - swap_fees[token]))
-                        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                        self.account['WETH'] = self.account['WETH'] - \
+                            (volume * buy_price)
+                        self.account[token] = self.account[token] + \
+                            (volume * (1 - swap_fees[token]))
+                        self.account['ETH'] = self.account['ETH'] - \
+                            (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                         self.open_positions['BUY'][str(next_id)] = (
                             token, buy_price, volume, timestamp)
                         self.trades.append(
                             (str(next_id), 'BUY', token, buy_price, volume, timestamp))
 
-                        self.check_account('OPEN', f'BUY {token}', signal=signal)
+                        self.check_account(
+                            'OPEN', f'BUY {token}', signal=signal)
                     elif open_type == 'SELL':
                         sell_price = prices[f'P{token[1]}']
 
                         # Borrow Token from Aave
-                        amount_to_move_to_collateral_WETH = ((volume * sell_price) / vtl_eth)
+                        amount_to_move_to_collateral_WETH = (
+                            (volume * sell_price) / vtl_eth)
                         self.account[token] = self.account[token] + volume
-                        self.account['WETH'] = self.account['WETH'] - amount_to_move_to_collateral_WETH
-                        self.account['collateral_WETH'] = self.account['collateral_WETH'] + amount_to_move_to_collateral_WETH
+                        self.account['WETH'] = self.account['WETH'] - \
+                            amount_to_move_to_collateral_WETH
+                        self.account['collateral_WETH'] = self.account['collateral_WETH'] + \
+                            amount_to_move_to_collateral_WETH
                         # Deduct Gas fee from borrowing
-                        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_BORROW * gas_price_in_eth)
+                        self.account['ETH'] = self.account['ETH'] - \
+                            (GAS_USED_BY_BORROW * gas_price_in_eth)
 
                         # Swap borrowed tokens to WETH
                         self.account[token] = self.account[token] - volume
-                        self.account['WETH'] = self.account['WETH'] + (volume * (1 - swap_fees[token]) * sell_price)
+                        self.account['WETH'] = self.account['WETH'] + \
+                            (volume * (1 - swap_fees[token]) * sell_price)
                         # Deduct Gas fee from swapping
-                        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                        self.account['ETH'] = self.account['ETH'] - \
+                            (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                         self.open_positions['SELL'][str(next_id)] = (
                             token, sell_price, volume, timestamp)
                         self.trades.append(
                             (str(next_id), 'SELL', token, sell_price, volume, timestamp))
 
-                        self.check_account('OPEN', f'SELL {token}', signal=signal)
+                        self.check_account(
+                            'OPEN', f'SELL {token}', signal=signal)
 
             for sell_trade in self.open_positions['SELL'].values():
                 sell_token, sold_price, sell_volume, _ = sell_trade
@@ -360,7 +403,7 @@ for pair in cointegrated_pairs:
     corr = corr_matrix[pair[0].lower()][pair[1].lower()]
     ps_with_corr.append((pair[0], pair[1], corr))
 
-cointegrated_pairs = sorted(ps_with_corr, key=lambda x:x[2])
+cointegrated_pairs = sorted(ps_with_corr, key=lambda x: x[2])
 
 # print(*cointegrated_pairs, sep="\n")
 
@@ -429,7 +472,7 @@ for cointegrated_pair in pairs:
         else:
             print(
                 f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
-            
+
         # plt.plot(backtest_kalman_filter.times, backtest_kalman_filter.account_value_history)
         # plt.show()
 
