@@ -294,7 +294,7 @@ class Backtest():
                         buy_price = prices[f'P{token[1]}']
                         self.account['WETH'] = self.account['WETH'] - (volume * buy_price)
                         self.account[token] = self.account[token] + (volume * (1 - swap_fees[token]))
-                        self.account['WETH'] = self.account['WETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
+                        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                         self.open_positions['BUY'][str(next_id)] = (
                             token, buy_price, volume, timestamp)
