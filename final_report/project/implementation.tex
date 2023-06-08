@@ -140,7 +140,6 @@ amount_to_swap = self.account['WETH'] * order[1]
 self.account['WETH'] = self.account['WETH'] - amount_to_swap
 self.account['ETH'] = self.account['ETH'] + amount_to_swap
 \end{lstlisting}
-\vspace{5mm}
 
 \subsubsection{\texttt{SWAP}}
 The \texttt{SWAP} order is to execute a simple swap for either token0 or token1 of the liquidity pool. This order is only used as a precautionary order, if the balance of the WETH balance gets too low. It takes 2 arguments, the first indicating whether it is swapping for token0 or token1 and the second parameter is a list of swaps, tuples containing with pool and the quantity, that would like to be swapped. As can be seen in the code excerpt below, the amount received in the account is multiplied by \texttt{(1 - swap\_fees[swap\_token])}, this is because Uniswap charges a percentage of the swap specified by \texttt{swap\_fees[swap\_token]}.
@@ -157,7 +156,6 @@ else:
         self.account[swap_token] = self.account[swap_token] - (swap_volume / prices[f'P{swap_token[1]}'])
         self.account['WETH'] = self.account['WETH'] + (swap_volume * (1 - swap_fees[swap_token]))
 \end{lstlisting}
-\vspace{5mm}
 
 \subsubsection{\texttt{OPEN\ BUY}}
 Similar to the \texttt{SWAP} order, \texttt{OPEN\ BUY} opens a buy position. As mentioned above opening a buy order is simply swapping token1 for token0. The parameters of buying are the target token and the volume. 
@@ -166,7 +164,6 @@ Similar to the \texttt{SWAP} order, \texttt{OPEN\ BUY} opens a buy position. As 
 self.account['WETH'] = self.account['WETH'] - (volume * buy_price)
 self.account[token] = self.account[token] + (volume * (1 - swap_fees[token]))
 \end{lstlisting}
-\vspace{5mm}
 
 \subsubsection{\texttt{CLOSE\ BUY}}
 Closing a buy position is similar to opening a buy position, however, the swap is in the other direction, i.e. from token to WETH. The only argument is the id of the buy order. To account for Uniswap's fees, the volume that was received, after the initial swap, is calculated then this volume is swapped back to WETH.
@@ -177,14 +174,13 @@ volume_bought = buy_volume * (1 - swap_fees[buy_token])
 self.account[buy_token] = self.account[buy_token] - volume_bought
 self.account['WETH'] = self.account['WETH'] + (prices[f'P{buy_token[1]}'] * (volume_bought * (1 - swap_fees[buy_token])))
 \end{lstlisting}
-\vspace{5mm}
 
 \subsubsection{\texttt{OPEN\ SELL}}
 Opening a sell position involves borrowing a token and then swapping the token. The parameters of selling are the target token and the volume. It also consists of depositing the required amount to borrow the volume ordered, calculated by the value to loan ratio.
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
 # Borrow token and Deposit collateral
-amount_to_move_to_collateral_WETH = ((volume * sell_price) / vtl_eth)
+amount_to_move_to_collateral_WETH = ((volume * sell_price) / ltv_eth)
 self.account[token] = self.account[token] + volume
 self.account['WETH'] = self.account['WETH'] - amount_to_move_to_collateral_WETH
 self.account['collateral_WETH'] = self.account['collateral_WETH'] + amount_to_move_to_collateral_WETH
@@ -193,7 +189,6 @@ self.account['collateral_WETH'] = self.account['collateral_WETH'] + amount_to_mo
 self.account[token] = self.account[token] - volume
 self.account['WETH'] = self.account['WETH'] + (volume * (1 - swap_fees[token]) * sell_price)
 \end{lstlisting}
-\vspace{5mm}
 
 \subsubsection{\texttt{CLOSE\ SELL}}
 Closing a sell position is more complicated that as in requires to swap back from the token to WETH, repay the loan with interest and finally return collateral. Swapping back to the required amount of tokens is the first step. For this the variable Annual Yield Rates between the timestamp of the opening of the position and closing positon is used to calculate the amount of interest required to be paid as this is cumulated every second. Once the volume of tokens required to be returned is calculated, the equivelent amount of WETH plus accounting for Uniswap fees is swapped to obtain these tokens. Finally, the tokens are repayed and the collateral is returned.
@@ -220,7 +215,6 @@ self.account[sell_token] = self.account[sell_token] - volume_required_to_return
 self.account['WETH'] = self.account['WETH'] + self.account['collateral_WETH']
 self.account['collateral_WETH'] = 0
 \end{lstlisting}
-\vspace{5mm}
 
 \subsubsection{\texttt{WITHDRAW}}
 The \texttt{WITHDRAW} order's function is to withdraw some collateral that is stored in Aave. It is not used in the strategies however is implemented in case of developing further strategies that may require this functionality. The only parameter is the amount that would like to be withdrawn.
@@ -229,7 +223,6 @@ The \texttt{WITHDRAW} order's function is to withdraw some collateral that is st
 self.account['WETH'] = self.account['WETH'] + withdraw_amount
 self.account['collateral_WETH'] = self.account['collateral_WETH'] - withdraw_amount
 \end{lstlisting}
-\vspace{5mm}
 
 \subsubsection{\texttt{DEPOSIT}}
 The \texttt{DEPOSIT} order's function is to deposit some additional collateral that is stored in Aave. This order is used when the collateral value not properly covering the loan value, hence avoiding liquidation. The only parameter is the amount that would like to be depositted. 
@@ -258,7 +251,7 @@ if self.account['ETH'] < negative_threshold:
     raise Exception('Account balace goes below 0 - ETH')
 \end{lstlisting}
 \vspace{5mm}    
-Furthermore, to simulate the potential liquidation of a sell position's loan, the value-to-loan ratio is calculated. This ratio serves as an indicator of the position's health and risk level. If the value-to-loan ratio breaches the predefined liquidation threshold, indicating that the position is approaching an unsustainable state, an exception is thrown.
+Furthermore, to simulate the potential liquidation of a sell position's loan, the loan-to-value ratio is calculated. This ratio serves as an indicator of the position's health and risk level. If the loan-to-value ratio breaches the predefined liquidation threshold, indicating that the position is approaching an unsustainable state, an exception is thrown.
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
 sell_token, sold_price, sell_volume, _ = sell_trade

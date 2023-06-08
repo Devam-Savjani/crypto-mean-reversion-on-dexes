@@ -236,5 +236,28 @@ The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} a
     In addition, prior to opening or closing a position, a preliminary check is conducted to ensure that the ETH balance remains positive. If the anticipated balance after executing the orders indicates a potential shortfall, an order to \texttt{BUY\ ETH} is automatically initiated. This precautionary measure ensures that the strategy maintains a positive ETH balance and avoids entering into positions that could lead to negative balances.
 \end{enumerate}
 
-\subsubsection{Volume of Trades - TODO}
+\subsubsection{Volume of Trades}
+A major part of the strategy is at which volumes to trade, therefore in order to be able to trade the maximum amount a minimization problem must be solved. However, before delving into thie problem it is important to highlight the influence of the hedge ratio of the trading volumes. If the hedge ratio is positive, for every unit of pair0 traded, \texttt{hedge\_ratio} units of pair1 should be traded. However, the inverse is true if the hedge ratio is negative, for every \texttt{-hedge\_ratio} units of pair0 traded, 1 unit of pair1 should be traded.
+\\[5mm]
+Given that $Z$ is amount of WETH in the account, $p_0, p_1$ are the prices of pairs 0 and 1 respectively, $LTV$ is the loan-to-value ratio and $x, y$ are the volumes to be traded on pair0 and pair1 respectively. Additionally, to generalize the problem for both positive and negative hedge ratios, let $n:k$ represent the ratio of volume traded for pair0:pair1. Assuming we are buying pair0 and selling pair1. The following problem states finds the maximum volumes that can be traded to leave the least amount of WETH remaining.
+\begin{equation}
+\begin{aligned}
+\min_{x, y} \quad & Z - xp_0 - \frac{yp_1}{LTV}\\
+\textrm{s.t.} \quad & x = \frac{k}{n}y\\
+    &x, y \geq 0\\
+    &p_0, p_1 \geq 0\\
+    &Z \geq 0\\
+    &0 \leq LTV \leq 1\\
+\end{aligned}
+\end{equation}
+Therefore, as all terms in the objective function are positive therefore, the minimal objective value in theory must be 0:
+\begin{align*}
+    Z - xp_0 - \frac{yp_1}{LTV} &= 0\\
+    Z - \frac{k}{n}yp_0 - \frac{yp_1}{LTV} &= 0\\
+    Z - (\frac{k}{n}p_0 + \frac{p_1}{LTV})y &= 0\\
+    y &= \frac{Z}{\frac{k}{n}p_0 + \frac{p_1}{LTV}}\\
+    x &= \frac{k}{n}\frac{Z}{\frac{k}{n}p_0 + \frac{p_1}{LTV}}
+\end{align*}
+\noindent Thus the resulting values of $x$ and $y$ represent the solution that minimizes the problem while maximizing the tradable volume. The case above shows that $x$ units of pair0 can be bought and thus $y$ units of pair1 must be sold. Similarly, if pair0 is sold and pair1 is bought, the maximum volumes are determined by $x = \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$ and $y = \frac{n}{k} \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$.
+
 
