@@ -42,7 +42,7 @@ class Abstract_Strategy():
         gas_price_in_eth = ctx['gas_price_in_eth']
         timestamp = ctx['timestamp']
         apy = ctx['apy']
-        vtl_eth = ctx['vtl_eth']
+        ltv_eth = ctx['ltv_eth']
         liquidation_threshold = ctx['liquidation_threshold']
 
         if self.initial_WETH is None:
@@ -108,7 +108,7 @@ class Abstract_Strategy():
                     volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1'])
                 volume_a = account['WETH'] / \
                     ((volume_ratio_coeff *
-                     prices['P2']) + (prices['P1'] / vtl_eth))
+                     prices['P2']) + (prices['P1'] / ltv_eth))
                 volume_b = volume_ratio_coeff * volume_a
 
                 self.account_history.append(account)
@@ -130,7 +130,7 @@ class Abstract_Strategy():
 
                 volume_b = account['WETH'] / \
                     ((volume_ratio_coeff *
-                     prices['P1']) + (prices['P2'] / vtl_eth))
+                     prices['P1']) + (prices['P2'] / ltv_eth))
                 volume_a = volume_ratio_coeff * volume_b
 
                 self.account_history.append(account)

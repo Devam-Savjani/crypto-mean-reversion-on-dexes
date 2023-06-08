@@ -201,7 +201,7 @@ class Backtest():
         weth_borrowing_rates = table_to_df(
             command=f"SELECT * FROM weth_borrowing_rates ORDER BY timestamp;", path_to_config='historical_data/database.ini')
 
-        vtl_eth = weth_borrowing_rates['ltv'].iloc[0]
+        ltv_eth = weth_borrowing_rates['ltv'].iloc[0]
         liquidation_threshold = weth_borrowing_rates['liquidation_threshold'].iloc[0]
 
         for i in tqdm(history_remaining.index):
@@ -227,7 +227,7 @@ class Backtest():
                     'gas_price_in_eth': gas_price_in_eth,
                     'timestamp': timestamp,
                     'apy': apy,
-                    'vtl_eth': vtl_eth,
+                    'ltv_eth': ltv_eth,
                     'liquidation_threshold': liquidation_threshold,
                     'uniswap_fees': swap_fees
                 }, prices)
@@ -343,7 +343,7 @@ class Backtest():
 
                         # Borrow Token from Aave
                         amount_to_move_to_collateral_WETH = (
-                            (volume * sell_price) / vtl_eth)
+                            (volume * sell_price) / ltv_eth)
                         self.account[token] = self.account[token] + volume
                         self.account['WETH'] = self.account['WETH'] - \
                             amount_to_move_to_collateral_WETH
