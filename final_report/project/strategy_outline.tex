@@ -220,10 +220,20 @@ class Abstract_Strategy():
 \end{lstlisting}
 \vspace{5mm}
 
-The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} and \texttt{generate\_signal} are all inheritted by each strategy and \texttt{recalculate\_thresholds} is implemented in each instance of the strategy. \texttt{\_\_init\_\_,\ initialise\_historical\_data} are self explanatory. \texttt{new\_tick} is called in \texttt{generate\_signal} to update the strategy's knowledge of historical prices, this function also triggers a call to \texttt{recalculate\_thresholds} which re-calculates the hedge ratio and determines the thresholds at which an arbitrage opportunity becomes apparent. \texttt{generate\_signal} is the function that is called by the trading system at each price update, it first invokes \texttt{new\_tick} which in turn updates the thresholds, finally the updated hedge ratio and thresholds are used in the process of generating a signal. The steps of \texttt{generate\_signal} are outlined below: TODO fishis after backtesting system
+The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} and \texttt{generate\_signal} are all inheritted by each strategy and \texttt{recalculate\_thresholds} is implemented in each instance of the strategy. \texttt{\_\_init\_\_,\ initialise\_historical\_data} are self explanatory. \texttt{new\_tick} is called in \texttt{generate\_signal} to update the strategy's knowledge of historical prices, this function also triggers a call to \texttt{recalculate\_thresholds} which re-calculates the hedge ratio and determines the thresholds at which an arbitrage opportunity becomes apparent. \texttt{generate\_signal} is the function that is called by the trading system at each price update, it first invokes \texttt{new\_tick} which in turn updates the thresholds, finally the updated hedge ratio and thresholds are used in the process of generating a signal. The steps of \texttt{generate\_signal} are outlined below:
 \begin{enumerate}
-    \item The first step is to check whether, a position is currently held, for this the open positions
-
+    \item The first step is to call \texttt{new\_tick} which updates the thresholds
+    \item Second, is to check whether a position is already held;
+    \begin{enumerate}
+        \item If a position IS held, the first is to check if the spread is between the thresholds and if the gas price is below that the specified limit, the positions are closed. Otherwise, the loan to value health factor is calculated, if it may cause liquidation, additional collateral is deposited in Aave.
+        \item However, if a position is NOT held and the gas price is below that the specified limit, there are 3 cases. \begin{enumerate}
+            \item $spread > upper\_threshold$ - Buy pair 2 and sell pair 1
+            \item $spread > lower\_threshold$ - Buy pair 1 and sell pair 2
+            \item No trade
+        \end{enumerate}
+        Furthermore, if a trade is ordered, it is also checked, if the WETH balance falls below the rebalance threshold, the additional tokens are converted back to WETH.
+    \end{enumerate}
+    In addition, prior to opening or closing a position, a preliminary check is conducted to ensure that the ETH balance remains positive. If the anticipated balance after executing the orders indicates a potential shortfall, an order to \texttt{BUY\ ETH} is automatically initiated. This precautionary measure ensures that the strategy maintains a positive ETH balance and avoids entering into positions that could lead to negative balances.
 \end{enumerate}
 
 \subsubsection{Volume of Trades - TODO}
