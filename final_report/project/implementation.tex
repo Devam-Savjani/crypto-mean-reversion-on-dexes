@@ -1,9 +1,45 @@
 \chapter{Implementation of the Trading Systems}
 This section provides a comprehensive overview of the two trading system implementations. The first one focuses on the backtesting system, which involves simulating and evaluating strategies in a controlled environment. In this system, historical market data is utilized to test and analyze the performance of various strategies. The second implementation is the live system, designed to execute trades on the Ethereum blockchain using smart contracts. This system operates in real-time and interacts with the live market, allowing for actual trades to be executed based on predefined strategies. Together, these two implementations provide a comprehensive framework for testing, evaluating, and deploying trading strategies, both in simulated environments and on the live blockchain.
 
+\section{Buying and Selling}
+The process of buying and selling in traditional markets is relatively straightforward as brokers and exchanges play a crucial role in executing orders on behalf of individuals. However, when it comes to trading cryptocurrencies, the responsibility falls directly on the trader, such as myself. Therefore, it becomes essential to clearly define what buying and selling entail in the context of cryptocurrency trading.
+
+\subsection{Buying}
+Prices on Uniswap are represented as ratios for example 1 USDC = $P$ WETH. With this understanding, let's delve into the process of buying one unit of USDC/WETH on Uniswap:
+\begin{itemize}
+    \item Opening a Buy position:\begin{itemize}
+        \item Starts with $P_{0}$ WETH
+        \item Swaps the WETH for USDC, hence ends with 1 USDC
+    \end{itemize}
+    \item Closing a Buy position:\begin{itemize}
+        \item Starts with 1 USDC
+        \item Swaps the USDC for WETH, hence ends with $P_1$ WETH
+    \end{itemize}
+\end{itemize}
+\noindent Consequently, if the price of USDC/WETH increases from the moment the buy position is opened to the time it is closed, the trader realizes a profit. On the other hand, if the price declines during this period, the trader incurs a loss.
+
+\subsection{Selling}
+Selling an asset is a more complex process compared to buying because it involves trading an asset that the trader doesn't initially possess. In traditional markets, this is facilitated by the trader borrowing the desired asset from a broker or another party. When the trader decides to close the position, they repurchase the same amount of the borrowed asset and return it to the lender, hoping that its value has declined. This borrowing and returning process is typically managed automatically by brokers and exchanges. However, in decentralized exchanges (DEXes), such mechanisms are not in place.
+\\[5mm]
+To simplify this process, I have opted to utilize Aave as a lending platform to borrow any required assets. It is worth noting that Aave supports only a limited range of tokens available for borrowing, namely DAI, EURS, USDC, USDT, AAVE, LINK, WBTC, and WETH. Therefore, shorting would be feasible only if I focus on liquidity pools that involve these cryptocurrencies. By leveraging Aave as a lending platform, I can access the necessary assets for shorting. The process of selling is as follows:
+\begin{itemize}
+    \item Opening a Sell position:\begin{itemize}
+        \item Borrow 1 USDC
+        \item Swaps the USDC for WETH, hence ends with $P_0$ WETH
+    \end{itemize}
+    \item Closing a Sell position:\begin{itemize}
+        \item Starts with $P_0$ WETH
+        \item Swaps the WETH for USDC, hence ends with $\frac{P_0}{P_1}$ USDC
+        \item Return the borrowed USDC, leaving $\frac{P_0}{P_1} - 1$ USDC
+    \end{itemize}
+\end{itemize}
+Consequently, if the price of USDC/WETH decreases, i.e. $P_1 < P_0$ from the moment the sell position is opened to the time it is closed, the trader realizes a profit. On the other hand, if the price increases during this period, the trader incurs a loss.
+\\[5mm]
+Note that this is is merely an illustrative example and does not account for any potential fees that the trader might incur.
+
 \section{Backtesting System}
 
-To develop a resilient backtesting system, a dedicated class was constructed to streamline the process of testing trading strategies. Upon evaluating a particular strategy the \texttt{backtest} function requires \texttt{cointegrated\_pair}, a tuple of the names of the liquidity pools that the strategy is to be evaluated on, \texttt{strategy}, the strategy, and finally, the \texttt{initial\_investment} in ETH. The first argument is required and used to retrieve the relevant historical prices. The second parameter is self-explanatory, the strategy to test. Finally, the inclusion of the initial investment amount as an input parameter enables users to simulate the performance of their strategies with a specific starting capital, it also helps analyze how the various transaction costs affect the ability to trade if any trades do result in a loss. However, the first step is to collect the historical data.
+To develop a resilient backtesting system, a dedicated class was constructed to streamline the process of testing trading strategies. Upon evaluating a particular strategy the \texttt{backtest} function requires \texttt{cointegrated\_pair}, a tuple of the names of the liquidity pools that the strategy is to be evaluated on, \texttt{strategy}, the strategy, and finally, the \texttt{initial\_investment} in ETH. The first argument is required and used to retrieve the relevant historical prices. The second parameter is self-explanatory, the strategy to test. Finally, the inclusion of the initial investment amount as an input parameter enables users to simulate the performance of their strategies with a specific starting capital, it also helps analyze how the various transaction costs affect the ability to trade if any trades do result in a loss. The \texttt{backtest} function iterates through historical data calling the strategy's \texttt{generate\_signal} and executing the trade orders it receives at each timestep. However, to do this historical data is required hence, the first step is to collect the historical data.
 
 \subsection{Data Collection and Storage}
 In order to simulate the market as accurately as possible the system should have access to reliable and accurate historical market data, including price, volume, and other relevant indicators. Therefore, I retrieve all of my data from the Uniswap and Aave protocols' subgraph using the Graph~\cite{noauthor_graph_nodate}. The Graph is a decentralized protocol for indexing and querying blockchain data hence making the data provided 100\% reliable as it indexes directly on the Ethereum blockchain. Subgraphs serve as GraphQL APIs designed to facilitate querying and extracting data from the blockchain. These APIs adhere to a specific schema outlined by the protocol, enabling seamless communication between the protocol and the underlying blockchain. Therefore, I employ the Uniswap V3, Aave V2, and Aave V3 subgraphs to obtain the data required for the backtesting system.
@@ -93,9 +129,121 @@ The following pseudocode shows how to fetch the gas price at each hour:
     \end{algorithmic}
 \end{algorithm}
 
-
-
 \subsection{Types of Orders and Execution}
+There are numerous order types that the backtesting supports due to measures to enusre a positive balance and avoid liquidation. The types of orders are; \texttt{BUY\ ETH}, \texttt{WITHDRAW}, \texttt{DEPOSIT}, \texttt{SWAP}, \texttt{OPEN\ BUY}, \texttt{CLOSE\ BUY}, \texttt{OPEN\ SELL}, \texttt{CLOSE\ SELL}. The precedures of each are outlined below.
+
+\subsubsection{\texttt{BUY\ ETH}}
+The \texttt{BUY\ ETH} order is used to swap a percentage of the accounts balance from WETH to ETH. The arguments is an float between 0 and 1. The logic of the execution, excluding gas fees, of the order is outlined below.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+amount_to_swap = self.account['WETH'] * order[1]
+self.account['WETH'] = self.account['WETH'] - amount_to_swap
+self.account['ETH'] = self.account['ETH'] + amount_to_swap
+\end{lstlisting}
+\vspace{5mm}
+
+\subsubsection{\texttt{SWAP}}
+The \texttt{SWAP} order is to execute a simple swap for either token0 or token1 of the liquidity pool. This order is only used as a precautionary order, if the balance of the WETH balance gets too low. It takes 2 arguments, the first indicating whether it is swapping for token0 or token1 and the second parameter is a list of swaps, tuples containing with pool and the quantity, that would like to be swapped. As can be seen in the code excerpt below, the amount received in the account is multiplied by \texttt{(1 - swap\_fees[swap\_token])}, this is because Uniswap charges a percentage of the swap specified by \texttt{swap\_fees[swap\_token]}.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+if is_for_token0:
+    for swap_for_token0 in swaps:
+        swap_token, swap_volume = swap_for_token0
+        self.account['WETH'] = self.account['WETH'] - (swap_volume * prices[f'P{swap_token[1]}'])
+        self.account[swap_token] = self.account[swap_token] + (swap_volume * (1 - swap_fees[swap_token]))
+else:
+    for swap_for_token1 in swaps:
+        swap_token, swap_volume = swap_for_token1
+        self.account[swap_token] = self.account[swap_token] - (swap_volume / prices[f'P{swap_token[1]}'])
+        self.account['WETH'] = self.account['WETH'] + (swap_volume * (1 - swap_fees[swap_token]))
+\end{lstlisting}
+\vspace{5mm}
+
+\subsubsection{\texttt{OPEN\ BUY}}
+Similar to the \texttt{SWAP} order, \texttt{OPEN\ BUY} opens a buy position. As mentioned above opening a buy order is simply swapping token1 for token0. The parameters of buying are the target token and the volume. 
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+self.account['WETH'] = self.account['WETH'] - (volume * buy_price)
+self.account[token] = self.account[token] + (volume * (1 - swap_fees[token]))
+\end{lstlisting}
+\vspace{5mm}
+
+\subsubsection{\texttt{CLOSE\ BUY}}
+Closing a buy position is similar to opening a buy position, however, the swap is in the other direction, i.e. from token to WETH. The only argument is the id of the buy order. To account for Uniswap's fees, the volume that was received, after the initial swap, is calculated then this volume is swapped back to WETH.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+buy_token, bought_price, buy_volume, buy_timestamp = self.open_positions['BUY'][buy_id]
+volume_bought = buy_volume * (1 - swap_fees[buy_token])
+self.account[buy_token] = self.account[buy_token] - volume_bought
+self.account['WETH'] = self.account['WETH'] + (prices[f'P{buy_token[1]}'] * (volume_bought * (1 - swap_fees[buy_token])))
+\end{lstlisting}
+\vspace{5mm}
+
+\subsubsection{\texttt{OPEN\ SELL}}
+Opening a sell position involves borrowing a token and then swapping the token. The parameters of selling are the target token and the volume. It also consists of depositing the required amount to borrow the volume ordered, calculated by the value to loan ratio.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+# Borrow token and Deposit collateral
+amount_to_move_to_collateral_WETH = ((volume * sell_price) / vtl_eth)
+self.account[token] = self.account[token] + volume
+self.account['WETH'] = self.account['WETH'] - amount_to_move_to_collateral_WETH
+self.account['collateral_WETH'] = self.account['collateral_WETH'] + amount_to_move_to_collateral_WETH
+
+# Swap borrowed tokens to WETH
+self.account[token] = self.account[token] - volume
+self.account['WETH'] = self.account['WETH'] + (volume * (1 - swap_fees[token]) * sell_price)
+\end{lstlisting}
+\vspace{5mm}
+
+\subsubsection{\texttt{CLOSE\ SELL}}
+Closing a sell position is more complicated that as in requires to swap back from the token to WETH, repay the loan with interest and finally return collateral. Swapping back to the required amount of tokens is the first step. For this the variable Annual Yield Rates between the timestamp of the opening of the position and closing positon is used to calculate the amount of interest required to be paid as this is cumulated every second. Once the volume of tokens required to be returned is calculated, the equivelent amount of WETH plus accounting for Uniswap fees is swapped to obtain these tokens. Finally, the tokens are repayed and the collateral is returned.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+sell_token, sold_price, sell_volume, sell_timestamp = self.open_positions['SELL'][sell_id]
+
+# Swap WETH back to Token
+volume_required_to_return = sell_volume
+previous_timestamp = sell_timestamp
+
+for apy_idx in apy[sell_token].index:
+    local_apy = apy[sell_token].loc[apy_idx]['borrow_rate']
+    number_of_seconds = apy[sell_token].loc[apy_idx]['timestamp'] - previous_timestamp
+    secondly_yield = (1 + local_apy)**(1 / (365*24*60*60))
+    volume_required_to_return *= secondly_yield ** number_of_seconds
+    previous_timestamp = apy[sell_token].loc[apy_idx]['timestamp']
+
+self.account['WETH'] = self.account['WETH'] - (sold_price * volume_required_to_return / (1 - swap_fees[sell_token])) 
+self.account[sell_token] = self.account[sell_token] + volume_required_to_return
+
+# Return Borrowed Tokens and Collatoral
+self.account[sell_token] = self.account[sell_token] - volume_required_to_return
+self.account['WETH'] = self.account['WETH'] + self.account['collateral_WETH']
+self.account['collateral_WETH'] = 0
+\end{lstlisting}
+\vspace{5mm}
+
+\subsubsection{\texttt{WITHDRAW}}
+The \texttt{WITHDRAW} order's function is to withdraw some collateral that is stored in Aave. It is not used in the strategies however is implemented in case of developing further strategies that may require this functionality. The only parameter is the amount that would like to be withdrawn.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+self.account['WETH'] = self.account['WETH'] + withdraw_amount
+self.account['collateral_WETH'] = self.account['collateral_WETH'] - withdraw_amount
+\end{lstlisting}
+\vspace{5mm}
+
+\subsubsection{\texttt{DEPOSIT}}
+The \texttt{DEPOSIT} order's function is to deposit some additional collateral that is stored in Aave. This order is used when the collateral value not properly covering the loan value, hence avoiding liquidation. The only parameter is the amount that would like to be depositted. 
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+self.account['WETH'] = self.account['WETH'] - deposit_amount
+self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
+\end{lstlisting}
+\vspace{5mm}
 
 
-\section{Live Trading}
+\subsection{Gas Fees - TODO}
+
+\subsection{Validating Balance Health}
+
+
+\section{Live Trading - TODO}
