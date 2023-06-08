@@ -244,10 +244,10 @@ class Backtest():
                     self.check_account('WITHDRAW', f'WETH', signal=signal)
 
                 elif order_type == 'SWAP':
-                    target_token, swaps = order[1]
-                    if target_token == 'A':
-                        for swap_for_a in swaps:
-                            swap_token, swap_volume = swap_for_a
+                    is_for_token0, swaps = order[1]
+                    if is_for_token0:
+                        for swap_for_token0 in swaps:
+                            swap_token, swap_volume = swap_for_token0
                             swap_price = prices[f'P{swap_token[1]}']
 
                             self.account['WETH'] = self.account['WETH'] - (swap_volume * swap_price)
@@ -261,9 +261,9 @@ class Backtest():
                             self.check_account(
                                 'SWAP', f'A {swap_token}', signal=signal)
 
-                    elif target_token == 'B':
-                        for swap_for_b in swaps:
-                            swap_token, swap_volume = swap_for_b
+                    else:
+                        for swap_for_token1 in swaps:
+                            swap_token, swap_volume = swap_for_token1
                             swap_price = prices[f'P{swap_token[1]}']
                             self.account[swap_token] = self.account[swap_token] - (swap_volume / swap_price)
                             self.account['WETH'] = self.account['WETH'] + (swap_volume * (1 - swap_fees[swap_token]))
@@ -394,7 +394,6 @@ for cointegrated_pair in pairs:
         return_percent = backtest_mean_reversion.backtest_pair(
             cointegrated_pair, mean_reversion_strategy, initial_investment)
 
-        print(backtest_mean_reversion.account)
         if return_percent > 0:
             print(
                 f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
@@ -424,7 +423,6 @@ for cointegrated_pair in pairs:
         return_percent = backtest_kalman_filter.backtest_pair(
             cointegrated_pair, kalman_filter_strategy, initial_investment)
 
-        print(backtest_kalman_filter.account)
         if return_percent > 0:
             print(
                 f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")

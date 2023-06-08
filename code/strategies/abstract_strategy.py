@@ -73,8 +73,6 @@ class Abstract_Strategy():
             if spread < self.upper_threshold and spread > self.lower_threshold and gas_price_in_eth < self.gas_price_threshold:
                 self.account_history.append(account)
 
-                swap_for_b = []
-
                 if account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
@@ -98,10 +96,12 @@ class Abstract_Strategy():
             if gas_price_in_eth > self.gas_price_threshold:
                 return []
 
-            swap_for_b = []
+            swap_for_token1 = []
             if account['WETH'] < self.rebalance_threshold_as_percent_of_initial_investment * self.initial_WETH:
-                swap_for_b.append(('T1', account['T1'] * prices['P1']))
-                swap_for_b.append(('T2', account['T2'] * prices['P2']))
+                if account['T1'] > 0:
+                    swap_for_token1.append(('T1', account['T1'] * prices['P1']))
+                if account['T2'] > 0:
+                    swap_for_token1.append(('T2', account['T2'] * prices['P2']))
 
             if spread > self.upper_threshold:
                 volume_ratio_coeff = (
@@ -113,11 +113,11 @@ class Abstract_Strategy():
 
                 self.account_history.append(account)
 
-                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_b) + 2)) + GAS_USED_BY_BORROW) * gas_price_in_eth) < 0:
+                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_token1) + 2)) + GAS_USED_BY_BORROW) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
-                if len(swap_for_b) > 0:
-                    orders += [('SWAP', swap_for_b)]
+                if len(swap_for_token1) > 0:
+                    orders += [('SWAP', (False, swap_for_token1))]
 
                 return orders + [
                     ('OPEN', ('BUY', 'T2', volume_b * self.percent_to_invest)),
@@ -135,11 +135,11 @@ class Abstract_Strategy():
 
                 self.account_history.append(account)
 
-                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_b) + 2)) + GAS_USED_BY_BORROW) * gas_price_in_eth) < 0:
+                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_token1) + 2)) + GAS_USED_BY_BORROW) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
-                if len(swap_for_b) > 0:
-                    orders += [('SWAP', swap_for_b)]
+                if len(swap_for_token1) > 0:
+                    orders += [('SWAP', (False, swap_for_token1))]
 
                 return orders + [
                     ('OPEN', ('BUY', 'T1', volume_a * self.percent_to_invest)),
