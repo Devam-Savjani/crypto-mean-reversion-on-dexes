@@ -3,6 +3,7 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers, network } from "hardhat";
 import { IERC20, IWETH, Swaps } from "../typechain";
+import { BigNumber } from "ethers";
 
 chai.use(solidity);
 
@@ -114,5 +115,5 @@ describe("Swaps to get gas fees", () => {
                 repayBorrowedDai.wait();
             })
         }
-    }
+    }    
 })

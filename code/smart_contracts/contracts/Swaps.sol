@@ -77,7 +77,7 @@ contract Swaps is IUniswapV3SwapCallback {
     address poolAddress,
     bool zeroForOne,
     int256 amountIn
-  ) external returns (int256, int256) {
+  ) public returns (int256, int256) {
     IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
 
     return
@@ -135,7 +135,7 @@ contract Swaps is IUniswapV3SwapCallback {
     address tokenAddress,
     uint256 borrowAmount,
     uint256 collatoralAmount
-  ) external {
+  ) public {
     // Transfer
     IERC20(wethAddress).transferFrom(
       msg.sender,
@@ -160,7 +160,7 @@ contract Swaps is IUniswapV3SwapCallback {
     address tokenAddress,
     uint256 repayAmount,
     uint256 collateralWithdrawAmount
-  ) external {
+  ) public {
     IERC20(tokenAddress).transferFrom(msg.sender, address(this), repayAmount);
 
     // Approve LendingPool contract to move your DAI
@@ -174,5 +174,35 @@ contract Swaps is IUniswapV3SwapCallback {
     uint256 collateralWithdrawAmount
   ) external {
     lendingPool.withdraw(wethAddress, collateralWithdrawAmount, msg.sender);
+  }
+
+  function openBuySellPositions(
+    address buyPoolAddress,
+    bool buyZeroForOne,
+    int256 buyAmount,
+    address sellTokenAddress,
+    uint256 sellAmount,
+    uint256 collatoralAmount,
+    address sellPoolAddress,
+    bool sellZeroForOne
+    ) external {
+      swapExactUsingPool(buyPoolAddress, buyZeroForOne, buyAmount);
+      borrowToken(sellTokenAddress, sellAmount, collatoralAmount);
+      swapExactUsingPool(sellPoolAddress, sellZeroForOne, int256(sellAmount));
+  }
+
+  function closeBuySellPositions(
+    address buyPoolAddress,
+    bool buyZeroForOne,
+    int256 buyAmount,
+    address sellTokenAddress,
+    uint256 sellAmount,
+    uint256 collatoralAmount,
+    address sellPoolAddress,
+    bool sellZeroForOne
+    ) external {
+      swapExactUsingPool(buyPoolAddress, buyZeroForOne, buyAmount);
+      swapExactUsingPool(sellPoolAddress, sellZeroForOne, int256(sellAmount));
+      repayBorrowedToken(sellTokenAddress, sellAmount, collatoralAmount);
   }
 }

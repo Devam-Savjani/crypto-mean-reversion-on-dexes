@@ -3,6 +3,7 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import { IERC20, IWETH, Swaps } from "../typechain";
+import { BigNumber } from "ethers";
 
 chai.use(solidity);
 
@@ -202,4 +203,86 @@ describe("Swaps", () => {
             expect(daiBalanceAfter).to.equal(daiBalanceBefore)
         })
     })
+
+    describe('Trades, Open and Close', () => {
+        it('Open Position', async () => {
+            const swapEthForWETH = await swapsContract.swapEthForWeth({
+                value: ethers.utils.parseEther('10')
+            })
+            swapEthForWETH.wait()
+
+            const ethBalanceBefore = Number((await ethers.provider.getBalance(user!.address))._hex);
+            const wethBalanceBefore = Number((await weth.balanceOf(user!.address))._hex);
+            const daiBalanceBefore = Number((await dai.balanceOf(user!.address))._hex);
+
+            const buyPool = "0x60594a405d53811d3bc4766596efd80fd545a270";
+            const buyZeroForOne = false;
+            const buyAmount = ethers.utils.parseEther('1');
+            const sellPool = "0xa80964c5bbd1a0e95777094420555fead1a26c1e";
+            const sellZeroForOne = true;
+            const sellTokenAddress = daiAddress;
+            const sellAmount = ethers.utils.parseEther('50');
+            const collatoralAmount = ethers.utils.parseEther('1');
+            
+            const openTrade = await swapsContract.openBuySellPositions(buyPool, buyZeroForOne, buyAmount, sellTokenAddress, sellAmount, collatoralAmount, sellPool, sellZeroForOne);
+            openTrade.wait()
+
+            const ethBalanceAfter = Number((await ethers.provider.getBalance(user!.address))._hex);
+            const wethBalanceAfter = Number((await weth.balanceOf(user!.address))._hex);
+            const daiBalanceAfter = Number((await dai.balanceOf(user!.address))._hex);
+
+            expect(ethBalanceAfter).to.lessThan(ethBalanceBefore)
+            expect(wethBalanceAfter).to.lessThan(wethBalanceBefore)
+            expect(daiBalanceBefore).to.lessThan(daiBalanceAfter)
+
+        })
+
+        it('Closes Position', async () => {
+            const swapEthForWETH = await swapsContract.swapEthForWeth({
+                value: ethers.utils.parseEther('10')
+            })
+            swapEthForWETH.wait()
+
+            const ethBalanceBefore = Number((await ethers.provider.getBalance(user!.address))._hex);
+            const wethBalanceBefore = Number((await weth.balanceOf(user!.address))._hex);
+            const wethBalanceBeforeBigInt : BigNumber = await weth.balanceOf(user!.address);
+            const daiBalanceBefore = Number((await dai.balanceOf(user!.address))._hex);
+            const daiBalanceBeforeBigInt : BigNumber = await dai.balanceOf(user!.address);
+            
+
+            const buyPool = "0x60594a405d53811d3bc4766596efd80fd545a270";
+            const buyZeroForOne = false;
+            const buyAmount = ethers.utils.parseEther('1');
+            const sellPool = "0x60594a405d53811d3bc4766596efd80fd545a270";
+            const sellZeroForOne = true;
+            const sellTokenAddress = daiAddress;
+            const sellAmount = ethers.utils.parseEther('50');
+            const collatoralAmount = ethers.utils.parseEther('1');
+            
+            const openTrade = await swapsContract.openBuySellPositions(buyPool, buyZeroForOne, buyAmount, sellTokenAddress, sellAmount, collatoralAmount, sellPool, sellZeroForOne);
+            openTrade.wait()
+
+            const ethBalanceMiddle = Number((await ethers.provider.getBalance(user!.address))._hex);
+            const wethBalanceMiddle = Number((await weth.balanceOf(user!.address))._hex);
+            const daiBalanceMiddle = Number((await dai.balanceOf(user!.address))._hex);
+
+            expect(ethBalanceMiddle).to.lessThan(ethBalanceBefore)
+            expect(wethBalanceMiddle).to.lessThan(wethBalanceBefore)
+            expect(daiBalanceBefore).to.lessThan(daiBalanceMiddle)
+
+            const daiAdded = (await dai.balanceOf(user!.address)).sub(daiBalanceBeforeBigInt)
+            const wethAdded = (await weth.balanceOf(user!.address)).add(buyAmount).add(collatoralAmount).sub(wethBalanceBeforeBigInt)
+
+            const closeTrade = await swapsContract.closeBuySellPositions(buyPool, !buyZeroForOne, daiAdded, sellTokenAddress, wethAdded, collatoralAmount, sellPool, !sellZeroForOne);
+            closeTrade.wait()
+
+            const ethBalanceAfter = Number((await ethers.provider.getBalance(user!.address))._hex);
+            const wethBalanceAfter = Number((await weth.balanceOf(user!.address))._hex);
+            const daiBalanceAfter = Number((await dai.balanceOf(user!.address))._hex);
+
+            expect(ethBalanceAfter).to.lessThan(ethBalanceMiddle);
+            expect(wethBalanceMiddle).to.lessThan(wethBalanceAfter);
+            expect(daiBalanceAfter).to.lessThan(daiBalanceMiddle);
+        })
+    }) 
 })
