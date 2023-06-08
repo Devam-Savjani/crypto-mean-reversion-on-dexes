@@ -105,7 +105,8 @@ class Abstract_Strategy():
 
             if spread > self.upper_threshold:
                 volume_ratio_coeff = (
-                    volume_ratios_of_pairs['T2'] / volume_ratios_of_pairs['T1'])
+                    volume_ratios_of_pairs['T1'] / volume_ratios_of_pairs['T2'])
+
                 volume_a = account['WETH'] / \
                     ((volume_ratio_coeff *
                      prices['P2']) + (prices['P1'] / ltv_eth))
@@ -125,8 +126,8 @@ class Abstract_Strategy():
                 ]
 
             elif spread < self.lower_threshold:
-                volume_ratio_coeff = volume_ratios_of_pairs['T1'] / \
-                    volume_ratios_of_pairs['T2']
+                volume_ratio_coeff = volume_ratios_of_pairs['T2'] / \
+                    volume_ratios_of_pairs['T1']
 
                 volume_b = account['WETH'] / \
                     ((volume_ratio_coeff *
