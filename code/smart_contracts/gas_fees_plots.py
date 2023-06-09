@@ -29,6 +29,8 @@ def plot_swap_fees():
 
     plt.plot(amounts, gas_fees_using_router, label="Gas Fee using Router")
     plt.plot(amounts, gas_fees_using_pool, label="Gas Fee using Pool")
+    plt.xlabel('Swap Volume in WETH')
+    plt.ylabel('Amount of Gas Used')
     plt.legend()
     plt.show()
 
@@ -45,6 +47,8 @@ def plot_deposit_fees():
     ]
 
     plt.plot(amounts, gas_fees_deposit)
+    plt.xlabel('Volume of Collateral deposited in WETH')
+    plt.ylabel('Amount of Gas Used')
     plt.show()
 
 
@@ -60,6 +64,8 @@ def plot_withdraw_fees():
     ]
 
     plt.plot(amounts, gas_fees_withdraw)
+    plt.xlabel('Volume of Collateral withdrawn in WETH')
+    plt.ylabel('Amount of Gas Used')
     plt.show()
 
 
@@ -105,7 +111,10 @@ def plot_borrow_fees():
     for idx, collateralAmount in enumerate(collateralAmounts):
         plt.plot(borrowAmounts, gas_fees_borrow[idx],
                  label=f"Collateral Amount = {collateralAmount}ETH")
-
+    
+    plt.xlabel('Volume of DAI borrowed')
+    plt.ylabel('Amount of Gas Used')
+    plt.legend()
     plt.show()
 
 
@@ -152,6 +161,9 @@ def plot_repay_fees():
         plt.plot(
             repayAmounts, gas_fees_repay[idx], label=f"Collateral Amount = {collateralAmount}ETH")
 
+    plt.xlabel('Volume of DAI Repayed')
+    plt.ylabel('Amount of Gas Used')
+    plt.legend()
     plt.show()
 
 def plot_trade_fees():
@@ -187,8 +199,9 @@ def plot_trade_fees():
         503420, 512092, 512080, 512092, 512104, 503432
     ]
 
-    plt.plot(amounts, gas_fees_open, label="Gas Fee Opening a Buy and Sell Position")
-    plt.plot(amounts, gas_fees_close, label="Gas Fee Closing a Buy and Sell Position")
+    plt.scatter(range(len(gas_fees_open)), gas_fees_open, label="Gas Fee Opening a Buy and Sell Position")
+    plt.scatter(range(len(gas_fees_close)), gas_fees_close, label="Gas Fee Closing a Buy and Sell Position")
+    plt.ylabel('Amount of Gas Used')
     plt.legend()
     plt.show()
 
