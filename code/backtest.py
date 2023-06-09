@@ -1,5 +1,5 @@
 from correlation_plot import get_correlation_matrix
-from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BUYING_ETH, GAS_USED_BY_DEPOSITING_COLLATERAL, GAS_USED_BY_WITHDRAWING_COLLATERAL, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY
+from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BUYING_ETH, GAS_USED_BY_DEPOSITING_COLLATERAL, GAS_USED_BY_WITHDRAWING_COLLATERAL, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY, GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION, GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION
 from calculate_cointegrated_pairs import load_cointegrated_pairs
 from database_interactions import table_to_df
 import matplotlib.pyplot as plt
@@ -142,7 +142,9 @@ class Backtest():
             'SELL': {}
         }
 
-        def close_buy_position(buy_id, gas_price_in_eth):
+        foo = set()
+
+        def close_buy_position(buy_id):
             buy_token, bought_price, buy_volume, buy_timestamp = self.open_positions[
                 'BUY'][buy_id]
 
@@ -155,12 +157,9 @@ class Backtest():
             self.account['WETH'] = self.account['WETH'] + (prices[f'P{buy_token[1]}'] * (
                 actual_volume_bought * (1 - swap_fees[buy_token])))
 
-            # Deduct gas fees
-            self.account['ETH'] = self.account['ETH'] - \
-                (GAS_USED_BY_SWAP * gas_price_in_eth)
             self.open_positions['BUY'].pop(buy_id)
 
-        def close_sell_position(sell_id, gas_price_in_eth, apy, curr_timestamp):
+        def close_sell_position(sell_id, apy):
             sell_token, sold_price, sell_volume, sell_timestamp = self.open_positions[
                 'SELL'][sell_id]
 
@@ -181,16 +180,10 @@ class Backtest():
                  (1 - swap_fees[sell_token]))
             self.account[sell_token] = self.account[sell_token] + \
                 volume_required_to_return
-            # Deduct Swap Gas Fee
-            self.account['ETH'] = self.account['ETH'] - \
-                GAS_USED_BY_SWAP * gas_price_in_eth
 
             # Return Borrowed Tokens
             self.account[sell_token] = self.account[sell_token] - \
                 volume_required_to_return
-            # Deduct Gas fee from loaning
-            self.account['ETH'] = self.account['ETH'] - \
-                GAS_USED_BY_REPAY * gas_price_in_eth
 
             # Return Collatoral to WETH
             self.account['WETH'] = self.account['WETH'] + \
@@ -235,6 +228,7 @@ class Backtest():
             self.account_value_history.append(
                 self.get_account_value_in_WETH(prices))
             self.times.append(timestamp)
+            foo.add('_'.join(sorted([order[0] for order in signal])))
 
             for order in signal:
                 order_type = order[0]
@@ -307,15 +301,13 @@ class Backtest():
                     position_type, position_ids = order[1]
                     if position_type == 'BUY':
                         for buy_id in position_ids:
-                            close_buy_position(
-                                buy_id=buy_id, gas_price_in_eth=gas_price_in_eth)
+                            close_buy_position(buy_id=buy_id)
                             self.check_account(
                                 'CLOSE', f'BUY {buy_id}', signal=signal)
 
                     if position_type == 'SELL':
                         for sell_id in position_ids:
-                            close_sell_position(
-                                sell_id=sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy, curr_timestamp=timestamp)
+                            close_sell_position(sell_id=sell_id, apy=apy)
                             self.check_account(
                                 'CLOSE', f'SELL {sell_id}', signal=signal)
 
@@ -328,8 +320,6 @@ class Backtest():
                             (volume * buy_price)
                         self.account[token] = self.account[token] + \
                             (volume * (1 - swap_fees[token]))
-                        self.account['ETH'] = self.account['ETH'] - \
-                            (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                         self.open_positions['BUY'][str(next_id)] = (
                             token, buy_price, volume, timestamp)
@@ -349,17 +339,11 @@ class Backtest():
                             amount_to_move_to_collateral_WETH
                         self.account['collateral_WETH'] = self.account['collateral_WETH'] + \
                             amount_to_move_to_collateral_WETH
-                        # Deduct Gas fee from borrowing
-                        self.account['ETH'] = self.account['ETH'] - \
-                            (GAS_USED_BY_BORROW * gas_price_in_eth)
 
                         # Swap borrowed tokens to WETH
                         self.account[token] = self.account[token] - volume
                         self.account['WETH'] = self.account['WETH'] + \
                             (volume * (1 - swap_fees[token]) * sell_price)
-                        # Deduct Gas fee from swapping
-                        self.account['ETH'] = self.account['ETH'] - \
-                            (GAS_USED_BY_SWAP * gas_price_in_eth)
 
                         self.open_positions['SELL'][str(next_id)] = (
                             token, sell_price, volume, timestamp)
@@ -368,6 +352,23 @@ class Backtest():
 
                         self.check_account(
                             'OPEN', f'SELL {token}', signal=signal)
+
+            if len([order[0] for order in signal if order[0] == 'OPEN']) == 2:
+                if strategy.should_batch_trade:
+                    self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION * gas_price_in_eth)
+                else:
+                    self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_BORROW) * gas_price_in_eth)
+                
+                self.check_account('OPEN', f'BUY and SELL position', signal=signal)
+
+            if len([order[0] for order in signal if order[0] == 'CLOSE']) == 2:
+                if strategy.should_batch_trade:
+                    self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION * gas_price_in_eth)
+                else:
+                    self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth)
+                
+                self.check_account('CLOSE', f'BUY and SELL position', signal=signal)
+
 
             for sell_trade in self.open_positions['SELL'].values():
                 sell_token, sold_price, sell_volume, _ = sell_trade
@@ -383,8 +384,8 @@ class Backtest():
             for sell_id in list(sell_positions):
                 apy = self.get_apy_at_timestamp(
                     history_remaining['period_start_unix'].iloc[-2], history_remaining['period_start_unix'].iloc[-1])
-                close_sell_position(sell_id, gas_price_in_eth=gas_price_in_eth, apy=apy,
-                                    curr_timestamp=history_remaining['period_start_unix'].iloc[-1])
+                close_sell_position(sell_id, apy=apy)
+                self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth)
 
         account_value_in_weth = self.get_account_value_in_WETH(prices)
         return_percent = ((account_value_in_weth - initial_investment_in_weth)
@@ -423,6 +424,7 @@ initial_investment = 100
 
 for cointegrated_pair in pairs:
     try:
+    # if True:
         print(num)
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
@@ -431,7 +433,8 @@ for cointegrated_pair in pairs:
                                                           window_size_in_seconds=window_size_in_seconds,
                                                           percent_to_invest=percent_to_invest,
                                                           gas_price_threshold=1.25e-07,
-                                                          rebalance_threshold_as_percent_of_initial_investment=0.5)
+                                                          rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                          should_batch_trade=False)
 
         backtest_mean_reversion = Backtest()
         return_percent = backtest_mean_reversion.backtest_pair(
@@ -460,7 +463,8 @@ for cointegrated_pair in pairs:
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest,
                                                         gas_price_threshold=1.25e-07,
-                                                        rebalance_threshold_as_percent_of_initial_investment=0.5)
+                                                        rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                        should_batch_trade=False)
 
         backtest_kalman_filter = Backtest()
         return_percent = backtest_kalman_filter.backtest_pair(

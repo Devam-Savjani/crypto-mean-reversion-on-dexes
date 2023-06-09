@@ -1,8 +1,9 @@
 import numpy as np
-from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY
+from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY, GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION, GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION
+
 
 class Abstract_Strategy():
-    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold=1.25e-07, rebalance_threshold_as_percent_of_initial_investment=0.001):
+    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold=1.25e-07, rebalance_threshold_as_percent_of_initial_investment=0.001, should_batch_trade=True):
         self.number_of_sds_from_mean = number_of_sds_from_mean
         self.has_initialised_historical_data = False
         self.window_size_in_seconds = window_size_in_seconds
@@ -14,6 +15,8 @@ class Abstract_Strategy():
         self.initial_WETH = None
         self.rebalance_threshold_as_percent_of_initial_investment = rebalance_threshold_as_percent_of_initial_investment
         self.spreads = []
+        self.should_batch_trade = should_batch_trade
+        self.gas_used_by_opening_positions = (GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION if should_batch_trade else (GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_BORROW))
 
     def initialise_historical_data(self, history_p1, history_p2):
         self.history_p1 = history_p1.to_numpy()
@@ -73,7 +76,7 @@ class Abstract_Strategy():
             if spread < self.upper_threshold and spread > self.lower_threshold and gas_price_in_eth < self.gas_price_threshold:
                 self.account_history.append(account)
 
-                if account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth) < 0:
+                if account['ETH'] - ((GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION if self.should_batch_trade else (GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY)) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
                 return orders + [
@@ -99,9 +102,11 @@ class Abstract_Strategy():
             swap_for_token1 = []
             if account['WETH'] < self.rebalance_threshold_as_percent_of_initial_investment * self.initial_WETH:
                 if account['T1'] > 0:
-                    swap_for_token1.append(('T1', account['T1'] * prices['P1']))
+                    swap_for_token1.append(
+                        ('T1', account['T1'] * prices['P1']))
                 if account['T2'] > 0:
-                    swap_for_token1.append(('T2', account['T2'] * prices['P2']))
+                    swap_for_token1.append(
+                        ('T2', account['T2'] * prices['P2']))
 
             if spread > self.upper_threshold:
                 volume_ratio_coeff = (
@@ -114,7 +119,7 @@ class Abstract_Strategy():
 
                 self.account_history.append(account)
 
-                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_token1) + 2)) + GAS_USED_BY_BORROW) * gas_price_in_eth) < 0:
+                if account['ETH'] - ((self.gas_used_by_opening_positions + (GAS_USED_BY_SWAP * len(swap_for_token1))) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
                 if len(swap_for_token1) > 0:
@@ -136,7 +141,7 @@ class Abstract_Strategy():
 
                 self.account_history.append(account)
 
-                if account['ETH'] - (((GAS_USED_BY_SWAP * (len(swap_for_token1) + 2)) + GAS_USED_BY_BORROW) * gas_price_in_eth) < 0:
+                if account['ETH'] - ((self.gas_used_by_opening_positions + (GAS_USED_BY_SWAP * len(swap_for_token1))) * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
                 if len(swap_for_token1) > 0:
