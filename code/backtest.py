@@ -397,7 +397,7 @@ class Backtest():
 cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
-corr_matrix = get_correlation_matrix()
+corr_matrix = get_correlation_matrix(list(set(sum(cointegrated_pairs, ()))))
 
 ps_with_corr = []
 for pair in cointegrated_pairs:
@@ -406,7 +406,7 @@ for pair in cointegrated_pairs:
 
 cointegrated_pairs = sorted(ps_with_corr, key=lambda x: x[2])
 
-# print(*cointegrated_pairs, sep="\n")
+print(*cointegrated_pairs, sep="\n")
 
 particular_idx = 3
 particular_idx = None
