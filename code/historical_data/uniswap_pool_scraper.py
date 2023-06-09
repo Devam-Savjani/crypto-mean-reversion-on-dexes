@@ -98,7 +98,7 @@ def reinitialise_all_liquidity_pool_data():
     logger.info('Completed: Reinitialise liquidity pool data tables')
 
 
-def refresh_database():
+def refresh_liquidity_pool_data():
 
     df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
 
@@ -133,4 +133,4 @@ def refresh_database():
 
 if __name__ == "__main__":
     # reinitialise_all_liquidity_pool_data()
-    refresh_database()
+    refresh_liquidity_pool_data()

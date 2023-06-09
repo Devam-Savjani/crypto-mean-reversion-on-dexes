@@ -88,7 +88,7 @@ def reinitialise_borrowing_rates_data():
             insert_rows(table_name, rows)
 
 
-def refresh_database():
+def refresh_borrowing_rates_data():
     gq_client_aave_v3 = GraphqlClient(
         endpoint='https://api.thegraph.com/subgraphs/name/aave/protocol-v3',
         headers={}
@@ -123,4 +123,4 @@ def refresh_database():
 
 if __name__ == "__main__":
     # reinitialise_borrowing_rates_data()
-    refresh_database()
+    refresh_borrowing_rates_data()

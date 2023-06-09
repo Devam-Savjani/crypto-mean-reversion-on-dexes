@@ -17,13 +17,6 @@ gq_client = GraphqlClient(
     headers={}
 )
 
-logging.basicConfig(filename='historical_data/data_scraper.log',
-                    filemode='a',
-                    format='%(asctime)s, %(name)s %(levelname)s %(message)s',
-                    level=logging.DEBUG)
-
-logger = logging.getLogger('urbanGUI')
-
 def get_block_data(table_name, min_time, max_time):
     rows_set = {}
     try:
@@ -67,7 +60,7 @@ def get_block_data(table_name, min_time, max_time):
         return list(rows_set.values()) if rows_set is not None else []
 
 
-def reinitialise_all_liquidity_pool_data():
+def reinitialise_gas_price_data():
     table_name = 'gas_prices'
 
     df = table_to_df(
@@ -96,7 +89,7 @@ def reinitialise_all_liquidity_pool_data():
     # if len(rows) > 0:
     #     insert_rows(table_name, rows)
 
-def refresh_database():
+def refresh_gas_price_data():
     table_name = 'gas_prices'
 
     df = table_to_df(
@@ -106,4 +99,4 @@ def refresh_database():
 
 if __name__ == "__main__":
     # reinitialise_all_liquidity_pool_data()
-    refresh_database()
+    refresh_gas_price_data()
