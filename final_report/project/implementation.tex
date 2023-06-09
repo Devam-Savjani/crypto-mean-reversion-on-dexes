@@ -232,7 +232,70 @@ self.account['WETH'] = self.account['WETH'] - deposit_amount
 self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
 \end{lstlisting}
 
-\subsection{Gas Fees - TODO}
+\subsection{Gas Fees}
+The remaining fee that is yet to be discussed is gas fees of each order. To best approximate the gas fee it is paramount to have an approximation to how much gas is used in each. Therefore, smart contracts were written and run on a forked Ethereum mainnet, to be able to accurately simulate the contracts behaviour. Using Hardhat, the gas usage of each function was tested and Figure \ref{fig:gasResult} shows the results. It can be seen that some functions have a tighter spread, between the maximum and minimum, compared to others therefore to better understand this, plots of using various parameters on the different functions provided a deeper insight into the cause of this, Figures \ref{fig:gasPlots1}, \ref{fig:gasPlots2} and \ref{fig:gasPlots3}.
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project/Images/gas_fee_results.png}
+    \caption{Results from running smart contract functions \label{fig:gasResult}}
+\end{figure}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project/Images/SwapFeesPlot.png}\\
+    \includegraphics[width=0.9\textwidth]{project/Images/BorrowFees1.png}
+    \caption{Gas Usage Plots 1 \label{fig:gasPlots1}}
+\end{figure}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project/Images/BorrowFees2.png}\\
+    \includegraphics[width=0.9\textwidth]{project/Images/RepayFees1.png}\\
+    \includegraphics[width=0.9\textwidth]{project/Images/RepayFees2.png}
+    \caption{Gas Usage Plots 2 \label{fig:gasPlots2}}
+\end{figure}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project/Images/withdrawFeesPlot1.png}\\
+    \includegraphics[width=0.9\textwidth]{project/Images/withdrawFeesPlot2.png}\\
+    \includegraphics[width=0.9\textwidth]{project/Images/depositFeesPlot1.png}\\
+    \includegraphics[width=0.9\textwidth]{project/Images/depositFeesPlot2.png}
+    \caption{Gas Usage Plots 3 \label{fig:gasPlots3}}
+\end{figure}
+
+\noindent Upon analyzing these plots, it becomes apparent that the majority of the functions exhibit a high level of consistency. However, it is noteworthy that for the smallest quantity tested, the gas consumption is significantly higher compared to that of larger quantities. Nevertheless, once this threshold is surpassed, the gas usage remains consistent. Therefore the average of the gas usage of each operation is used in the backtesting system as it provides a representative estimate of the gas consumption across different quantities.
+\\[5mm]
+Furthermore, another feature that is interesting is the gas usage by swaps and the different methods. The initial method utilizes Uniswap's Router, which scans all available liquidity pools to identify the optimal price, whereas the second method involves direct swapping within a specific liquidity pool. Figure \ref{fig:gasPlots1} illustrates that, on average, the router-based approach exhibits higher gas usage compared to direct swapping using a liquidity pool. However, directly swapping using a liquidity pool exhibits greater volatility in terms of gas consumption but also consistently returns to values above 100,000, because of this the average gas usage of swapping using a liquidity pool is used.
+\\[5mm]
+It can also be seen that combining the operations to open/close buy and sell positions consumes less gas compared to if were to be executed seperately. This also confirms the claims in Wang's paper, that batching the operations together is more effective than executing them seperately~\cite{wang_cyclic_2022}.
+\\[5mm]
+To implement this in the backtesting system, each order deducts some ETH where this quantity is calculated by how much gas is used by the order type multiplied by the gas price. For example, in the case of buying more ETH:
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+amount_to_swap = self.account['WETH'] * order[1]
+self.account['WETH'] = self.account['WETH'] - amount_to_swap
+self.account['ETH'] = self.account['ETH'] + amount_to_swap - (GAS_USED_BY_BUYING_ETH * gas_price_in_eth)
+\end{lstlisting}
+\vspace{5mm}
+\noindent However, deducting ETH for gas fees for open and close orders is done differently to better understand the impact of combining the operations on the returns of the strategies. Thus, instead of being deducted immediatly at each order, it is deducted after iterating through the signal:
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+if len([order[0] for order in signal if order[0] == 'OPEN']) == 2:
+    if strategy.should_batch_trade:
+        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION * gas_price_in_eth)
+    else:
+        self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_BORROW) * gas_price_in_eth)
+
+if len([order[0] for order in signal if order[0] == 'CLOSE']) == 2:
+    if strategy.should_batch_trade:
+        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION * gas_price_in_eth)
+    else:
+        self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth)
+
+\end{lstlisting}
+\vspace{5mm}
+Therefore, by passing a boolean to the strategy that indicates if the open or close positions should be batched, the necessary amount of fees is deducted.
 
 \subsection{Validating Balance Health}
 To maintain the integrity and effectiveness of the trading strategy, it is crucial to incorporate various checks and safeguards after each trade and at each timestep. One key aspect involves monitoring the balance of each token to ensure that it remains positive. After every order execution, the balances of the tokens involved are checked, and if any of them fall below zero, an exception is triggered.
