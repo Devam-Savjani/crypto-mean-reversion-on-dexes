@@ -1,5 +1,5 @@
 import numpy as np
-from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY, GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION, GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION
+from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY, GAS_USED_BY_DEPOSITING_COLLATERAL, GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION, GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION
 
 
 class Abstract_Strategy():
@@ -17,6 +17,7 @@ class Abstract_Strategy():
         self.spreads = []
         self.should_batch_trade = should_batch_trade
         self.gas_used_by_opening_positions = (GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION if should_batch_trade else (GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_BORROW))
+        self.gas_used_by_closing_positions = (GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION if should_batch_trade else (GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY))
 
     def initialise_historical_data(self, history_p1, history_p2):
         self.history_p1 = history_p1.to_numpy()
@@ -76,7 +77,7 @@ class Abstract_Strategy():
             if spread < self.upper_threshold and spread > self.lower_threshold and gas_price_in_eth < self.gas_price_threshold:
                 self.account_history.append(account)
 
-                if account['ETH'] - ((GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION if self.should_batch_trade else (GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY)) * gas_price_in_eth) < 0:
+                if account['ETH'] - (self.gas_used_by_closing_positions * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
                 return orders + [
@@ -85,10 +86,13 @@ class Abstract_Strategy():
                     ('CLOSE', ('BUY', [
                      buy_position for buy_position in open_positions['BUY']])),
                 ]
+            
+            if should_deposit_more and account['ETH'] - (GAS_USED_BY_DEPOSITING_COLLATERAL * gas_price_in_eth) < 0:
+                orders += [('BUY ETH', 0.1)]
 
             deposit_amount = ((sell_volume * current_token_price) /
                               liquidation_threshold) - account['collateral_WETH']
-            return [('DEPOSIT', deposit_amount)] if should_deposit_more else []
+            return (orders + [('DEPOSIT', deposit_amount)]) if should_deposit_more else []
 
         else:
             volume_ratios_of_pairs = {
