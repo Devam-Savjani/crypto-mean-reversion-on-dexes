@@ -32,7 +32,8 @@ def get_correlation_matrix():
 
 def get_correlated_pairs(should_save=True):
     corr_matrix = get_correlation_matrix()
-    # sn.heatmap(corr_matrix, annot = True)
+    # sn.heatmap(corr_matrix, annot = True, fmt='.4f')
+    # plt.xticks(fontsize = 8) 
     # plt.show()
     filteredDf = corr_matrix[((CORRELATION_LOWER_LIMIT < corr_matrix)) & (corr_matrix < CORRELATION_UPPER_LIMIT)]
 
