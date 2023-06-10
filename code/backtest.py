@@ -7,8 +7,9 @@ import warnings
 import statsmodels.api as sm
 from datetime import datetime
 import numpy as np
-from strategies.mean_reversion import Mean_Reversion_Strategy
-from strategies.kalman_filter import Kalman_Filter_Strategy
+from strategies.constant_hr_strategy import Constant_Hedge_Ratio_Strategy
+from strategies.kalman_filter_strategy import Kalman_Filter_Strategy
+from strategies.rolling_ols_strategy import Rolling_Hedge_Ratio_Strategy
 from tqdm import tqdm
 import sys
 sys.path.append('./historical_data')
@@ -408,7 +409,7 @@ cointegrated_pairs = sorted(ps_with_corr, key=lambda x: x[2])
 
 print(*cointegrated_pairs, sep="\n")
 
-particular_idx = 3
+particular_idx = 0
 particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
@@ -429,23 +430,23 @@ for cointegrated_pair in pairs:
         num += 1
         print(f'cointegrated_pair: {cointegrated_pair}')
 
-        mean_reversion_strategy = Mean_Reversion_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+        constant_hr_strategy = Constant_Hedge_Ratio_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                           window_size_in_seconds=window_size_in_seconds,
                                                           percent_to_invest=percent_to_invest,
                                                           gas_price_threshold=1.25e-07,
                                                           rebalance_threshold_as_percent_of_initial_investment=0.5,
                                                           should_batch_trade=False)
 
-        backtest_mean_reversion = Backtest()
-        return_percent = backtest_mean_reversion.backtest_pair(
-            cointegrated_pair, mean_reversion_strategy, initial_investment)
+        backtest_constant_hr = Backtest()
+        return_percent = backtest_constant_hr.backtest_pair(
+            cointegrated_pair, constant_hr_strategy, initial_investment)
 
         if return_percent > 0:
             print(
-                f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
+                f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
         else:
             print(
-                f"\033[95mMean_Reversion_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_mean_reversion.times[0])} to {datetime.fromtimestamp(backtest_mean_reversion.times[-1])} with {len(backtest_mean_reversion.trades)} trades")
+                f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
 
         # fig, axs = plt.subplots(4, sharex=True,)
         # axs[0].plot(backtest_mean_reversion.history_remaining_p1.to_list())
@@ -476,11 +477,30 @@ for cointegrated_pair in pairs:
         else:
             print(
                 f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+            
+
+        rolling_hr_strategy = Rolling_Hedge_Ratio_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                        window_size_in_seconds=window_size_in_seconds,
+                                                        percent_to_invest=percent_to_invest,
+                                                        gas_price_threshold=1.25e-07,
+                                                        rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                        should_batch_trade=False)
+
+        backtest_rolling_hr = Backtest()
+        return_percent = backtest_rolling_hr.backtest_pair(
+            cointegrated_pair, rolling_hr_strategy, initial_investment)
+
+        if return_percent > 0:
+            print(
+                f"\033[94mRolling_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_rolling_hr.trades)} trades")
+        else:
+            print(
+                f"\033[94mRolling_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_rolling_hr.trades)} trades")
 
         # plt.plot(backtest_kalman_filter.times, backtest_kalman_filter.account_value_history)
         # plt.show()
 
-        # font_size = 15
+        font_size = 15
 
         # table = table_to_df(
         #     command=f"SELECT pool_address, token0, token1, feetier FROM liquidity_pools where volume_usd >= 10000000000 and (token0='WETH' OR token1='WETH');", path_to_config='historical_data/database.ini')
@@ -496,6 +516,12 @@ for cointegrated_pair in pairs:
         # plt.plot(table['period_start_unix'], f)
         # plt.ylabel('Gas Price in Gwei')
         # plt.xlabel('UNIX Timestamp')
+        # plt.show()
+
+        # plt.plot(backtest_rolling_hr.times, rolling_hr_strategy.hedge_ratio_history, label='hedge ratio')
+        # plt.xlabel('Unix timestamp', fontsize=font_size)
+        # plt.ylabel('Hedge Ratio', fontsize=font_size)
+        # plt.title(f'How the Hedge Ratio evolves over time between {cointegrated_pair[0]} and {cointegrated_pair[1]}')
         # plt.show()
 
         # plt.plot(backtest_kalman_filter.times, kalman_filter_strategy.hedge_ratio_history, label='hedge ratio')
