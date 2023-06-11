@@ -82,72 +82,8 @@ By concentrating on the cointegrated pairs, we can delve deeper into exploring t
 
 As previously mentioned, the strategy I employ is the mean reversion trading strategy. The basic concept of a mean reversion strategy identifying two closely related assets or securities, typically referred to as a pair, and taking advantage of deviations from their historical price relationship. This works by initially identifying a pair of assets that have a historically stable relationship as I have done in Section \ref{sec:liquidity-pools}. Then as prices change you calculate the spread, which is the difference between their prices. Look for deviations from the historical mean spread, upon a deviation one buys the undervalued asset and sells the other. The positions are then closed once the spread reverts back to its historical mean.
 
-\subsection{Hedge Ratio}
-In the mean reversion strategy, the hedge ratio refers to the ratio or proportion between the positions of two assets involved in a pairs trading strategy. It determines the optimal allocation of capital between the assets to minimize risk and create a market-neutral position. The hedge ratio represents the number of units or shares of one asset that should be held for each unit or share of the other asset in order to create a balanced or hedged position. It is derived through statistical techniques such as regression analysis.
-
-\subsubsection{Mean Reversion Strategy}
-In the simple mean reversion strategy, the approach relies on a given historical dataset, assuming that the hedge ratio between the paired assets remains consistent over the long term. To determine this hedge ratio, the Ordinary Least Squares (OLS) regression method is employed. In Python, the calculation can be carried out using the following steps:
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-model = sm.OLS(history_p1, sm.add_constant(history_p2))
-results = model.fit()
-# Gradient of the OLS i.e. X = results.params[0] + results.params[1] * 'p2_token1_price'
-hedge_ratio = params[1]
-\end{lstlisting}
-\vspace{5mm}
-In Figure \ref{fig:f1}, the observed trend reveals that the gradient, representing the rate of change, exhibits a proximity to the value of 1. This indicates a relatively balanced relationship between the prices of each pair. However, it is important to note that as time progresses, any fluctuations or deviations from the exact value of 1 are minimal and have a negligible impact on the overall trend. The stability of the gradient over time suggests a consistent and relatively stable relationship between the liquidity pools, reinforcing the notion that their interdependence remains relatively constant.
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[width=0.8\textwidth]{project/Images/simple_hedge_ratio.png}
-    \caption{Conducting OLS to obtain the Hedge Ratio \label{fig:f1}}
-\end{figure}
-
-\subsubsection{Kalman Filter}
-As mentioned earlier, the hedge ratio plays a crucial role in minimizing risk and achieving a market-neutral position in trading strategies. However, relying on a fixed hedge ratio may not be ideal, as market dynamics and the relationship between the paired assets can change over time. To address this challenge, I employ the Kalman Filter as a dynamic tool to update and adapt the hedge ratio, taking into account the changing market conditions and the evolving relationship between the paired assets. This allows for a more responsive and adaptive approach to maintaining a market-neutral position. The Kalman Filter takes into consideration not only the current price data but also the historical information and the underlying dynamics of the assets. It provides a more robust and accurate estimation of the optimal hedge ratio, which aligns with the mean reversion strategy's objective of capturing potential price divergences and profiting from their eventual convergence.
-\\[5mm]
-The Kalman Filter works by iteratively updating and refining its estimate of the system state using a prediction step and an update step. For this an initial `guess' of the parameters that I use is the using the Ordinary Least Squares from the historical information provided. The remainder of the parameters that are selected can be seen below:
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-model = sm.OLS(price_history_2, sm.add_constant(price_history_1))
-initial_state = model.fit().params[::-1]
-
-kf = KalmanFilter(
-    n_dim_state=2,
-    initial_state_mean=initial_state,
-    transition_matrices=np.eye(2),
-    observation_matrices=obs_mat,
-    transition_covariance=1e-5 * np.eye(2)
-    )
-\end{lstlisting}
-\vspace{5mm}
-
-\noindent Below describes the reasoning behind the choices of parameters:
-\begin{itemize}
-    \item \texttt{n\_dim\_state} - This parameter to the number of elements in the state. In our scenario, the state consists of two components: the y-intercept and the gradient.
-    \item \texttt{initial\_state\_mean} - As mentioned earlier, the Kalman Filter utilizes past estimates to iteratively estimate the true states. Therefore, I employ the OLS method to calculate the initial state of the price history's regression, which returns both the y-intercept and gradient.
-    \item \texttt{observation\_matrices} - The observation matrix defines the relationship between the observed measurements and the hidden state variables. Thus takes the historical data that is provided zipped along with 1 as the observed measurements directly correspond to the hedge ratio. This can be represented as $\begin{bmatrix} y_1 & 1 \\ y_1 & 1 \\ \vdots & 1 \\ y_n & 1\end{bmatrix}$.
-    \item \texttt{transition\_matrices} - In the context of our strategy, we anticipate a consistent long-term hedge ratio. Therefore, we set the \texttt{transition\_matrices} parameter to $\begin{bmatrix} 1 & 0\\ 0 & 1 \end{bmatrix}$.
-    \item \texttt{transition\_covariance} - Finally the transition\_covariance specifies the covariance matrix of the process noise. It represents the uncertainty or variability in the state transition, hence it is set to be very small, $\begin{bmatrix} 10^{-5} & 0\\ 0 & 10^{-5} \end{bmatrix}$.
-\end{itemize}
-
-Figures \ref{fig:evolving_hedge_ratio_kf} and \ref{fig:ratios_kf} provide visual representations of the hedge ratio's evolution over time. These figures illustrate that the hedge ratio, while exhibiting subtle variations, does indeed change over the observed period. One notable event is the significant drop that occurs at the timestamp 1.655e9 or June 2022. This particular shift in the hedge ratio is likely attributed to the migration from the Proof of Work (PoW) consensus mechanism to the Proof of Stake (PoS) consensus mechanism on the Ethereum network.
-\\[5mm]
-During the transition from PoW to PoS, there are fundamental changes in how the Ethereum network reaches consensus and validates transactions. This change in consensus mechanism can impact various aspects of the network, including the dynamics of the hedge ratio. It is plausible that the observed drop in the hedge ratio during the migration period reflects the adjustments and reconfiguration of the underlying mechanisms in response to the shift to PoS.
-
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[width=\textwidth]{project/Images/Evolving_hedge_ratio_kf.png}
-    \caption{Plot of how the Hedge Ratio using the Kalman Filter \label{fig:evolving_hedge_ratio_kf}}
-\end{figure}
-
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[width=\textwidth]{project/Images/plots_1.png}
-    \caption{The plot shows the Kalman Filter estimating the regression line over time, \label{fig:ratios_kf}}
-\end{figure}
-
-\subsection{Overall Strategy}
-The implementation of these strategies is intricate, as it is designed to be scalable and highly customizable with various parameters. Additionally, since the strategies being investigated are based on mean reversion, an abstract strategy is created to allow for quick exploration and research into different approaches and the impact of hedge ratio calculations on returns. This abstract strategy encompasses the core logic of generating trading signals, determining optimal trade timing and volumes, and transmitting them to the live or backtesting system. The strategy-specific classes contain operations that calculate the hedge ratio and establish the thresholds that trigger the generation of trading signals. Below shows the functions that the abstract strategy possesses.
+\subsection{Abstract Strategy}
+The implementation of the generalization of these strategies is intricate and designed to be scalable and highly customizable with various parameters. Additionally, since the trading strategies being investigated are based on mean reversion, an abstract strategy is created to allow for quick exploration and research into different approaches and the impact of hedge ratio calculations on returns. This abstract strategy encompasses the core logic of generating trading signals, determining optimal trade timing and volumes, and transmitting them to the live or backtesting system. The strategy-specific classes contain operations that calculate the hedge ratio and establish the thresholds that trigger the generation of trading signals. Below shows the functions that the abstract strategy possesses.
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
 class Abstract_Strategy():
@@ -208,5 +144,83 @@ Therefore, as all terms in the objective function are positive therefore, the mi
     x &= \frac{k}{n}\frac{Z}{\frac{k}{n}p_0 + \frac{p_1}{LTV}}
 \end{align*}
 \noindent Thus the resulting values of $x$ and $y$ represent the solution that minimizes the problem while maximizing the tradable volume. The case above shows that $x$ units of pair0 can be bought and thus $y$ units of pair1 must be sold. Similarly, if pair0 is sold and pair1 is bought, the maximum volumes are determined by $x = \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$ and $y = \frac{n}{k} \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$.
+
+\subsection{Constant Hedge Ratio}
+In the mean reversion strategies, the hedge ratio refers to the ratio or proportion between the positions of two assets involved in a pairs trading strategy. It determines the optimal allocation of capital between the assets to minimize risk and create a market-neutral position. The hedge ratio represents the number of units or shares of one asset that should be held for each unit or share of the other asset in order to create a balanced or hedged position. It is derived through statistical techniques such as regression analysis.
+\\[5mm]
+In the most simplistic mean reversion strategy, the approach relies on a given historical dataset, assuming that the hedge ratio between the paired assets remains consistent over the long term. To determine this hedge ratio, the Ordinary Least Squares (OLS) regression method is employed. In Python, the calculation can be carried out using the following steps:
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+model = sm.OLS(history_p1, sm.add_constant(history_p2))
+results = model.fit()
+# Gradient of the OLS i.e. X = results.params[0] + results.params[1] * 'p2_token1_price'
+hedge_ratio = params[1]
+\end{lstlisting}
+\vspace{5mm}
+In Figure \ref{fig:f1}, the observed trend reveals that the gradient, representing the rate of change, exhibits a proximity to the value of 1. This indicates a relatively balanced relationship between the prices of each pair. However, it is important to note that as time progresses, any fluctuations or deviations from the exact value of 1 are minimal and have a negligible impact on the overall trend. The stability of the gradient over time suggests a consistent and relatively stable relationship between the liquidity pools, reinforcing the notion that their interdependence remains relatively constant.
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{project/Images/simple_hedge_ratio.png}
+    \caption{Conducting OLS to obtain the Hedge Ratio \label{fig:f1}}
+\end{figure}
+
+\subsection{Sliding Window Strategy}
+As mentioned earlier, the hedge ratio plays a crucial role in minimizing risk and achieving a market-neutral position in trading strategies. However, employing a static hedge ratio may prove suboptimal since market conditions and the correlation between paired assets can evolve over time. To tackle this challenge, a dynamic approach is adopted using a sliding window approach. In this approach, the hedge ratio is continuously updated at each tick by considering the most recent data. The length of the data window used for the calculation is determined by the value specified in the \texttt{window\_size} argument. By incorporating the sliding window mechanism, the hedge ratio remains adaptive to the changing market dynamics, providing a more accurate and responsive estimation for effective risk management and trading decisions. Therefore, the following function is ran every price tick,
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+def update_hedge_ratio(self):
+    p1, p2 = self.history_p1[-window_size:], self.history_p2[-window_size:]
+    model = sm.OLS(p2, sm.add_constant(p1))
+    results = model.fit()
+    self.hedge_ratio = results.params[1]
+\end{lstlisting}
+
+\subsection{Kalman Filter Strategy}
+Another method that is often used to ensure market-neutral positions is the use of Kalman Filters as a dynamic tool to update and adapt the hedge ratio, taking into account the changing market conditions and the evolving relationship between the paired assets. This allows for a more responsive and adaptive approach to maintaining a market-neutral position. The Kalman Filter takes into consideration not only the current price data but also the historical information and the underlying dynamics of the assets. It provides a more robust and accurate estimation of the optimal hedge ratio, which aligns with the mean reversion strategy's objective of capturing potential price divergences and profiting from their eventual convergence.
+\\[5mm]
+The Kalman Filter works by iteratively updating and refining its estimate of the system state using a prediction step and an update step. For this an initial `guess' of the parameters that I use is the using the Ordinary Least Squares from the historical information provided. The remainder of the parameters that are selected can be seen below:
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+model = sm.OLS(price_history_2, sm.add_constant(price_history_1))
+initial_state = model.fit().params[::-1]
+
+kf = KalmanFilter(
+    n_dim_state=2,
+    initial_state_mean=initial_state,
+    transition_matrices=np.eye(2),
+    observation_matrices=obs_mat,
+    transition_covariance=1e-5 * np.eye(2)
+    )
+\end{lstlisting}
+\vspace{5mm}
+
+\noindent Below describes the reasoning behind the choices of parameters:
+\begin{itemize}
+    \item \texttt{n\_dim\_state} - This parameter to the number of elements in the state. In our scenario, the state consists of two components: the y-intercept and the gradient.
+    \item \texttt{initial\_state\_mean} - As mentioned earlier, the Kalman Filter utilizes past estimates to iteratively estimate the true states. Therefore, I employ the OLS method to calculate the initial state of the price history's regression, which returns both the y-intercept and gradient.
+    \item \texttt{observation\_matrices} - The observation matrix defines the relationship between the observed measurements and the hidden state variables. Thus takes the historical data that is provided zipped along with 1 as the observed measurements directly correspond to the hedge ratio. This can be represented as $\begin{bmatrix} y_1 & 1 \\ y_1 & 1 \\ \vdots & 1 \\ y_n & 1\end{bmatrix}$.
+    \item \texttt{transition\_matrices} - In the context of our strategy, we anticipate a consistent long-term hedge ratio. Therefore, we set the \texttt{transition\_matrices} parameter to $\begin{bmatrix} 1 & 0\\ 0 & 1 \end{bmatrix}$.
+    \item \texttt{transition\_covariance} - Finally the transition\_covariance specifies the covariance matrix of the process noise. It represents the uncertainty or variability in the state transition, hence it is set to be very small, $\begin{bmatrix} 10^{-5} & 0\\ 0 & 10^{-5} \end{bmatrix}$.
+\end{itemize}
+
+Figures \ref{fig:evolving_hedge_ratio_kf} and \ref{fig:ratios_kf} provide visual representations of the hedge ratio's evolution over time. These figures illustrate that the hedge ratio, while exhibiting subtle variations, does indeed change over the observed period. One notable event is the significant drop that occurs at the timestamp 1.655e9 or June 2022. This particular shift in the hedge ratio is likely attributed to the migration from the Proof of Work (PoW) consensus mechanism to the Proof of Stake (PoS) consensus mechanism on the Ethereum network.
+\\[5mm]
+During the transition from PoW to PoS, there are fundamental changes in how the Ethereum network reaches consensus and validates transactions. This change in consensus mechanism can impact various aspects of the network, including the dynamics of the hedge ratio. It is plausible that the observed drop in the hedge ratio during the migration period reflects the adjustments and reconfiguration of the underlying mechanisms in response to the shift to PoS.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\textwidth]{project/Images/Evolving_hedge_ratio_kf.png}
+    \caption{Plot of how the Hedge Ratio using the Kalman Filter \label{fig:evolving_hedge_ratio_kf}}
+\end{figure}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\textwidth]{project/Images/plots_1.png}
+    \caption{The plot shows the Kalman Filter estimating the regression line over time, \label{fig:ratios_kf}}
+\end{figure}
+
+\subsection{Lagged Strategy}
+
+\subsection{Granger Causality Test}
 
 
