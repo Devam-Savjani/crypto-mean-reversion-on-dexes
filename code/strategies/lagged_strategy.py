@@ -18,7 +18,7 @@ class Lagged_Strategy(abstract_strategy.Abstract_Strategy):
     def initialise_thresholds(self):
         p1, p2 = self.history_p1[-self.window_size_in_hours:], self.history_p2[-self.window_size_in_hours:]
 
-        lagged_p1 = sm.tsa.lagmat(p1, maxlag=self.lag)
+        lagged_p1 = sm.tsa.lagmat(p1, maxlag=min(self.lag, len(p1)-1))
 
         model = sm.OLS(p2, sm.add_constant(lagged_p1))
         results = model.fit()
@@ -53,7 +53,7 @@ class Lagged_Strategy(abstract_strategy.Abstract_Strategy):
 
     def update_hedge_ratio(self):
         p1, p2 = self.history_p1[-self.window_size_in_hours:], self.history_p2[-self.window_size_in_hours:]
-        lagged_p1 = sm.tsa.lagmat(p1, maxlag=1)
+        lagged_p1 = sm.tsa.lagmat(p1, maxlag=min(self.lag, len(p1)-1))
 
         model = sm.OLS(p2, sm.add_constant(lagged_p1))
         results = model.fit()

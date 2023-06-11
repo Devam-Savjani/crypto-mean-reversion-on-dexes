@@ -3,13 +3,12 @@ from constants import GAS_USED_BY_SWAP, GAS_USED_BY_BUYING_ETH, GAS_USED_BY_DEPO
 from calculate_cointegrated_pairs import load_cointegrated_pairs
 from database_interactions import table_to_df
 import matplotlib.pyplot as plt
-import warnings
 import statsmodels.api as sm
 from datetime import datetime
 import numpy as np
 from strategies.constant_hr_strategy import Constant_Hedge_Ratio_Strategy
 from strategies.kalman_filter_strategy import Kalman_Filter_Strategy
-from strategies.rolling_ols_strategy import Rolling_Hedge_Ratio_Strategy
+from strategies.sliding_window_strategy import Sliding_Window_Strategy
 from strategies.lagged_strategy import Lagged_Strategy
 from strategies.rolling_gc_strategy import Granger_Causality_Strategy
 from tqdm import tqdm
@@ -412,8 +411,8 @@ cointegrated_pairs = sorted(ps_with_corr, key=lambda x: x[2])
 
 print(*cointegrated_pairs, sep="\n")
 
-particular_idx = 0
 particular_idx = None
+particular_idx = 0
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
@@ -451,23 +450,23 @@ for cointegrated_pair in pairs:
             print(
                 f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
 
-        rolling_hr_strategy = Rolling_Hedge_Ratio_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+        sliding_window_strategy = Sliding_Window_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest,
                                                         gas_price_threshold=1.25e-07,
                                                         rebalance_threshold_as_percent_of_initial_investment=0.5,
                                                         should_batch_trade=False)
 
-        backtest_rolling_hr = Backtest()
-        return_percent = backtest_rolling_hr.backtest_pair(
-            cointegrated_pair, rolling_hr_strategy, initial_investment)
+        backtest_sliding_window = Backtest()
+        return_percent = backtest_sliding_window.backtest_pair(
+            cointegrated_pair, sliding_window_strategy, initial_investment)
 
         if return_percent > 0:
             print(
-                f"\033[94mRolling_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_rolling_hr.trades)} trades")
+                f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
         else:
             print(
-                f"\033[94mRolling_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_rolling_hr.trades)} trades")
+                f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
 
         kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
