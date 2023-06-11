@@ -16,16 +16,17 @@ class Lagged_Strategy(abstract_strategy.Abstract_Strategy):
         self.initialise_thresholds()
 
     def initialise_thresholds(self):
-        p1, p2 = self.history_p1[-self.window_size_in_hours:], self.history_p2[-self.window_size_in_hours:]
-
-        lagged_p1 = sm.tsa.lagmat(p1, maxlag=min(self.lag, len(p1)-1))
-
+        maxlag = min(self.lag, min(self.window_size_in_hours, len(self.history_p1))-1)
+        p1, p2 = self.history_p1[-(self.window_size_in_hours+maxlag):], self.history_p2[-self.window_size_in_hours:]
+        lagged_p1 = sm.tsa.lagmat(p1, maxlag=maxlag)[-self.window_size_in_hours:]
+        
         model = sm.OLS(p2, sm.add_constant(lagged_p1))
         results = model.fit()
 
         self.hedge_ratio = results.params[1]
 
-        spread = p1 - self.hedge_ratio * p2
+        spread = self.history_p1[-self.window_size_in_hours:] - \
+                self.hedge_ratio * self.history_p2[-self.window_size_in_hours:]
         spread_mean = spread.mean()
         spread_std = spread.std()
 
@@ -52,8 +53,9 @@ class Lagged_Strategy(abstract_strategy.Abstract_Strategy):
                 spread_mean - self.number_of_sds_from_mean * spread_std)
 
     def update_hedge_ratio(self):
-        p1, p2 = self.history_p1[-self.window_size_in_hours:], self.history_p2[-self.window_size_in_hours:]
-        lagged_p1 = sm.tsa.lagmat(p1, maxlag=min(self.lag, len(p1)-1))
+        maxlag = min(self.lag, min(self.window_size_in_hours, len(self.history_p1))-1)
+        p1, p2 = self.history_p1[-(self.window_size_in_hours+maxlag):], self.history_p2[-self.window_size_in_hours:]
+        lagged_p1 = sm.tsa.lagmat(p1, maxlag=maxlag)[-self.window_size_in_hours:]
 
         model = sm.OLS(p2, sm.add_constant(lagged_p1))
         results = model.fit()
