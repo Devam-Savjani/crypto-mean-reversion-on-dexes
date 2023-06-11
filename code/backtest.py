@@ -10,6 +10,8 @@ import numpy as np
 from strategies.constant_hr_strategy import Constant_Hedge_Ratio_Strategy
 from strategies.kalman_filter_strategy import Kalman_Filter_Strategy
 from strategies.rolling_ols_strategy import Rolling_Hedge_Ratio_Strategy
+from strategies.lagged_strategy import Lagged_Strategy
+from strategies.rolling_gc_strategy import Granger_Causality_Strategy
 from tqdm import tqdm
 import sys
 sys.path.append('./historical_data')
@@ -198,7 +200,8 @@ class Backtest():
         ltv_eth = weth_borrowing_rates['ltv'].iloc[0]
         liquidation_threshold = weth_borrowing_rates['liquidation_threshold'].iloc[0]
 
-        for i in tqdm(history_remaining.index):
+        # for i in tqdm(history_remaining.index):
+        for i in history_remaining.index:
             prices = {
                 'P1': history_remaining_p1[i],
                 'P2': history_remaining_p2[i]
@@ -448,17 +451,23 @@ for cointegrated_pair in pairs:
             print(
                 f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
 
-        # fig, axs = plt.subplots(4, sharex=True,)
-        # axs[0].plot(backtest_mean_reversion.history_remaining_p1.to_list())
-        # axs[1].plot(backtest_mean_reversion.history_remaining_p2.to_list())
+        rolling_hr_strategy = Rolling_Hedge_Ratio_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                        window_size_in_seconds=window_size_in_seconds,
+                                                        percent_to_invest=percent_to_invest,
+                                                        gas_price_threshold=1.25e-07,
+                                                        rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                        should_batch_trade=False)
 
-        # axs[2].plot(mean_reversion_strategy.upper_thresholds, label='upper')
-        # axs[2].plot(mean_reversion_strategy.spreads, label='spread')
-        # axs[2].plot(mean_reversion_strategy.lower_thresholds, label='lower')
-        # axs[2].legend()
+        backtest_rolling_hr = Backtest()
+        return_percent = backtest_rolling_hr.backtest_pair(
+            cointegrated_pair, rolling_hr_strategy, initial_investment)
 
-        # axs[3].plot(backtest_mean_reversion.account_value_history)
-        # plt.show()
+        if return_percent > 0:
+            print(
+                f"\033[94mRolling_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_rolling_hr.trades)} trades")
+        else:
+            print(
+                f"\033[94mRolling_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_rolling_hr.trades)} trades")
 
         kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
@@ -478,29 +487,59 @@ for cointegrated_pair in pairs:
             print(
                 f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
             
-
-        rolling_hr_strategy = Rolling_Hedge_Ratio_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+        
+        lagged_strategy = Lagged_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest,
                                                         gas_price_threshold=1.25e-07,
                                                         rebalance_threshold_as_percent_of_initial_investment=0.5,
                                                         should_batch_trade=False)
 
-        backtest_rolling_hr = Backtest()
-        return_percent = backtest_rolling_hr.backtest_pair(
-            cointegrated_pair, rolling_hr_strategy, initial_investment)
+        backtest_lagged = Backtest()
+        return_percent = backtest_lagged.backtest_pair(
+            cointegrated_pair, lagged_strategy, initial_investment)
 
         if return_percent > 0:
             print(
-                f"\033[94mRolling_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_rolling_hr.trades)} trades")
+                f"\033[33mLagged_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
         else:
             print(
-                f"\033[94mRolling_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_rolling_hr.trades)} trades")
+                f"\033[33mLagged_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
+            
+        gc_strategy = Granger_Causality_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                        window_size_in_seconds=window_size_in_seconds,
+                                                        percent_to_invest=percent_to_invest,
+                                                        gas_price_threshold=1.25e-07,
+                                                        rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                        should_batch_trade=False)
+
+        backtest_gc = Backtest()
+        return_percent = backtest_gc.backtest_pair(
+            cointegrated_pair, gc_strategy, initial_investment)
+
+        if return_percent > 0:
+            print(
+                f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
+        else:
+            print(
+                f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
+
+        # fig, axs = plt.subplots(4, sharex=True,)
+        # axs[0].plot(backtest_mean_reversion.history_remaining_p1.to_list())
+        # axs[1].plot(backtest_mean_reversion.history_remaining_p2.to_list())
+
+        # axs[2].plot(mean_reversion_strategy.upper_thresholds, label='upper')
+        # axs[2].plot(mean_reversion_strategy.spreads, label='spread')
+        # axs[2].plot(mean_reversion_strategy.lower_thresholds, label='lower')
+        # axs[2].legend()
+
+        # axs[3].plot(backtest_mean_reversion.account_value_history)
+        # plt.show()
 
         # plt.plot(backtest_kalman_filter.times, backtest_kalman_filter.account_value_history)
         # plt.show()
 
-        font_size = 15
+        # font_size = 15
 
         # table = table_to_df(
         #     command=f"SELECT pool_address, token0, token1, feetier FROM liquidity_pools where volume_usd >= 10000000000 and (token0='WETH' OR token1='WETH');", path_to_config='historical_data/database.ini')
