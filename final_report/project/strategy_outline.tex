@@ -145,7 +145,7 @@ Therefore, as all terms in the objective function are positive therefore, the mi
 \end{align*}
 \noindent Thus the resulting values of $x$ and $y$ represent the solution that minimizes the problem while maximizing the tradable volume. The case above shows that $x$ units of pair0 can be bought and thus $y$ units of pair1 must be sold. Similarly, if pair0 is sold and pair1 is bought, the maximum volumes are determined by $x = \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$ and $y = \frac{n}{k} \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$.
 
-\subsection{Constant Hedge Ratio}
+\subsection{Constant Hedge Ratio Strategy}
 In the mean reversion strategies, the hedge ratio refers to the ratio or proportion between the positions of two assets involved in a pairs trading strategy. It determines the optimal allocation of capital between the assets to minimize risk and create a market-neutral position. The hedge ratio represents the number of units or shares of one asset that should be held for each unit or share of the other asset in order to create a balanced or hedged position. It is derived through statistical techniques such as regression analysis.
 \\[5mm]
 In the most simplistic mean reversion strategy, the approach relies on a given historical dataset, assuming that the hedge ratio between the paired assets remains consistent over the long term. To determine this hedge ratio, the Ordinary Least Squares (OLS) regression method is employed. In Python, the calculation can be carried out using the following steps:
@@ -173,6 +173,30 @@ def update_hedge_ratio(self):
     model = sm.OLS(p2, sm.add_constant(p1))
     results = model.fit()
     self.hedge_ratio = results.params[1]
+\end{lstlisting}
+
+\subsection{Lagged Strategy}
+A lagged strategy was also a implemented as an extension of the sliding window strategy. In the context of the sliding window strategy, the hedge ratio is updated using the most recent data within a specified window size. However, due to potential delays or lags in the synchronization of liquidity pools, the instantaneous prices of the assets may not fully reflect their actual relationship. Therefore, this approach aims to account for potential lags in the synchronization of liquidity pools. The lagged strategy extends the existing sliding window approach by using \texttt{sm.tsa.lagmat} function to perform the lag, which is then used to perform OLS.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+def update_hedge_ratio(self):
+    maxlag = min(self.lag, min(self.window_size_in_hours, len(self.history_p1))-1)
+    p1, p2 = self.history_p1[-(self.window_size_in_hours+maxlag):], self.history_p2[-self.window_size_in_hours:]
+    lagged_p1 = sm.tsa.lagmat(p1, maxlag=maxlag)[-self.window_size_in_hours:]
+    model = sm.OLS(p2, sm.add_constant(lagged_p1))
+    results = model.fit()
+    self.hedge_ratio = results.params[1]
+\end{lstlisting}
+
+\subsection{Granger Causality Test}
+Similarly, to account for lag and causality, a strategy that was employed was using the Granger Causality Test. The Granger Causality Test is a statistical hypothesis test that assesses the predictive value of one time series in forecasting another. Part of the test the results provide insights into the relationship between the variables and help determine the presence of Granger causality in the form of an OLS regression for both the restricted and unrestricted models. The restricted model is a regression model that includes only the lagged values of the dependent variable whereas the unrestricted model includes both the lagged values of the dependent variable and the potentially causal variable. The restricted model's regression parameters are used to calculate the hedge ratio.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+def update_hedge_ratio(self):
+    p1, p2 = self.history_p1[-self.window_size_in_hours:], self.history_p2[-self.window_size_in_hours:]
+    data = pd.DataFrame({'Asset1': p1, 'Asset2': p2})
+    granger_results = statsmodels.tsa.stattools.grangercausalitytests(data, maxlag=[1], verbose=False)
+    self.hedge_ratio = granger_results[1][1][0].params[0]
 \end{lstlisting}
 
 \subsection{Kalman Filter Strategy}
@@ -218,9 +242,4 @@ During the transition from PoW to PoS, there are fundamental changes in how the 
     \includegraphics[width=\textwidth]{project/Images/plots_1.png}
     \caption{The plot shows the Kalman Filter estimating the regression line over time, \label{fig:ratios_kf}}
 \end{figure}
-
-\subsection{Lagged Strategy}
-
-\subsection{Granger Causality Test}
-
 
