@@ -411,8 +411,8 @@ cointegrated_pairs = sorted(ps_with_corr, key=lambda x: x[2])
 
 print(*cointegrated_pairs, sep="\n")
 
-particular_idx = None
 particular_idx = 0
+particular_idx = None
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
