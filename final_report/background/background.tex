@@ -96,7 +96,7 @@ Research into cryptocurrency arbitrage is still in its infancy and previous rese
 Although this project aims to focus on statistical arbitrage techniques, it is still important to look at research into purer forms of arbitrage, i.e. triangular and cyclic arbitrage.
 \\[5mm]
 As previously mentioned, research into this topic is still in its infancy thus which means a very thin slice of exploration on the subject matter. The majority of the research has been into the arbitrage on centralized exchanges~\cite{MakarovIgor2020Taai, crepelliere_arbitrage_2022, PAUNACristian2018ATSf}. Cristian Pauna investigates and implements an arbitrage strategy in~\cite{PAUNACristian2018ATSf}. The paper details the technical details of arbitrage trading from the data and the system architecture used. Pauna finds complications such as requesting data from multiple exchanges, converting the data such that it is homogeneous and also managing server load. Pauna presents the architecture such that the servers request data from the necessary exchanges, aggregating prices in a relational database which then triggers a server that is used to generate trading signals.
-
+\\[5mm]
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.28\textwidth]{background/Images/Arbitrage-Architecture.png}
@@ -104,6 +104,7 @@ As previously mentioned, research into this topic is still in its infancy thus w
 \end{figure}
 
 \noindent As previously mentioned triangular and cyclic arbitrage is one of the most used and purest forms of arbitrage to implement and analyse,~\cite{boonpeam2021arbitrage} explores triangular arbitrage on decentralised exchanges. Algorithm \ref{alg:arb_sys_on_dex} is the algorithm used to find the most profitable arbitrage route on a particular platform, once this is calculated, it is compared with other routes on other platforms. Initially, the system converts the base token into another token and converts it back into the base token, using only one token is used as a middle route, then using the algorithm below, increases the number of middle tokens.
+\\[5mm]
 
 \begin{algorithm}
     \caption{Maximum Profit Route Searching (R)}\label{alg:arb_sys_on_dex}
@@ -126,8 +127,8 @@ As previously mentioned, research into this topic is still in its infancy thus w
     \item Other considerations such as price slippage - Exchanges have different liquidity levels which depend on the usage and liquidity providers that the exchange employs.
 \end{enumerate}
 
-\noindent Figure \ref{fig:arb_on_diff_exchanges} displays the revenues obtained by same trading token route, ETH $\rightarrow$ MKR $\rightarrow$ OMG $\rightarrow$ USDT $\rightarrow$ ETH. As we can see upon applying the strategy on multiple exchanges; Uniswap, 1inch, Kyberswap and Bancor, 1 inch was the only exchange that generated a profit whereas the others lose money. 
-
+\noindent Figure \ref{fig:arb_on_diff_exchanges} displays the revenues obtained by same trading token route, ETH $\rightarrow$ MKR $\rightarrow$ OMG $\rightarrow$ USDT $\rightarrow$ ETH. As we can see upon applying the strategy on multiple exchanges; Uniswap, 1inch, Kyberswap and Bancor, 1 inch was the only exchange that generated a profit whereas the others lose money~\cite{boonpeam2021arbitrage}. 
+\\[5mm]
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.6\textwidth]{background/Images/revenue_oncyclic_arb.png}
@@ -167,7 +168,7 @@ As previously mentioned, research into this topic is still in its infancy thus w
 \end{algorithm}
 
 \noindent After analyzing Ethereum block data and applying this strategy to identify the number of arbitrage opportunities, it was found that between May 4, 2020, and April 15, 2021, there were numerous exploitable and profitable arbitrage opportunities. These opportunities grew consistently to reach 1,750 in 11 months, as depicted in Figure \ref{fig:exploitable_ops}. Only cycles with length 3 were experimented with and only cycles including ETH as 80\% of the liquidity pools on Uniswap include ETH and another cryptocurrency~\cite{heimbach2021behavior}. Furthermore, it is found that 287,241 of the 292,606 arbitrages executed started with ETH, and 85\% of the arbitrages used a cycle of length 3. The total revenue of the cyclic arbitrage was 34,429 ETH. However, gas fees account for 24.6\% of the total revenue leaving an approximate 25,971 ETH profit.
-
+\\[5mm]
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.6\textwidth]{background/Images/exploitable_ops.png}
@@ -273,8 +274,8 @@ The first step is to generate a descent direction and then update the variable w
     \end{algorithmic}
 \end{algorithm}
 
-\noindent After all of this analysis, the authors of the paper, \cite{8450775, ZipingZhao2019OMPW}, ran simulations on real data comparing underlying spread. It found that it resulted in consistent profits as shown in figure \ref{fig:ROIsMRP}:
-
+\noindent After all of this analysis, the authors of the paper, \cite{8450775, ZipingZhao2019OMPW}, ran simulations on real data comparing underlying spread. It found that it resulted in consistent profits as shown in Figure \ref{fig:ROIsMRP}.
+\\[5mm]
 \begin{figure}[htb!]
     \centering
     \includegraphics[width=0.4\textwidth]{background/Images/rois1.png}
@@ -297,7 +298,7 @@ A paper that investigated the use of the Kalman Filter on ETFs found that the st
 \noindent The author states ``pairs trading strategies have gained widespread acceptance thus making profitability much more elusive'' to justify the disappointing results, however, the author fails to find evidence or provide sufficient evidence to justify the claim~\cite{dempsey_market_2017}.
 \begin{figure}[htb!]
     \centering
-    \includegraphics[width=0.5\textwidth]{background/Images/insamplevsoutsampleresults.png}
+    \includegraphics[width=0.9\textwidth]{background/Images/insamplevsoutsampleresults.png}
     \caption{Aggregate average return of using the Kalman filter for pairs trading on ETFs~\cite{dempsey_market_2017}}
     \label{fig:kalman_results}
 \end{figure}
@@ -305,20 +306,20 @@ A paper that investigated the use of the Kalman Filter on ETFs found that the st
 Another paper used the combination of the Kalman Filter and Machine Learning, more specifically Extreme Learning Machine and Support Vector Regression (SVR) to build a statistical arbitrage strategy on the Brazilian Stock Exchange~\cite{6974093}. The strategies can simply be explained as using SVR and ELM to forecast returns and using the Kalman Filter to improve the forecast.
 \begin{figure}[htb!]
     \centering
-    \includegraphics[width=0.5\textwidth]{background/Images/KalmanMLFlowChart.png}
+    \includegraphics[width=0.9\textwidth]{background/Images/KalmanMLFlowChart.png}
     \caption{Visualisation of the trading strategy used in \cite{6974093}}
     \label{fig:kalman_ml_flowchart}
 \end{figure}
-\\[5mm]
-The paper also compares methods, such as LASSO, BMA, and GRR, to benchmark the performance of the Kalman Filter. The research found that using simply ELM and SVR forecasts results in a return of 20.19\% and 21.32\% respectively for out-of-sample data points and using a combination with the Kalman Filter gives a return of 26.13\% for out-of-sample data points. The full results can be seen below in Figure \ref{fig:kalman_ml_results}. In addition to this, it can be seen that the volatility of the return also decreases which is ideal for investment managers.
+
+\noindent The paper also compares methods, such as LASSO, BMA, and GRR, to benchmark the performance of the Kalman Filter. The research found that using simply ELM and SVR forecasts results in a return of 20.19\% and 21.32\% respectively for out-of-sample data points and using a combination with the Kalman Filter gives a return of 26.13\% for out-of-sample data points. The full results can be seen below in Figure \ref{fig:kalman_ml_results}. In addition to this, it can be seen that the volatility of the return also decreases which is ideal for investment managers.
 \begin{figure}[htb!]
     \centering
     \includegraphics[width=0.5\textwidth]{background/Images/kalman_ml_results.png}
     \caption{Econometric results~\cite{6974093}}
     \label{fig:kalman_ml_results}
 \end{figure}
-\\[5mm]
-Other papers/articles such as \cite{KRAUSS2017689, alma991000475380901591, jrfm12010031} have designed, compared and analysed other statistical arbitrage techniques using Machine Learning algorithms and revealed that some algorithms are profitable. The majority of research on machine learning trading strategies has been on assets such as stocks on centralized exchanges. The little research that has been done on statistical arbitrage on cryptocurrencies has all been on analysing arbitrage on centralized exchanges and not decentralised exchanges. One of the research projects that analysed machine learning methods of statistical arbitrage on cryptocurrencies on a centralized exchange, compared a logistic regression approach with a random forest approach~\cite{jrfm12010031}. 
+
+\noindent Other papers/articles such as \cite{KRAUSS2017689, alma991000475380901591, jrfm12010031} have designed, compared and analysed other statistical arbitrage techniques using Machine Learning algorithms and revealed that some algorithms are profitable. The majority of research on machine learning trading strategies has been on assets such as stocks on centralized exchanges. The little research that has been done on statistical arbitrage on cryptocurrencies has all been on analysing arbitrage on centralized exchanges and not decentralised exchanges. One of the research projects that analysed machine learning methods of statistical arbitrage on cryptocurrencies on a centralized exchange, compared a logistic regression approach with a random forest approach~\cite{jrfm12010031}. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -403,10 +404,12 @@ $$g_{\tau + 1} =  \mathbb{E}_{\tau}[v_{\tau + 1}] = \sum_{i=1}^{\lfloor I / 2 \r
 \end{itemize}
 
 \noindent The researchers of the paper evaluated their trading strategy for 334 days and a moving window of 3 years, 1096 observations, every day to estimate the parameters for the dynamic factor model. We can see in Figure \ref{fig:gains} that the strategy was able to consistently generate a profit even when considering transaction costs.
-
+\\[5mm]
 \begin{figure}[htb!]
     \centering
     \includegraphics[width=0.8\textwidth]{background/Images/gains.png}
     \caption{Net gains taking transaction fees into account~\cite{Figa-TalamancaGianna2021Cdff}}
     \label{fig:gains}
 \end{figure}
+
+\noindent Overall although there have been countless studies that explored statistical analysis of arbitrage opportunities on centralized exchanges, little attention has been given to investigating such opportunities on decentralized exchanges. Profitable methods like mean reversion, mean reversion utilizing the Kalman filter, and analyzing cointegrated cryptocurrencies have been identified in centralized exchange settings. Consequently, it would be intriguing to explore whether these findings hold true when applied to decentralized exchanges.

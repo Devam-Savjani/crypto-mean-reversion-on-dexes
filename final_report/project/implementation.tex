@@ -287,7 +287,7 @@ self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amou
 \end{lstlisting}
 
 \subsection{Gas Fees}
-The remaining fee that is yet to be discussed is gas fees of each order. To best approximate the gas fee it is paramount to have an approximation to how much gas is used in each. Therefore, smart contracts were written and run on a forked Ethereum mainnet, to be able to accurately simulate the contracts behaviour. Using Hardhat, the gas usage of each function was tested and Figure \ref{fig:gasResult} shows the results. It can be seen that some functions have a tighter spread, between the maximum and minimum, compared to others therefore to better understand this, plots of using various parameters on the different functions provided a deeper insight into the cause of this, Figures \ref{fig:gasPlots1}, \ref{fig:gasPlots2} and \ref{fig:gasPlots3}.
+The remaining fee that is yet to be discussed is gas fees of each order. To best approximate the gas fee it is paramount to have an approximation to how much gas is used in each. Therefore, smart contracts were written and run on a forked Ethereum mainnet, to be able to accurately simulate the contracts behaviour. Using Hardhat, the gas usage of each function was tested and Figure \ref{fig:gasResult} shows the results. It can be seen that some functions have a tighter spread, between the maximum and minimum, compared to others therefore to better understand this, plots of using various parameters on the different functions provided a deeper insight into the cause of this, Figures \ref{fig:gasPlots1} and \ref{fig:gasPlots2}.
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.9\textwidth]{project/Images/gas_fee_results.png}
@@ -297,25 +297,15 @@ The remaining fee that is yet to be discussed is gas fees of each order. To best
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.9\textwidth]{project/Images/SwapFeesPlot.png}\\
-    \includegraphics[width=0.9\textwidth]{project/Images/BorrowFees1.png}
-    \caption{Gas Usage Plots 1 \label{fig:gasPlots1}}
+    \includegraphics[width=0.9\textwidth]{project/Images/BorrowFees2.png}
+    \caption{Gas Usage Plots of Gas Used by Swapping (Top) and Borrowing (Bottom) \label{fig:gasPlots1}}
 \end{figure}
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.9\textwidth]{project/Images/BorrowFees2.png}\\
-    \includegraphics[width=0.9\textwidth]{project/Images/RepayFees1.png}\\
-    \includegraphics[width=0.9\textwidth]{project/Images/RepayFees2.png}
-    \caption{Gas Usage Plots 2 \label{fig:gasPlots2}}
-\end{figure}
-
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[width=0.9\textwidth]{project/Images/withdrawFeesPlot1.png}\\
-    \includegraphics[width=0.9\textwidth]{project/Images/withdrawFeesPlot2.png}\\
-    \includegraphics[width=0.9\textwidth]{project/Images/depositFeesPlot1.png}\\
+    \includegraphics[width=0.9\textwidth]{project/Images/RepayFees2.png}\\
     \includegraphics[width=0.9\textwidth]{project/Images/depositFeesPlot2.png}
-    \caption{Gas Usage Plots 3 \label{fig:gasPlots3}}
+    \caption{Gas Usage Plots of Gas Used by Repaying Borrowed Tokens (Top) and Depositting additional tokens (Bottom) \label{fig:gasPlots2}}
 \end{figure}
 
 \noindent Upon analyzing these plots, it becomes apparent that the majority of the functions exhibit a high level of consistency. However, it is noteworthy that for the smallest quantity tested, the gas consumption is significantly higher compared to that of larger quantities. Nevertheless, once this threshold is surpassed, the gas usage remains consistent. Therefore the average of the gas usage of each operation is used in the backtesting system as it provides a representative estimate of the gas consumption across different quantities.
