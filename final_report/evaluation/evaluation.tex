@@ -27,7 +27,7 @@ We can see that as $\sigma \rightarrow 0$, the number of trades increases howeve
 Consistent profit among all of the pool pairs, excluding pool pair 6, is also achieved at different $\sigma$s. We can see in Figure \ref{fig:varyStd} that the average return across all liquidity pool pairs that each strategy generates at each standard deviation. The Kalman Filter becomes largely profitable at $\sigma = 0.5$, whereas the lagged, sliding window and granger causality strategies become profitable at $\sigma = 2$. This is highly due to the fact that the Kalman Filter is better able to find underlying trends thus being better at selecting the hedge ratio.
 
 \definecolor{green}{RGB}{0,153,0}
-\begin{table}[!ht]
+\begin{table}[!htb]
     \centering
     \begin{adjustwidth}{-0.8in}{-0.9in}
         \begin{tabular}{|p{4em}|p{2em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|}\hline
@@ -97,18 +97,155 @@ Consistent profit among all of the pool pairs, excluding pool pair 6, is also ac
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\textwidth]{evaluation/Images/VaryStd.png}
+    \includegraphics[width=1\textwidth]{evaluation/Images/VaryStd.png}
     \caption{Plot of Average Return across all pool pairs by the standard deviation}
     \label{fig:varyStd}
 \end{figure}
 
+\section{Gas Fees}
+Another aspect that could be changed is fees; the first is how the transactions are executed on the blockchain and also the maximum gas price if we want to open a position. As previously mentioned, the gas fee is calculated by a combination of the gas price and the gas used. Therefore, these 2 parameters allow the strategy control both the gas used and gas price.
+
+\subsection{Batched Transactions vs Seperately Executed Transactions}
+The method in which the transactions are executed effects how much gas is used. When transactions are executed separately, each transaction incurs its own gas cost. This means that for every individual transaction, there will be gas consumed for various operations such as contract interaction, data storage, and computational tasks. As a result, executing a large number of separate transactions can lead to a significant cumulative gas cost. On the other hand, when transactions are batched together, they are consolidated into a single transaction. This consolidation reduces the overhead associated with executing multiple transactions individually. By combining the operations of multiple transactions into a single execution, redundant computations and storage operations can be eliminated, resulting in more efficient gas usage. It can immediately be seen in Figure  \ref{fig:gasResult} that the process of batching the transactions consumes less gas than the combined gas of the transactions required to exectue the openning and closing of the positions.
+\\[5mm]
+Furthermore, the effects of using seperate versus batched transactions can be seen in Table \ref{tab:BatchedVsSeperate}. The parameters used for this investigation were the same as above with the selection og $\sigma = 1.75$, 100 ETH worth of initial investment, the window size set to 30 days, a gas price threshold of 1 ETH (i.e. not having a threshold) and the testing period remained from 18th December 2021 to 9th June 2023.
+
+\begin{table}[H]
+    \centering
+    \begin{adjustwidth}{-0.8in}{-0.9in}
+        \begin{tabular}{|p{2em}|p{2em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|}\hline
+            & Pool Pair & \multicolumn{10}{|c|}{Strategy's Return} \\\cline{3-12}
+            &   & \multicolumn{2}{|c|}{Constant} & \multicolumn{2}{|c|}{Sliding Window} & \multicolumn{2}{|c|}{Lagged} & \multicolumn{2}{|c|}{Granger Causality} & \multicolumn{2}{|c|}{Kalman Filter}\\\cline{3-12}
+            & & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades\\\hline
+            
+            \parbox[t]{4em}{\multirow{7}{*}{\rotatebox[origin=c]{90}{Seperate}}} & 0 & \textcolor{red}{-10.35} & 288 & \textcolor{green}{38.26} & 342 & \textcolor{green}{141.77} & 353 & \textcolor{green}{46.07} & 359 & \textcolor{green}{175.37} & 153\\\cline{3-12}
+            & 1 & \textcolor{red}{-67.13} & 358 & \textcolor{red}{-29.23} & 293 & \textcolor{red}{-7.71} & 323 & \textcolor{red}{-36.45} & 320 & \textcolor{green}{74.13} & 178\\\cline{3-12}
+            & 2 & \textcolor{red}{-2.51} & 225 & \textcolor{green}{33.15} & 277 & \textcolor{green}{115.65} & 270 & \textcolor{green}{47.41} & 264 & \textcolor{green}{167.95} & 133\\\cline{3-12}
+            & 3 & \textcolor{red}{-59.62} & 309 & \textcolor{red}{-21.28} & 268 & \textcolor{red}{-1.49} & 294 & \textcolor{red}{-20.76} & 266 & \textcolor{green}{88.24} & 145\\\cline{3-12}
+            & 4 & \textcolor{red}{-3.72} & 241 & \textcolor{green}{41.37} & 294 & \textcolor{green}{92.24} & 291 & \textcolor{green}{34.18} & 289 & \textcolor{green}{146.99} & 152\\\cline{3-12}
+            & 5 & \textcolor{red}{-54.88} & 287 & \textcolor{red}{-14.02} & 225 & \textcolor{green}{14.77} & 250 & \textcolor{red}{-17.77} & 237 & \textcolor{green}{103.61} & 152\\\cline{3-12}
+            & 6 & \textcolor{red}{-47.31} & 76 & \textcolor{red}{-26.89} & 67 & \textcolor{red}{-40.81} & 76 & \textcolor{red}{-30.3} & 55 & \textcolor{red}{-22.66} & 74\\\hline\hline
+
+            \parbox[t]{4em}{\multirow{7}{*}{\rotatebox[origin=c]{90}{Batched}}} & 0 & \textcolor{red}{-3.23} & 288 & \textcolor{green}{48.58} & 342 & \textcolor{green}{153.27} & 353 & \textcolor{green}{56.43} & 359 & \textcolor{green}{178.18} & 153\\\cline{3-12}
+            & 1 & \textcolor{red}{-61.04} & 358 & \textcolor{red}{-23.06} & 293 & \textcolor{green}{1.35} & 323 & \textcolor{red}{-31.02} & 320 & \textcolor{green}{76.1} & 178\\\cline{3-12}
+            & 2 & \textcolor{green}{3.91} & 225 & \textcolor{green}{44.4} & 277 & \textcolor{green}{126.45} & 270 & \textcolor{green}{55.63} & 264 & \textcolor{green}{172.68} & 133\\\cline{3-12}
+            & 3 & \textcolor{red}{-55.28} & 309 & \textcolor{red}{-14.32} & 268 & \textcolor{green}{7.03} & 294 & \textcolor{red}{-15.18} & 266 & \textcolor{green}{87.1} & 145\\\cline{3-12}
+            & 4 & \textcolor{green}{2.55} & 241 & \textcolor{green}{47.2} & 294 & \textcolor{green}{105.24} & 291 & \textcolor{green}{43.94} & 289 & \textcolor{green}{150.06} & 152\\\cline{3-12}
+            & 5 & \textcolor{red}{-49.45} & 287 & \textcolor{red}{-7.04} & 225 & \textcolor{green}{21.89} & 250 & \textcolor{red}{-12.14} & 237 & \textcolor{green}{104.23} & 152\\\cline{3-12}
+            & 6 & \textcolor{red}{-45.35} & 76 & \textcolor{red}{-25.25} & 67 & \textcolor{red}{-38.07} & 76 & \textcolor{red}{-28.98} & 55 & \textcolor{red}{-20.97} & 74\\\hline
+        \end{tabular}
+    \end{adjustwidth}
+    \caption{Returns of each strategy when using seperate and batched transactions \label{tab:BatchedVsSeperate}}.
+\end{table}
+\noindent When comparing the use of batched transactions to executing transactions separately, it is evident that utilizing batched transactions yields a higher return, as expected. The observed increase in return ranges from approximately 2\% to 10\% compared to executing the transactions individually. The higher return achieved through batched transactions can be attributed to several factors. First, as mentioned earlier, batching transactions reduces the gas costs associated with executing multiple transactions. By consolidating operations into a single transaction, redundant computations and storage operations are eliminated, resulting in more efficient gas usage. The reduction in gas costs directly contributes to the overall profitability of the trading strategy.
+
+\subsection{Gas Price Threshold}
+A threshold on the gas price is also set to ensure positions that have a high transaction cost associated with it are avoided. As the gas price is variable, we can see in Figure \ref{fig:GasPriceHistogram} and in Table \ref{tab:gasPriceStats} the distribution of the gas prices over time is similar to a geometric distribution therefore by thresholding high gas prices, the strategies would avoid making a trade where the trade's profit would be overshadowed by the cost of trading.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{evaluation/Images/GasPriceHistogram.png}
+    \caption{Histogram Plot of Gas Prices in ETH}
+    \label{fig:GasPriceHistogram}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|l|l|l|l|l|}
+    \hline
+        max & 75\% & 50\% & 25\% & min & std & mean & count \\ \hline
+        2.12849e-05 & 7.47779e-08 & 3.57343e-08 & 1.84e-08 & 0 & 2.28997e-07 & 6.70062e-08 & 18375 \\ \hline
+    \end{tabular}
+    \caption{Statistics on the Gas Price}
+\label{tab:gasPriceStats}
+\end{table}
+
+\noindent Therefore, in our investigation of how the setting of this threshold effects the returns. Using batched transactions and the same parameters used in the aboce experiment, the thresholds are set to the $60^{th}, 70^{th},80^{th},90^{th},100^{th}$ quantiles. Table \ref{tab:VaryGasPriceThresholds} displays the results obtained by varying these thresholds. It can be seen that by filtering more costly opportunities, expectedly reduces the number of actionable, however the higher thresholds also show that these opportunities are still just as if not more profitable. In addition, to this Figure \ref{fig:VaryGasPriceThresholds}, shows how setting the threshold after the $90^{th}$ percentile does little to no effect in the return. The figure also shows that the threshold hinders profit in the constant hedge ratio strategy and seems to have little impact on the other strategies, giving a slight positive impact on the Kalman Filter strategy and a slight negative impact on the the remaining. This is likely due to there only a small amounts of arbitrage opportunities to be present in such times when the gas price is high, thus having little impact. With regards to the lower spectrum, having the threshold too low, i.e. the $60^{th}$ percentile, the returns are lower as many profitable opportunities are missed due to the overly low threshold, resulting in a reduction in the overall profitability of the trading strategy.
+\\[5mm]
+Overall, the analysis of varying gas price thresholds reveals that adjusting the threshold level has a direct impact on the number of actionable opportunities and the resulting returns. Higher thresholds filter out less favorable opportunities, while still maintaining profitability. However, it is crucial to strike a balance and avoid setting the threshold too low, as this may lead to missed profitable opportunities. Hence, to get the best balance the threshold is set to the $90^{th}$ percentile.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{evaluation/Images/VaryGPThreshold.png}
+    \caption{Returns of each strategy when using different gas price thresholds}
+    \label{fig:VaryGasPriceThresholds}
+\end{figure}
+
+\begin{table}[htb!]
+    \centering
+    \begin{adjustwidth}{-0.9in}{-0.9in}
+        \begin{tabular}{|p{5em}|p{2em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|}\hline
+            Gas Price Threshold & Pool Pair & \multicolumn{10}{|c|}{Strategy's Return} \\\cline{3-12}
+            &   & \multicolumn{2}{|c|}{Constant} & \multicolumn{2}{|c|}{Sliding Window} & \multicolumn{2}{|c|}{Lagged} & \multicolumn{2}{|c|}{Granger Causality} & \multicolumn{2}{|c|}{Kalman Filter}\\\cline{3-12}
+            & & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades\\\hline
+            
+            & 0 & \textcolor{green}{11.97} & 193 & \textcolor{green}{40.91} & 221 & \textcolor{green}{47.84} & 242 & \textcolor{green}{46.15} & 247 & \textcolor{green}{84.25} & 105\\\cline{3-12}
+            & 1 & \textcolor{red}{-32.65} & 253 & \textcolor{red}{-1.01} & 178 & \textcolor{red}{-13.67} & 205 & \textcolor{red}{-11.1} & 202 & \textcolor{green}{40.81} & 124\\\cline{3-12}
+            & 2 & \textcolor{green}{13.1} & 134 & \textcolor{green}{47.32} & 171 & \textcolor{green}{41.15} & 169 & \textcolor{green}{41.02} & 162 & \textcolor{green}{84.45} & 77\\\cline{3-12}
+            $60^{th}$ percentile = 4.7e-08 & 3 & \textcolor{red}{-31.25} & 214 & \textcolor{green}{0.85} & 165 & \textcolor{red}{-12.06} & 188 & \textcolor{red}{-7.06} & 165 & \textcolor{green}{49.6} & 90\\[-5.5ex]\cline{3-12}
+            & 4 & \textcolor{green}{22.39} & 150 & \textcolor{green}{54.73} & 178 & \textcolor{green}{38.45} & 184 & \textcolor{green}{36.72} & 182 & \textcolor{green}{76.66} & 90\\\cline{3-12}
+            & 5 & \textcolor{red}{-17.92} & 191 & \textcolor{green}{10.46} & 128 & \textcolor{green}{5.72} & 150 & \textcolor{green}{9.36} & 140 & \textcolor{green}{61.33} & 96\\\cline{3-12}
+            & 6 & \textcolor{red}{-37.46} & 53 & \textcolor{red}{-7.03} & 30 & \textcolor{red}{-22.04} & 46 & \textcolor{red}{-21.15} & 26 & \textcolor{red}{-9.21} & 50\\\hline\hline
+
+            & 0 & \textcolor{green}{19.52} & 216 & \textcolor{green}{53.11} & 255 & \textcolor{green}{53.53} & 277 & \textcolor{green}{53.94} & 282 & \textcolor{green}{96.83} & 120\\\cline{3-12}
+            & 1 & \textcolor{red}{-33.97} & 283 & \textcolor{red}{-3.15} & 209 & \textcolor{red}{-24.62} & 243 & \textcolor{red}{-15.07} & 237 & \textcolor{green}{46.96} & 140\\\cline{3-12}
+            & 2 & \textcolor{green}{18.82} & 156 & \textcolor{green}{52.75} & 199 & \textcolor{green}{40.56} & 200 & \textcolor{green}{46.72} & 193 & \textcolor{green}{102.2} & 94\\\cline{3-12}
+            $70^{th}$ percentile = 6.36e-08 & 3 & \textcolor{red}{-32.07} & 240 & \textcolor{green}{0.52} & 193 & \textcolor{red}{-20.87} & 219 & \textcolor{red}{-10.63} & 195 & \textcolor{green}{57.12} & 107\\[-5.5ex]\cline{3-12}
+            & 4 & \textcolor{green}{22.27} & 175 & \textcolor{green}{53.37} & 215 & \textcolor{green}{36.47} & 219 & \textcolor{green}{39.94} & 216 & \textcolor{green}{99.76} & 111\\\cline{3-12}
+            & 5 & \textcolor{red}{-19.16} & 220 & \textcolor{green}{9.93} & 152 & \textcolor{red}{-5.52} & 179 & \textcolor{green}{7.71} & 166 & \textcolor{green}{69.1} & 116\\\cline{3-12}
+            & 6 & \textcolor{red}{-35.97} & 59 & \textcolor{red}{-8.73} & 37 & \textcolor{red}{-25.15} & 56 & \textcolor{red}{-21.4} & 29 & \textcolor{red}{-12.88} & 58\\\hline\hline
+            
+            & 0 & \textcolor{green}{19.42} & 239 & \textcolor{green}{60.6} & 282 & \textcolor{green}{68.01} & 298 & \textcolor{green}{72.21} & 304 & \textcolor{green}{78.9} & 127\\\cline{3-12}
+            & 1 & \textcolor{red}{-37.49} & 310 & \textcolor{red}{-5.19} & 235 & \textcolor{red}{-24.14} & 267 & \textcolor{red}{-11.09} & 262 & \textcolor{green}{30.0} & 148\\\cline{3-12}
+            & 2 & \textcolor{green}{19.31} & 182 & \textcolor{green}{59.67} & 224 & \textcolor{green}{54.3} & 222 & \textcolor{green}{65.54} & 217 & \textcolor{green}{82.23} & 102\\\cline{3-12}
+            $80^{th}$ percentile = 8.83e-08 & 3 & \textcolor{red}{-37.58} & 266 & \textcolor{red}{-1.95} & 220 & \textcolor{red}{-20.69} & 247 & \textcolor{red}{-4.91} & 219 & \textcolor{green}{38.77} & 116\\[-5.5ex]\cline{3-12}
+            & 4 & \textcolor{green}{21.92} & 196 & \textcolor{green}{59.66} & 241 & \textcolor{green}{47.85} & 240 & \textcolor{green}{54.47} & 239 & \textcolor{green}{83.14} & 122\\\cline{3-12}
+            & 5 & \textcolor{red}{-20.95} & 239 & \textcolor{green}{12.95} & 177 & \textcolor{red}{-5.75} & 201 & \textcolor{green}{11.5} & 188 & \textcolor{green}{51.16} & 123\\\cline{3-12}
+            & 6 & \textcolor{red}{-35.14} & 60 & \textcolor{red}{-18.27} & 46 & \textcolor{red}{-22.77} & 59 & \textcolor{red}{-22.23} & 36 & \textcolor{red}{-12.11} & 59\\\hline\hline
+
+            & 0 & \textcolor{green}{10.78} & 261 & \textcolor{green}{56.38} & 308 & \textcolor{green}{141.21} & 325 & \textcolor{green}{63.39} & 327 & \textcolor{green}{142.23} & 146\\\cline{3-12}
+            & 1 & \textcolor{red}{-53.48} & 336 & \textcolor{red}{-14.07} & 264 & \textcolor{green}{7.76} & 294 & \textcolor{red}{-20.77} & 290 & \textcolor{green}{65.04} & 167\\\cline{3-12}
+            & 2 & \textcolor{green}{7.65} & 201 & \textcolor{green}{49.43} & 250 & \textcolor{green}{109.59} & 247 & \textcolor{green}{56.37} & 237 & \textcolor{green}{138.86} & 122\\\cline{3-12}
+            $90^{th}$ percentile = 1.29e-07 & 3 & \textcolor{red}{-46.86} & 287 & \textcolor{red}{-8.9} & 243 & \textcolor{green}{11.59} & 272 & \textcolor{red}{-11.73} & 241 & \textcolor{green}{75.58} & 133\\[-5.5ex]\cline{3-12}
+            & 4 & \textcolor{green}{12.6} & 217 & \textcolor{green}{51.02} & 268 & \textcolor{green}{111.43} & 265 & \textcolor{green}{47.22} & 261 & \textcolor{green}{142.85} & 139\\\cline{3-12}
+            & 5 & \textcolor{red}{-40.42} & 265 & \textcolor{red}{-0.86} & 201 & \textcolor{green}{34.21} & 226 & \textcolor{red}{-3.04} & 212 & \textcolor{green}{90.84} & 144\\\cline{3-12}
+            & 6 & \textcolor{red}{-41.38} & 69 & \textcolor{red}{-21.81} & 56 & \textcolor{red}{-25.34} & 70 & \textcolor{red}{-22.24} & 47 & \textcolor{red}{-13.22} & 67\\\hline\hline
+
+            & 0 & \textcolor{red}{-3.23} & 288 & \textcolor{green}{48.58} & 342 & \textcolor{green}{153.27} & 353 & \textcolor{green}{56.43} & 359 & \textcolor{green}{178.18} & 153\\\cline{3-12}
+            & 1 & \textcolor{red}{-61.04} & 358 & \textcolor{red}{-23.06} & 293 & \textcolor{green}{1.35} & 323 & \textcolor{red}{-31.02} & 320 & \textcolor{green}{76.1} & 178\\\cline{3-12}
+            & 2 & \textcolor{green}{3.91} & 225 & \textcolor{green}{44.4} & 277 & \textcolor{green}{126.45} & 270 & \textcolor{green}{55.63} & 264 & \textcolor{green}{172.68} & 133\\\cline{3-12}
+            $100^{th}$ percentile = 2.13e-05 & 3 & \textcolor{red}{-55.28} & 309 & \textcolor{red}{-14.32} & 268 & \textcolor{green}{7.03} & 294 & \textcolor{red}{-15.18} & 266 & \textcolor{green}{87.1} & 145\\[-5.5ex]\cline{3-12}
+            & 4 & \textcolor{green}{2.55} & 241 & \textcolor{green}{47.2} & 294 & \textcolor{green}{105.24} & 291 & \textcolor{green}{43.94} & 289 & \textcolor{green}{150.06} & 152\\\cline{3-12}
+            & 5 & \textcolor{red}{-49.45} & 287 & \textcolor{red}{-7.04} & 225 & \textcolor{green}{21.89} & 250 & \textcolor{red}{-12.14} & 237 & \textcolor{green}{104.23} & 152\\\cline{3-12}
+            & 6 & \textcolor{red}{-45.35} & 76 & \textcolor{red}{-25.25} & 67 & \textcolor{red}{-38.07} & 76 & \textcolor{red}{-28.98} & 55 & \textcolor{red}{-20.97} & 74\\\hline
+        \end{tabular}
+    \end{adjustwidth}
+    \caption{Returns of each strategy when using different gas price thresholds \label{tab:VaryGasPriceThresholds}}.
+\end{table}
+
 \section{Initial Investment Volume}
 
-\section{Window Size}
+% \begin{table}[!ht]
+%     \centering
+%     \begin{adjustwidth}{-0.8in}{-0.9in}
+%         \begin{tabular}{|p{4em}|p{2em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|}\hline
+%             Initial Investment & Pool Pair & \multicolumn{10}{|c|}{Strategy's Return} \\\cline{3-12}
+%             &   & \multicolumn{2}{|c|}{Constant} & \multicolumn{2}{|c|}{Sliding Window} & \multicolumn{2}{|c|}{Lagged} & \multicolumn{2}{|c|}{Granger Causality} & \multicolumn{2}{|c|}{Kalman Filter}\\\cline{3-12}
+%             & & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades\\\hline
+            
+%             & 0 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 2 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1\\\cline{3-12}
+%             & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 2 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1\\\cline{3-12}
+%             & 2 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 2 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1\\\cline{3-12}
+%             Investment = 0.1 & 3 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 2 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1\\\cline{3-12}
+%             & 4 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 2 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1\\\cline{3-12}
+%             & 5 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 2 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1\\\cline{3-12}
+%             & 6 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1 & \textcolor{red}{-100} & 1\\\hline\hline
 
-\section{Fees}
-\subsection{Batched Transactions vs Seperately Executed Transactions}
-\subsection{Gas Fee Threshold}
+%         \end{tabular}
+%     \end{adjustwidth}
+%     \caption{Returns of various standard deviation thresholds of each strategy \label{tab:varying_sigma}}.
+% \end{table}
+
+\section{Window Size}
 
 \section{Beta}
 
