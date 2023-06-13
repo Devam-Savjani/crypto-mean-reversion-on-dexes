@@ -10,7 +10,7 @@ from strategies.constant_hr_strategy import Constant_Hedge_Ratio_Strategy
 from strategies.kalman_filter_strategy import Kalman_Filter_Strategy
 from strategies.sliding_window_strategy import Sliding_Window_Strategy
 from strategies.lagged_strategy import Lagged_Strategy
-from strategies.rolling_gc_strategy import Granger_Causality_Strategy
+from strategies.granger_causality_strategy import Granger_Causality_Strategy
 from tqdm import tqdm
 import sys
 sys.path.append('./historical_data')
@@ -414,19 +414,17 @@ pairs = cointegrated_pairs[particular_idx:particular_idx +
 
 bad_pairs = []
 
-number_of_sds_from_mean = 1
+number_of_sds_from_mean = 2
 window_size_in_seconds = days_to_seconds(30)
 history_size = days_to_seconds(30)
 percent_to_invest = 1.00
+should_batch_trade = True
+gas_price_threshold = 1.29e-07
 initial_investment = 100
-gas_price_threshold=1
-# gas_price_threshold=1.25e-07
-should_batch_trade = False
 
 results = []
 
 for idx, cointegrated_pair in enumerate(pairs):
-    # if True:
     print(num)
     num += 1
     print(f'cointegrated_pair: {cointegrated_pair}')
@@ -545,7 +543,14 @@ for idx, cointegrated_pair in enumerate(pairs):
     gc_return_percent_str = f"\\textcolor{{{'green' if gc_return_percent > 0 else 'red'}}}{{{round(gc_return_percent, rounding_num)}}}"
     kf_return_percent_str = f"\\textcolor{{{'green' if kf_return_percent > 0 else 'red'}}}{{{round(kf_return_percent, rounding_num)}}}"
 
-    results.append(f" & {idx} & {constant_return_percent_str} & {len(backtest_constant_hr.trades)} & {sw_return_percent_str} & {len(backtest_sliding_window.trades)} & {lagged_return_percent_str} & {len(backtest_lagged.trades)} & {gc_return_percent_str} & {len(backtest_gc.trades)} & {kf_return_percent_str} & {len(backtest_kalman_filter.trades)}\\\\\\cline{{3-12}}")
+    to_print = f" & {idx} & {constant_return_percent_str} & {len(backtest_constant_hr.trades)} & {sw_return_percent_str} & {len(backtest_sliding_window.trades)} & {lagged_return_percent_str} & {len(backtest_lagged.trades)} & {gc_return_percent_str} & {len(backtest_gc.trades)} & {kf_return_percent_str} & {len(backtest_kalman_filter.trades)}\\\\\\cline{{3-12}}"
+    if idx == 3:
+        to_print = f"$100 ETH = \$394,626.00$" + to_print
+
+    if idx == 6:
+        to_print = to_print[:-11] + "hline\\hline"
+
+    results.append(to_print)
 
     # fig, axs = plt.subplots(4, sharex=True,)
     # axs[0].plot(backtest_mean_reversion.history_remaining_p1.to_list())

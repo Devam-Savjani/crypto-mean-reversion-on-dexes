@@ -17,7 +17,7 @@ class Granger_Causality_Strategy(abstract_strategy.Abstract_Strategy):
         self.initialise_kalman_filter_and_thresholds()
 
     def initialise_kalman_filter_and_thresholds(self):
-        p1, p2 = self.history_p1[-self.window_size_in_hours:], self.history_p2[-self.window_size_in_hours:]
+        p1, p2 = self.history_p1, self.history_p2
 
         data = pd.DataFrame({'Asset1': p1, 'Asset2': p2})
         granger_results = statsmodels.tsa.stattools.grangercausalitytests(data, maxlag=[1], verbose=False)
@@ -51,7 +51,7 @@ class Granger_Causality_Strategy(abstract_strategy.Abstract_Strategy):
                 spread_mean - self.number_of_sds_from_mean * spread_std)
 
     def update_hedge_ratio(self):
-        p1, p2 = self.history_p1[-self.window_size_in_hours:], self.history_p2[-self.window_size_in_hours:]
+        p1, p2 = self.history_p1, self.history_p2
         data = pd.DataFrame({'Asset1': p1, 'Asset2': p2})
         granger_results = statsmodels.tsa.stattools.grangercausalitytests(data, maxlag=[1], verbose=False)
         self.hedge_ratio = granger_results[1][1][0].params[0]
