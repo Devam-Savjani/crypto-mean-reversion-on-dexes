@@ -97,9 +97,9 @@ class Backtest():
             'T2': self.aave2_df.loc[(self.aave2_df['timestamp'] >= start_timestamp) & (self.aave2_df['timestamp'] <= end_timestamp)][['timestamp', 'borrow_rate']]
         }
 
-    def backtest_pair(self, cointegrated_pair, strategy, initial_investment_in_weth=100):
+    def backtest_pair(self, cointegrated_pair, strategy, initial_investment_in_weth, history_size):
         history_arg, history_remaining = self.fetch_and_preprocess_data(
-            cointegrated_pair, strategy.window_size_in_seconds)
+            cointegrated_pair, history_size)
 
         cointegrated_pair_0_split = cointegrated_pair[0].split('_')
         cointegrated_pair_1_split = cointegrated_pair[1].split('_')
@@ -357,6 +357,9 @@ class Backtest():
                             'OPEN', f'SELL {token}', signal=signal)
 
             if len([order[0] for order in signal if order[0] == 'OPEN']) == 2:
+                open_positions = self.trades[-2:]
+                self.trades = self.trades[:-2]
+                self.trades.append(open_positions)
                 if strategy.should_batch_trade:
                     self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION * gas_price_in_eth)
                 else:
@@ -400,15 +403,6 @@ class Backtest():
 cointegrated_pairs = load_cointegrated_pairs(
     'historical_data/cointegrated_pairs.pickle')
 
-corr_matrix = get_correlation_matrix(list(set(sum(cointegrated_pairs, ()))))
-
-ps_with_corr = []
-for pair in cointegrated_pairs:
-    corr = corr_matrix[pair[0].lower()][pair[1].lower()]
-    ps_with_corr.append((pair[0], pair[1], corr))
-
-cointegrated_pairs = sorted(ps_with_corr, key=lambda x: x[2])
-
 print(*cointegrated_pairs, sep="\n")
 
 particular_idx = 0
@@ -422,196 +416,217 @@ bad_pairs = []
 
 number_of_sds_from_mean = 1
 window_size_in_seconds = days_to_seconds(30)
+history_size = days_to_seconds(30)
 percent_to_invest = 1.00
 initial_investment = 100
+gas_price_threshold=1
+# gas_price_threshold=1.25e-07
+should_batch_trade = False
 
-for cointegrated_pair in pairs:
-    try:
+results = []
+
+for idx, cointegrated_pair in enumerate(pairs):
     # if True:
-        print(num)
-        num += 1
-        print(f'cointegrated_pair: {cointegrated_pair}')
+    print(num)
+    num += 1
+    print(f'cointegrated_pair: {cointegrated_pair}')
 
+    try:
         constant_hr_strategy = Constant_Hedge_Ratio_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                           window_size_in_seconds=window_size_in_seconds,
                                                           percent_to_invest=percent_to_invest,
-                                                          gas_price_threshold=1.25e-07,
+                                                          gas_price_threshold=gas_price_threshold,
                                                           rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                          should_batch_trade=False)
+                                                          should_batch_trade=should_batch_trade)
 
         backtest_constant_hr = Backtest()
-        return_percent = backtest_constant_hr.backtest_pair(
-            cointegrated_pair, constant_hr_strategy, initial_investment)
+        constant_return_percent = backtest_constant_hr.backtest_pair(
+            cointegrated_pair, constant_hr_strategy, initial_investment, history_size)
+    except Exception as e:
+        constant_return_percent = -100
+    
 
-        if return_percent > 0:
-            print(
-                f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
-        else:
-            print(
-                f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
-
+    if constant_return_percent > 0:
+        print(
+            f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{constant_return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
+    else:
+        print(
+            f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{constant_return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
+        
+    try:
         sliding_window_strategy = Sliding_Window_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest,
-                                                        gas_price_threshold=1.25e-07,
+                                                        gas_price_threshold=gas_price_threshold,
                                                         rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                        should_batch_trade=False)
+                                                        should_batch_trade=should_batch_trade)
 
         backtest_sliding_window = Backtest()
-        return_percent = backtest_sliding_window.backtest_pair(
-            cointegrated_pair, sliding_window_strategy, initial_investment)
+        sw_return_percent = backtest_sliding_window.backtest_pair(
+            cointegrated_pair, sliding_window_strategy, initial_investment, history_size)
+    except Exception as e:
+        sw_return_percent = -100
 
-        if return_percent > 0:
-            print(
-                f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
-        else:
-            print(
-                f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
-
+    if sw_return_percent > 0:
+        print(
+            f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[92m{sw_return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
+    else:
+        print(
+            f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[91m{sw_return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
+    
+    try:
         kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest,
-                                                        gas_price_threshold=1.25e-07,
+                                                        gas_price_threshold=gas_price_threshold,
                                                         rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                        should_batch_trade=False)
+                                                        should_batch_trade=should_batch_trade)
 
         backtest_kalman_filter = Backtest()
-        return_percent = backtest_kalman_filter.backtest_pair(
-            cointegrated_pair, kalman_filter_strategy, initial_investment)
+        kf_return_percent = backtest_kalman_filter.backtest_pair(
+            cointegrated_pair, kalman_filter_strategy, initial_investment, history_size)
+    except Exception as e:
+        kf_return_percent = -100
 
-        if return_percent > 0:
-            print(
-                f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
-        else:
-            print(
-                f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+    if kf_return_percent > 0:
+        print(
+            f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{kf_return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+    else:
+        print(
+            f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{kf_return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
             
-        
+    try:
         lagged_strategy = Lagged_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest,
-                                                        gas_price_threshold=1.25e-07,
+                                                        gas_price_threshold=gas_price_threshold,
                                                         rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                        should_batch_trade=False)
+                                                        should_batch_trade=should_batch_trade,
+                                                        lag=1)
 
         backtest_lagged = Backtest()
-        return_percent = backtest_lagged.backtest_pair(
-            cointegrated_pair, lagged_strategy, initial_investment)
-
-        if return_percent > 0:
-            print(
-                f"\033[33mLagged_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
-        else:
-            print(
-                f"\033[33mLagged_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
-            
+        lagged_return_percent = backtest_lagged.backtest_pair(
+            cointegrated_pair, lagged_strategy, initial_investment, history_size)
+    except Exception as e:
+        lagged_return_percent = -100
+    
+    if lagged_return_percent > 0:
+        print(
+            f"\033[33mLagged_Strategy\033[0m Total returns \033[92m{lagged_return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
+    else:
+        print(
+            f"\033[33mLagged_Strategy\033[0m Total returns \033[91m{lagged_return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
+    
+    try:            
         gc_strategy = Granger_Causality_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
                                                         window_size_in_seconds=window_size_in_seconds,
                                                         percent_to_invest=percent_to_invest,
-                                                        gas_price_threshold=1.25e-07,
+                                                        gas_price_threshold=gas_price_threshold,
                                                         rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                        should_batch_trade=False)
+                                                        should_batch_trade=should_batch_trade)
 
         backtest_gc = Backtest()
-        return_percent = backtest_gc.backtest_pair(
-            cointegrated_pair, gc_strategy, initial_investment)
-
-        if return_percent > 0:
-            print(
-                f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[92m{return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
-        else:
-            print(
-                f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[91m{return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
-
-        # fig, axs = plt.subplots(4, sharex=True,)
-        # axs[0].plot(backtest_mean_reversion.history_remaining_p1.to_list())
-        # axs[1].plot(backtest_mean_reversion.history_remaining_p2.to_list())
-
-        # axs[2].plot(mean_reversion_strategy.upper_thresholds, label='upper')
-        # axs[2].plot(mean_reversion_strategy.spreads, label='spread')
-        # axs[2].plot(mean_reversion_strategy.lower_thresholds, label='lower')
-        # axs[2].legend()
-
-        # axs[3].plot(backtest_mean_reversion.account_value_history)
-        # plt.show()
-
-        # plt.plot(backtest_kalman_filter.times, backtest_kalman_filter.account_value_history)
-        # plt.show()
-
-        # font_size = 15
-
-        # table = table_to_df(
-        #     command=f"SELECT pool_address, token0, token1, feetier FROM liquidity_pools where volume_usd >= 10000000000 and (token0='WETH' OR token1='WETH');", path_to_config='historical_data/database.ini')
-        # table['feetier'] = table['feetier'].apply(lambda x: x*1e-4)
-
-        # print(table.to_latex(index=False))
-
-        # table = table_to_df(
-        #     command=f'SELECT * FROM "{cointegrated_pair[0]}" where gas_price_wei > 0 ORDER BY period_start_unix;', path_to_config='historical_data/database.ini')
-
-        # f = table['gas_price_wei'].to_numpy()*1e-9
-        # print(f)
-        # plt.plot(table['period_start_unix'], f)
-        # plt.ylabel('Gas Price in Gwei')
-        # plt.xlabel('UNIX Timestamp')
-        # plt.show()
-
-        # plt.plot(backtest_rolling_hr.times, rolling_hr_strategy.hedge_ratio_history, label='hedge ratio')
-        # plt.xlabel('Unix timestamp', fontsize=font_size)
-        # plt.ylabel('Hedge Ratio', fontsize=font_size)
-        # plt.title(f'How the Hedge Ratio evolves over time between {cointegrated_pair[0]} and {cointegrated_pair[1]}')
-        # plt.show()
-
-        # plt.plot(backtest_kalman_filter.times, kalman_filter_strategy.hedge_ratio_history, label='hedge ratio')
-        # plt.xlabel('Unix timestamp', fontsize=font_size)
-        # plt.ylabel('Hedge Ratio', fontsize=font_size)
-        # plt.title(f'How the Hedge Ratio evolves over time between {cointegrated_pair[0]} and {cointegrated_pair[1]}')
-        # plt.show()
-
-        # model = sm.OLS(backtest_mean_reversion.history_p2, sm.add_constant(backtest_mean_reversion.history_p1))
-        # results = model.fit()
-
-        # # Calculate the ratio of the coefficients
-        # Gradient of the OLS i.e. X = results.params[0] + results.params[1] 'p2_token1_price'
-        # print(results.params)
-
-        # cm = plt.get_cmap('jet')
-        # sc2 = plt.scatter(backtest_mean_reversion.history_p2, backtest_mean_reversion.history_p1, s=30, c=list(backtest_mean_reversion.history_times), cmap=cm, alpha=0.3,label='Price',edgecolor='k')
-        # sc = plt.scatter(backtest_mean_reversion.history_p2, backtest_mean_reversion.history_p1, s=30, c=list(backtest_mean_reversion.history_times), cmap=cm, alpha=1,label='Price',edgecolor='k').set_visible(False)
-        # cb = plt.colorbar(sc)
-        # plt.plot(backtest_kalman_filter.history_p2, results.params[1] * backtest_kalman_filter.history_p2 + results.params[0], alpha=.5, lw=2)
-        # cb.ax.get_yaxis().labelpad = 20
-
-        # font_size = 15
-        # cb.set_label('UNIX Timestamp', rotation=270, fontsize=font_size)
-        # plt.ylabel(f'Price of {cointegrated_pair[0]}', fontsize=font_size)
-        # plt.xlabel(f'Price of {cointegrated_pair[1]}', fontsize=font_size)
-        # plt.show()
-
-        # state_means = kalman_filter_strategy.means_trace
-        # font_size = 15
-
-        # add regression lines
-        # step = int(len(state_means) / 10) # pick slope and intercept every 50 days
-
-        # colors_l = np.linspace(0.1, 1, len(state_means[::step]))
-        # for i, b in enumerate(state_means[::step]):
-        #     print(b)
-        #     plt.plot(backtest_kalman_filter.history_p2, b[0] * backtest_kalman_filter.history_p2 + b[1], alpha=.5, lw=2, c=cm(colors_l[i]))
-
-        # plt.ylabel(f'Price of {cointegrated_pair[0]}', fontsize=font_size)
-        # plt.xlabel(f'Price of {cointegrated_pair[1]}', fontsize=font_size)
-        # cb.set_label('UNIX Timestamp', rotation=270, fontsize=font_size)
-        # plt.show()
-
-        # print(*backtest_mean_reversion.trades, sep='\n')
-
+        gc_return_percent = backtest_gc.backtest_pair(
+            cointegrated_pair, gc_strategy, initial_investment, history_size)
     except Exception as e:
-        bad_pairs.append((cointegrated_pair))
-        # plt.plot(backtest_mean_reversion.times, backtest_mean_reversion.account_value_history)
-        # plt.show()
-        print(e)
-        # print(kalman_filter_strategy.account_history[-1])
-        print()
-    finally:
-        pass
+        gc_return_percent = -100
+
+    if gc_return_percent > 0:
+        print(
+            f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[92m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
+    else:
+        print(
+            f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[91m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
+        
+    rounding_num = 2
+    constant_return_percent_str = f"\\textcolor{{{'green' if constant_return_percent > 0 else 'red'}}}{{{round(constant_return_percent, rounding_num)}}}"
+    sw_return_percent_str = f"\\textcolor{{{'green' if sw_return_percent > 0 else 'red'}}}{{{round(sw_return_percent, rounding_num)}}}"
+    lagged_return_percent_str = f"\\textcolor{{{'green' if lagged_return_percent > 0 else 'red'}}}{{{round(lagged_return_percent, rounding_num)}}}"
+    gc_return_percent_str = f"\\textcolor{{{'green' if gc_return_percent > 0 else 'red'}}}{{{round(gc_return_percent, rounding_num)}}}"
+    kf_return_percent_str = f"\\textcolor{{{'green' if kf_return_percent > 0 else 'red'}}}{{{round(kf_return_percent, rounding_num)}}}"
+
+    results.append(f" & {idx} & {constant_return_percent_str} & {len(backtest_constant_hr.trades)} & {sw_return_percent_str} & {len(backtest_sliding_window.trades)} & {lagged_return_percent_str} & {len(backtest_lagged.trades)} & {gc_return_percent_str} & {len(backtest_gc.trades)} & {kf_return_percent_str} & {len(backtest_kalman_filter.trades)}\\\\\\cline{{3-12}}")
+
+    # fig, axs = plt.subplots(4, sharex=True,)
+    # axs[0].plot(backtest_mean_reversion.history_remaining_p1.to_list())
+    # axs[1].plot(backtest_mean_reversion.history_remaining_p2.to_list())
+
+    # axs[2].plot(mean_reversion_strategy.upper_thresholds, label='upper')
+    # axs[2].plot(mean_reversion_strategy.spreads, label='spread')
+    # axs[2].plot(mean_reversion_strategy.lower_thresholds, label='lower')
+    # axs[2].legend()
+
+    # axs[3].plot(backtest_mean_reversion.account_value_history)
+    # plt.show()
+
+    # plt.plot(backtest_kalman_filter.times, backtest_kalman_filter.account_value_history)
+    # plt.show()
+
+    # font_size = 15
+
+    # table = table_to_df(
+    #     command=f"SELECT pool_address, token0, token1, feetier FROM liquidity_pools where volume_usd >= 10000000000 and (token0='WETH' OR token1='WETH');", path_to_config='historical_data/database.ini')
+    # table['feetier'] = table['feetier'].apply(lambda x: x*1e-4)
+
+    # print(table.to_latex(index=False))
+
+    # table = table_to_df(
+    #     command=f'SELECT * FROM "{cointegrated_pair[0]}" where gas_price_wei > 0 ORDER BY period_start_unix;', path_to_config='historical_data/database.ini')
+
+    # f = table['gas_price_wei'].to_numpy()*1e-9
+    # print(f)
+    # plt.plot(table['period_start_unix'], f)
+    # plt.ylabel('Gas Price in Gwei')
+    # plt.xlabel('UNIX Timestamp')
+    # plt.show()
+
+    # plt.plot(backtest_rolling_hr.times, rolling_hr_strategy.hedge_ratio_history, label='hedge ratio')
+    # plt.xlabel('Unix timestamp', fontsize=font_size)
+    # plt.ylabel('Hedge Ratio', fontsize=font_size)
+    # plt.title(f'How the Hedge Ratio evolves over time between {cointegrated_pair[0]} and {cointegrated_pair[1]}')
+    # plt.show()
+
+    # plt.plot(backtest_kalman_filter.times, kalman_filter_strategy.hedge_ratio_history, label='hedge ratio')
+    # plt.xlabel('Unix timestamp', fontsize=font_size)
+    # plt.ylabel('Hedge Ratio', fontsize=font_size)
+    # plt.title(f'How the Hedge Ratio evolves over time between {cointegrated_pair[0]} and {cointegrated_pair[1]}')
+    # plt.show()
+
+    # model = sm.OLS(backtest_mean_reversion.history_p2, sm.add_constant(backtest_mean_reversion.history_p1))
+    # results = model.fit()
+
+    # # Calculate the ratio of the coefficients
+    # Gradient of the OLS i.e. X = results.params[0] + results.params[1] 'p2_token1_price'
+    # print(results.params)
+
+    # cm = plt.get_cmap('jet')
+    # sc2 = plt.scatter(backtest_mean_reversion.history_p2, backtest_mean_reversion.history_p1, s=30, c=list(backtest_mean_reversion.history_times), cmap=cm, alpha=0.3,label='Price',edgecolor='k')
+    # sc = plt.scatter(backtest_mean_reversion.history_p2, backtest_mean_reversion.history_p1, s=30, c=list(backtest_mean_reversion.history_times), cmap=cm, alpha=1,label='Price',edgecolor='k').set_visible(False)
+    # cb = plt.colorbar(sc)
+    # plt.plot(backtest_kalman_filter.history_p2, results.params[1] * backtest_kalman_filter.history_p2 + results.params[0], alpha=.5, lw=2)
+    # cb.ax.get_yaxis().labelpad = 20
+
+    # font_size = 15
+    # cb.set_label('UNIX Timestamp', rotation=270, fontsize=font_size)
+    # plt.ylabel(f'Price of {cointegrated_pair[0]}', fontsize=font_size)
+    # plt.xlabel(f'Price of {cointegrated_pair[1]}', fontsize=font_size)
+    # plt.show()
+
+    # state_means = kalman_filter_strategy.means_trace
+    # font_size = 15
+
+    # add regression lines
+    # step = int(len(state_means) / 10) # pick slope and intercept every 50 days
+
+    # colors_l = np.linspace(0.1, 1, len(state_means[::step]))
+    # for i, b in enumerate(state_means[::step]):
+    #     print(b)
+    #     plt.plot(backtest_kalman_filter.history_p2, b[0] * backtest_kalman_filter.history_p2 + b[1], alpha=.5, lw=2, c=cm(colors_l[i]))
+
+    # plt.ylabel(f'Price of {cointegrated_pair[0]}', fontsize=font_size)
+    # plt.xlabel(f'Price of {cointegrated_pair[1]}', fontsize=font_size)
+    # cb.set_label('UNIX Timestamp', rotation=270, fontsize=font_size)
+    # plt.show()
+
+    # print(*backtest_mean_reversion.trades, sep='\n')
+print(*results,sep='\n')

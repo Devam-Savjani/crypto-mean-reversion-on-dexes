@@ -5,11 +5,11 @@ import sys
 sys.path.append('./strategies')
 
 class Lagged_Strategy(abstract_strategy.Abstract_Strategy):
-    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment, should_batch_trade):
+    def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment, should_batch_trade, lag):
         super().__init__(number_of_sds_from_mean, window_size_in_seconds, percent_to_invest,
                          'Kalman', gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment, should_batch_trade)
         self.hedge_ratio_history = []
-        self.lag = 1
+        self.lag = lag
 
     def initialise_historical_data(self, history_p1, history_p2):
         super().initialise_historical_data(history_p1, history_p2)
