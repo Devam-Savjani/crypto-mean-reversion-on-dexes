@@ -1,5 +1,5 @@
 \chapter{Evaluation}
-The design of each strategy and the backtesting system allows for extensive parameterization, providing multiple axes for analysis. Parameters that can be adjusted are at what \# of standard deviations away from the mean spread should a threshold set and a signal to be generated, how the trades are executed, limits on how much gas price should be when executing a trade, , and also the volume of the initial investment. These are all factors that can effect the returns of the trading strategy. In the following sections, we will examine the performance of the strategy by varying these parameters, providing valuable insights into their influence on trading outcomes. For the purpose of data visualisation we denote the liquidity pool pairs by their index:
+The design of each strategy and the backtesting system allow for extensive parameterization, providing multiple axes for analysis. Parameters that can be adjusted are at what number of standard deviations away from the mean spread should a threshold set and a signal to be generated, how the trades are executed, limits on how much gas price should be when executing a trade, and also the volume of the initial investment. These are all factors that can effect the returns of the trading strategy. In the following sections, we will examine the performance of the strategy by varying these parameters, providing valuable insights into their influence on trading outcomes. For the purpose of data visualisation we denote the liquidity pool pairs by their index:
 \begin{table}[!ht]
     \centering
     \begin{adjustwidth}{-0.5in}{-0.9in}
@@ -16,15 +16,15 @@ The design of each strategy and the backtesting system allows for extensive para
     \end{adjustwidth}
     \caption{Liquidity pool pairs and their corresponding labels}
 \end{table}
-\vspace{-2ex}
+\vspace{-4ex}
 \section{Number of Standard Deviations away from the Mean}
 Varying the standard deviation in a mean reversion pairs trading strategy can have a significant impact on the strategy's returns. When the standard deviation threshold is set too high, it means that the spread between the pair's prices must deviate significantly from the mean before a signal is generated. In this case, the strategy may generate fewer trades, resulting in longer holding periods for positions, however this tends to have a greater return per trade. On the other hand, setting a lower standard deviation threshold makes the strategy more sensitive to smaller deviations from the mean. This increases the frequency of trade signals and potentially leads to more active trading. However, it also exposes the strategy to a higher risk of false signals or trading on noise in the price data. It can result in higher transaction costs and potentially lower returns due to increased trading activity, potentially resulting in losses.
 \\[5mm]
-Table \ref{tab:varying_sigma} displays the returns as the standard deviations away from the mean the threshold is set. For the purpose of this experiment the other parameters were; 100 ETH worth of initial investment, the window size set to 30 days, a gas price threshold of 1 ETH (i.e. not having a threshold), the interactions with the blockchain to be seperately executed and finally the lag that the lagged strategy uses is set to 1 hour.
+Table \ref{tab:varying_sigma} displays the returns as the standard deviations away from the mean the threshold is set. For the purpose of this experiment the other parameters were; 100 ETH worth of initial investment, the window size set to 30 days, a gas price threshold of 1 ETH (i.e. not having a threshold), the interactions with the blockchain to be seperately executed and finally the lag that the lagged strategy uses is set to 1 hour. The period that trading occurs is from 18th December 2021 to 9th June 2023.
 \\[5mm]
-We can see that as $\sigma \rightarrow 0$, the number of trades increases however causes the returns to be more negative (and in some cases terminating early with 100\% loss) than positive, likely due to trades being opened when gas fees are substantially larger than the profit. However, if sigma is larger, although the profits from each trade increases, the number of opportunities that were actionable were limited. Another interesting feature that can easily be spotted is that the Constant Hedge Ratio Strategy makes little to no profit in all cases whereas the other strategies perform better as $\sigma \rightarrow \sim2$. Furthermore, all of the strategies return a profit on pool pair 6 with the exception of the Kalman Filter Strategy, albeit with a higher threshold.
+We can see that as $\sigma \rightarrow 0$, the number of trades increases however causes the returns to be more negative (and in some cases terminating early with 100\% loss) than positive, likely due to trades being opened when gas fees are substantially larger than the profit. However, if $\sigma$ is larger, although the profits from each trade increases, the number of opportunities that were actionable were limited. Another interesting feature that can easily be spotted is that the Constant Hedge Ratio Strategy makes little to no profit in all cases whereas the other strategies perform better as $\sigma \rightarrow \sim2$. Furthermore, all of the strategies return a profit on pool pair 6 with the exception of the Kalman Filter Strategy, albeit with a higher threshold.
 \\[5mm]
-Consistent profit among all of the pool pairs, excluding pool pair 6, is also achieved at different $\sigma$s. The Kalman Filter becomes largely profitable at $\sigma = 1.5$, whereas the lagged, sliding window and granger causality strategies become profitable at $\sigma = 2$. This is highly due to the fact that the Kalman Filter is better able to find underlying trends thus being better at selecting the hedge ratio.
+Consistent profit among all of the pool pairs, excluding pool pair 6, is also achieved at different $\sigma$s. We can see in Figure \ref{fig:varyStd} that the average return across all liquidity pool pairs that each strategy generates at each standard deviation. The Kalman Filter becomes largely profitable at $\sigma = 0.5$, whereas the lagged, sliding window and granger causality strategies become profitable at $\sigma = 2$. This is highly due to the fact that the Kalman Filter is better able to find underlying trends thus being better at selecting the hedge ratio.
 
 \definecolor{green}{RGB}{0,153,0}
 \begin{table}[!ht]
@@ -94,6 +94,14 @@ Consistent profit among all of the pool pairs, excluding pool pair 6, is also ac
     \end{adjustwidth}
     \caption{Returns of various standard deviation thresholds of each strategy \label{tab:varying_sigma}}.
 \end{table}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{evaluation/Images/VaryStd.png}
+    \caption{Plot of Average Return across all pool pairs by the standard deviation}
+    \label{fig:varyStd}
+\end{figure}
+
 \section{Initial Investment Volume}
 
 \section{Window Size}
