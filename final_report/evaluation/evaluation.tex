@@ -425,8 +425,30 @@ Another valuable insight can be seen in Figure \ref{fig:HedgeRatioPerStrat} wher
 
 
 \section{Beta}
+An important metric when evaluating trading strategies or investments that is used in industry is Beta, $\beta$. It measures how correlated the strategy's return is with the market return rate. It is often used as a risk-reward measure, allowing investor to make better decisions when investing, balancing the risk and reward. $\beta$ is defined as $\beta = \frac{Cov(R_M, R_S)}{Var(R_M)}$, where $R_M$ is the market's returns and $R_S$ is the strategy's or stock's returns, the higher the $\beta$ value the more correlated the strategy's return is with the market whereas a lower one, i.e. $\rightarrow - \infty$, the strategy swings the opposing direction to the market. Therefore, in risk neutral strategies, a low absolute value is ideal as it minimizes the risk.
+\\[5mm]
+Therefore, to analyse the $\beta$ of each strategy, the conversion from WETH to USD is used as the strategies use WETH as their base currency. As we can see in Table \ref{tab:betas} the $\beta$s are very close to 0 indicating that the strategy's dependence on the market returns is very low. The low $\beta$ values imply that the trading strategy may be designed to generate returns based on factors other than general market movements. It suggests that the strategy relies more on specific signals, indicators, or market inefficiencies rather than the broader market conditions. This can be advantageous in certain situations, as it may allow the strategy to perform well even when the overall market is experiencing volatility or downturns.
 
+\begin{table}[!htb]
+    \centering
+    \begin{adjustwidth}{-0.8in}{-0.9in}
+        \begin{tabular}{|p{5em}|p{7em}|p{7em}|p{7em}|p{8em}|p{7em}|}\hline
+            Pool Pair & \multicolumn{5}{|c|}{Strategy's Beta, $\beta$} \\\cline{1-6}
+            & Constant & Sliding Window & Lagged & Granger Causality & Kalman Filter\\\cline{2-6}
+            0 & -0.0054 & -0.0083596 & -0.0105042 & -0.0085415 & -0.0085415\\\cline{2-6}
+            1 & -0.0007 & -0.0056642 & -0.0077704 & -0.0061343 & -0.0061343\\\cline{2-6}
+            2 & 0.0002 & -0.0082718 & -0.0100794 & -0.0070316 & -0.0070316\\\cline{2-6}
+            3 & -0.0004 & -0.006005 & -0.0068239 & -0.0048919 & -0.0048919\\\cline{2-6}
+            4 & -0.001 & -0.0074551 & -0.0103428 & -0.0069803 & -0.0069803\\\cline{2-6}
+            5 & -0.0002 & -0.0060318 & -0.0077201 & -0.0049521 & -0.0049521\\\cline{2-6}
+            6 & 0.0003 & 0.0016306 & 0.0031887 & 0.0016742 & 0.0016742\\\hline\hline
+            Average & -0.001037 & -0.005737 & -0.007150 & -0.005265 & -0.005265\\\hline
+        \end{tabular}
+    \end{adjustwidth}
+    \caption{$\beta$s of each strategy \label{tab:betas}}.
+\end{table}
 
 \section{Sharpe Ratio}
+
 
 \section{Comparison with Other results}
