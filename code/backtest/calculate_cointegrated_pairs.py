@@ -1,14 +1,14 @@
-import numpy as np
-from tqdm import tqdm
-import pickle
-import statsmodels.api as sm
-from database_interactions import table_to_df
-from check_liquidity_pool_data import get_pools_max_timestamp
 import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current))
-from constants import CORRELATION_LOWER_LIMIT, CORRELATION_UPPER_LIMIT
+import numpy as np
+from tqdm import tqdm
+import pickle
+import statsmodels.api as sm
+from utils.database_interactions import table_to_df
+from utils.check_liquidity_pool_data import get_pools_max_timestamp
+from utils.constants import CORRELATION_LOWER_LIMIT, CORRELATION_UPPER_LIMIT
 # import seaborn as sn
 # import matplotlib.pyplot as plt
 
@@ -78,27 +78,27 @@ def get_top_n_cointegrated_pairs(correlated_pairs, n=-1, should_save=False):
         return cointegrated_pairs
 
 def save_correlated_pairs(correlated_pairs):
-    with open('historical_data/correlated_pairs.pickle', 'wb') as f:
+    with open('historical_data_scrapers/correlated_pairs.pickle', 'wb') as f:
         pickle.dump(correlated_pairs, f)
 
     f.close()
     return correlated_pairs
 
 def load_correlated_pairs():
-    with open('correlated_pairs.pickle', 'rb') as f:
+    with open('historical_data_scrapers.pickle', 'rb') as f:
         correlated_pairs = pickle.load(f)
         f.close()
 
     return correlated_pairs
 
 def save_cointegrated_pairs(cointegrated_pairs):
-    with open('historical_data/cointegrated_pairs.pickle', 'wb') as f:
+    with open('historical_data_scrapers/cointegrated_pairs.pickle', 'wb') as f:
         pickle.dump(cointegrated_pairs, f)
 
     f.close()
     return cointegrated_pairs
 
-def load_cointegrated_pairs(path='historical_data/cointegrated_pairs.pickle'):
+def load_cointegrated_pairs(path='historical_data_scrapers/cointegrated_pairs.pickle'):
     with open(path, 'rb') as f:
         cointegrated_pairs = pickle.load(f)
         f.close()

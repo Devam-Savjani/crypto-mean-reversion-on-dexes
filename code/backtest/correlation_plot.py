@@ -1,14 +1,16 @@
 import sys
-sys.path.append('./historical_data')
-from database_interactions import table_to_df
+import os
+current = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(current))
 import seaborn as sn
 import matplotlib.pyplot as plt
 import numpy as np
-from constants import CORRELATION_LOWER_LIMIT, CORRELATION_UPPER_LIMIT, LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
+from utils.database_interactions import table_to_df
+from utils.constants import CORRELATION_LOWER_LIMIT, CORRELATION_UPPER_LIMIT, LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
 
 def get_correlation_matrix(pools=None):
     if pools is None:
-        liquidity_pools = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY, path_to_config='historical_data/database.ini')['table_name'].to_list()
+        liquidity_pools = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY, path_to_config='../utils/database.ini')['table_name'].to_list()
     else:
         liquidity_pools = pools
 
@@ -25,7 +27,7 @@ def get_correlation_matrix(pools=None):
         ORDER BY p1.period_start_unix;
     """
 
-    return table_to_df(command=query, path_to_config='historical_data/database.ini').corr().abs()
+    return table_to_df(command=query, path_to_config='../utils/database.ini').corr().abs()
 
 def plot_heatmap():
     corr_matrix = get_correlation_matrix()

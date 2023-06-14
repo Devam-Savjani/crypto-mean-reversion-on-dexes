@@ -1,11 +1,11 @@
 import statsmodels.api as sm
-import abstract_strategy
 import numpy as np
 from pykalman import KalmanFilter
 import sys
 sys.path.append('./strategies')
+from strategies.abstract_strategy import Abstract_Strategy
 
-class Kalman_Filter_Strategy(abstract_strategy.Abstract_Strategy):
+class Kalman_Filter_Strategy(Abstract_Strategy):
     def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment, should_batch_trade):
         super().__init__(number_of_sds_from_mean, window_size_in_seconds, percent_to_invest,
                          'Kalman', gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment, should_batch_trade)

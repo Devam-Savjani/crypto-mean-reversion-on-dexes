@@ -1,6 +1,11 @@
-from graphql_client import GraphqlClient
+import sys
+import os
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(os.path.realpath(current))
+sys.path.append(os.path.dirname(parent))
 import json
-from database_interactions import drop_table, create_table, insert_rows
+from utils.graphql_client import GraphqlClient
+from utils.database_interactions import drop_table, create_table, insert_rows
 
 gq_client = GraphqlClient(
     endpoint='https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',

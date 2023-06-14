@@ -1,11 +1,7 @@
 from datetime import datetime, timedelta
 import time
-from database_interactions import table_to_df
-import sys
-import os
-current = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.dirname(current))
-from constants import LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
+from utils.database_interactions import table_to_df
+from utils.constants import LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
 
 def get_pools_max_timestamp():
     ydays_date = datetime.now().date() - timedelta(days=1)

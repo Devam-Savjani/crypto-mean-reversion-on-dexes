@@ -1,15 +1,16 @@
-from graphql_client import GraphqlClient
+import sys
+import os
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(os.path.realpath(current))
+sys.path.append(os.path.dirname(parent))
 import json
 import logging
 import pandas as pd
 from tqdm import tqdm
 import time
-from database_interactions import table_to_df, drop_table, create_table, insert_rows
-import sys
-import os
-current = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.dirname(current))
-from constants import LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
+from utils.graphql_client import GraphqlClient
+from utils.database_interactions import table_to_df, drop_table, create_table, insert_rows
+from utils.constants import LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
 
 
 gq_client = GraphqlClient(

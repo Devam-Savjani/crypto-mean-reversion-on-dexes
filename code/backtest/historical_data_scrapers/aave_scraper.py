@@ -1,15 +1,16 @@
-from graphql_client import GraphqlClient
+import sys
+import os
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(os.path.realpath(current))
+sys.path.append(os.path.dirname(parent))
 import json
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from datetime import datetime
-from database_interactions import table_to_df, drop_table, create_table, insert_rows
-import sys
-import os
-current = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.dirname(current))
-from constants import LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY
+from utils.graphql_client import GraphqlClient
+from utils.database_interactions import table_to_df, drop_table, create_table, insert_rows
+from utils.constants import LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY
 
 
 def get_block_data(symbol, gq_client, prev_max_time=0):
