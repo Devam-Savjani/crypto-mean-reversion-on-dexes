@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 import time
-from database_interactions import table_to_df
-from constants import LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
+from utils.database_interactions import table_to_df
+from utils.constants import LIQUIDITY_POOLS_OF_INTEREST_TABLENAMES_QUERY
 
 def get_pools_max_timestamp():
-    ydays_date = datetime.now().date() - timedelta(days=1)
+    ydays_date = datetime.now().date() - timedelta(days=9)
     ydays_timestamp = int(time.mktime(ydays_date.timetuple()))
 
     df = table_to_df(command=f"""
@@ -24,7 +24,7 @@ def get_pools_max_timestamp():
             END $$;
 
             SELECT table_name FROM get_max_timestamp() WHERE max_timestamp >= {ydays_timestamp};
-            """, path_to_config='./utils/database.ini')
+            """, path_to_config='../utils/database.ini')
 
     return df
 

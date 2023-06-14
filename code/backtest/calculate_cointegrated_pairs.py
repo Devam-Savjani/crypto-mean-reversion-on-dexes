@@ -9,8 +9,8 @@ import statsmodels.api as sm
 from utils.database_interactions import table_to_df
 from utils.check_liquidity_pool_data import get_pools_max_timestamp
 from utils.constants import CORRELATION_LOWER_LIMIT, CORRELATION_UPPER_LIMIT
-# import seaborn as sn
-# import matplotlib.pyplot as plt
+import seaborn as sn
+import matplotlib.pyplot as plt
 
 def get_correlation_matrix():
     liquidity_pools = get_pools_max_timestamp()['table_name'].to_list()
@@ -30,16 +30,13 @@ def get_correlation_matrix():
 
     return table_to_df(command=query, path_to_config='../utils/database.ini').corr()
 
-def get_correlated_pairs(should_save=True):
+def get_correlated_pairs():
     corr_matrix = get_correlation_matrix()
     # sn.heatmap(corr_matrix, annot = True, fmt='.4f')
     # plt.xticks(fontsize = 8) 
     # plt.show()
     filteredDf = corr_matrix[((CORRELATION_LOWER_LIMIT < corr_matrix)) & (corr_matrix < CORRELATION_UPPER_LIMIT)]
 
-    if should_save:
-        return save_correlated_pairs(list(filteredDf.unstack().dropna().drop_duplicates().index))
-    
     return list(filteredDf.unstack().dropna().drop_duplicates().index)
 
 def is_cointegrated(p1, p2):
@@ -67,38 +64,18 @@ def get_top_n_cointegrated_pairs(correlated_pairs, n=-1, should_save=False):
         if is_pair_cointegrated:
             cointegrated_pairs.append(pair)
             if len(cointegrated_pairs) == n:
-                if should_save:
-                    return save_cointegrated_pairs(cointegrated_pairs)
-                else:
-                    return cointegrated_pairs
+                return cointegrated_pairs
 
-    if should_save:
-        return save_cointegrated_pairs(cointegrated_pairs)
-    else:
-        return cointegrated_pairs
-
-def save_correlated_pairs(correlated_pairs):
-    with open('historical_data_scrapers/correlated_pairs.pickle', 'wb') as f:
-        pickle.dump(correlated_pairs, f)
-
-    f.close()
-    return correlated_pairs
-
-def load_correlated_pairs():
-    with open('historical_data_scrapers.pickle', 'rb') as f:
-        correlated_pairs = pickle.load(f)
-        f.close()
-
-    return correlated_pairs
+    return cointegrated_pairs
 
 def save_cointegrated_pairs(cointegrated_pairs):
-    with open('historical_data_scrapers/cointegrated_pairs.pickle', 'wb') as f:
+    with open('utils/cointegrated_pairs.pickle', 'wb') as f:
         pickle.dump(cointegrated_pairs, f)
 
     f.close()
     return cointegrated_pairs
 
-def load_cointegrated_pairs(path='historical_data_scrapers/cointegrated_pairs.pickle'):
+def load_cointegrated_pairs(path='utils/cointegrated_pairs.pickle'):
     with open(path, 'rb') as f:
         cointegrated_pairs = pickle.load(f)
         f.close()
@@ -107,12 +84,12 @@ def load_cointegrated_pairs(path='historical_data_scrapers/cointegrated_pairs.pi
 
 if __name__ == "__main__":
     use_pickled_cointegrated_pairs = False
-    should_save = True
+    should_save = False
 
     if use_pickled_cointegrated_pairs:
         cointegrated_pairs = load_cointegrated_pairs()
     else:
-        correlated_pairs = get_correlated_pairs(should_save=should_save)
+        correlated_pairs = get_correlated_pairs()
         cointegrated_pairs = get_top_n_cointegrated_pairs(correlated_pairs=correlated_pairs, should_save=should_save)
 
     print(*cointegrated_pairs, sep="\n")

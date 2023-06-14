@@ -1,0 +1,1 @@
+0 * * * * (cd /Users/devamsavjani/Documents/Imperial/Year_4/MEngIndividualProject/code/live && /usr/local/bin/python3 get_price_data.py) >> cron.log 2>&1

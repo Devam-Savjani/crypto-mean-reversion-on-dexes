@@ -423,7 +423,7 @@ class Backtest():
         return return_percent
 
 
-cointegrated_pairs = load_cointegrated_pairs('historical_data_scrapers/cointegrated_pairs.pickle')
+cointegrated_pairs = load_cointegrated_pairs('../utils/cointegrated_pairs.pickle')
 
 print(*cointegrated_pairs, sep="\n")
 
@@ -579,9 +579,7 @@ for idx, cointegrated_pair in enumerate(pairs):
             f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[91m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
     
     apy_adj = ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365*24*60*60))
-
     foo = [constant_return_percent, sw_return_percent, lagged_return_percent, gc_return_percent, kf_return_percent]
-
     returns.loc[idx] = [((100 * (((r / 100) + 1)**(1 / apy_adj))) - 100) for r in foo]
 
     #### Prints for Tables
@@ -598,7 +596,7 @@ for idx, cointegrated_pair in enumerate(pairs):
 
     # results.append(to_print)
 
-    font_size = 13
+    # font_size = 13
 
     #### Plot for Account History
     # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_constant_hr.times]), backtest_constant_hr.account_value_history, label='Constant')
@@ -725,5 +723,5 @@ for idx, cointegrated_pair in enumerate(pairs):
 # sharpe_ratios.loc['avg'] = sharpe_ratios.mean()
 # print(sharpe_ratios)
 
-returns.loc['avg'] = returns.mean()
-print(returns)
+# returns.loc['avg'] = returns.mean()
+# print(returns)
