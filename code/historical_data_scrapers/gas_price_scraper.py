@@ -1,8 +1,7 @@
 import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(os.path.realpath(current))
-sys.path.append(os.path.dirname(parent))
+sys.path.append(os.path.dirname(current))
 import json
 import logging
 import pandas as pd
@@ -82,7 +81,7 @@ def reinitialise_gas_price_data():
             END $$;
 
             SELECT min_timestamp FROM get_min_timestamp();
-        """)
+        """, path_to_config='utils/database.ini')
     
     drop_table(table_name)
     create_table(table_name, [('timestamp', 'BIGINT'), ('gas_price_wei', 'NUMERIC')])
@@ -94,7 +93,7 @@ def refresh_gas_price_data():
     table_name = 'gas_prices'
 
     df = table_to_df(
-        command=f'SELECT max(timestamp) as max_period_start_unix FROM {table_name};')
+        command=f'SELECT max(timestamp) as max_period_start_unix FROM {table_name};', path_to_config='utils/database.ini')
     
     rows = get_block_data(table_name, df['max_period_start_unix'].iloc[0] if df['max_period_start_unix'].iloc[0] is not None else 0, int(time.time() - (time.time() % (60 * 60))))
 

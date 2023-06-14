@@ -187,7 +187,7 @@ def insert_rows(table_name, rows, should_print=False):
             if should_print:
                 print('Database connection closed.')
 
-def table_to_df(table_name=None, command=None, should_print=False, path_to_config='../utils/database.ini'):
+def table_to_df(path_to_config, table_name=None, command=None, should_print=False):
     engine = None
     command = command if command is not None else f"SELECT * FROM {table_name};"
     try:
@@ -262,7 +262,7 @@ if __name__ == '__main__':
     # create_table('liquidity_pools', [('pool_address', 'VARCHAR(255)'), ('token0', 'VARCHAR(255)'), ('token1', 'VARCHAR(255)'), ('volume_USD', 'VARCHAR(255)'), ('created_At_Timestamp', 'BIGINT')])
 
     insert_rows('liquidity_pools', [('0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801','UNI','WETH','4296011283.605405753201057482744276','1620157956'), ('0x6c6bc977e13df9b0de53b251522280bb72383700','DAI','USDC','7181443762.93080360608231664706628','1620158293')])
-    df = table_to_df('liquidity_pools')
+    df = table_to_df('liquidity_pools', path_to_config='./utils/database.ini')
     print(df.shape)
     print(df.dtypes)
     # drop_table('liquidity_pools')

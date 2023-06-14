@@ -1,8 +1,7 @@
 import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(os.path.realpath(current))
-sys.path.append(os.path.dirname(parent))
+sys.path.append(os.path.dirname(current))
 import json
 import pandas as pd
 import numpy as np
@@ -62,7 +61,7 @@ def get_block_data(symbol, gq_client, prev_max_time=0):
 
 def reinitialise_borrowing_rates_data():
 
-    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
+    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY, path_to_config='utils/database.ini')
 
     tokens = np.unique(pd.concat([df['token0'], df['token1']]))
 
@@ -95,11 +94,11 @@ def refresh_borrowing_rates_data():
         headers={}
     )
 
-    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
+    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY, path_to_config='utils/database.ini')
     tokens = np.unique(pd.concat([df['token0'], df['token1']]))
 
     tables = list(table_to_df(
-        command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public'")['tablename'])
+        command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public'", path_to_config='utils/database.ini')['tablename'])
 
     for token in tqdm(tokens):
         token_lower = token.lower()
@@ -107,7 +106,7 @@ def refresh_borrowing_rates_data():
 
         if table_name in tables:
             df = table_to_df(
-                command=f'SELECT max(id) as max_id, max(timestamp) as max_timestamp FROM {table_name};')
+                command=f'SELECT max(id) as max_id, max(timestamp) as max_timestamp FROM {table_name};', path_to_config='utils/database.ini')
             rows = get_block_data(token, gq_client=gq_client_aave_v3,
                                   prev_max_time=df['max_timestamp'].iloc[0])
             if len(rows) > 0:

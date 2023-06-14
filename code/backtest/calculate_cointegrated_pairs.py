@@ -28,7 +28,7 @@ def get_correlation_matrix():
         ORDER BY p1.period_start_unix;
     """
 
-    return table_to_df(command=query).corr()
+    return table_to_df(command=query, path_to_config='../utils/database.ini').corr()
 
 def get_correlated_pairs(should_save=True):
     corr_matrix = get_correlation_matrix()
@@ -47,7 +47,7 @@ def is_cointegrated(p1, p2):
                 SELECT p1.period_start_unix as period_start_unix, p1.id as p1_id, p1.{'token1_price' if p1.split('_')[0] != 'WETH' else 'token0_price'} as p1_token_price, p2.id as p2_id, p2.{'token1_price' if p2.split('_')[0] != 'WETH' else 'token0_price'} as p2_token_price
                 FROM "{p1}" as p1 INNER JOIN "{p2}" as p2
                 ON p1.period_start_unix = p2.period_start_unix;
-                """)
+                """, path_to_config='../utils/database.ini')
 
     result = sm.tsa.stattools.coint(merged['p1_token_price'], merged['p2_token_price'])
 

@@ -83,7 +83,7 @@ def get_block_data(pool_address, table_name, prev_max_time=0):
 def reinitialise_all_liquidity_pool_data():
     drop_all_tables_given_condition("tablename LIKE '%_%_0x%'")
 
-    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
+    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY, path_to_config='utils/database.ini')
     logger.info('Begining to reinitialise liquidity pool data tables')
 
     for _, row in tqdm(df.iterrows(), total=df.shape[0]):
@@ -101,10 +101,10 @@ def reinitialise_all_liquidity_pool_data():
 
 def refresh_liquidity_pool_data():
 
-    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY)
+    df = table_to_df(command=LIQUIDITY_POOLS_OF_INTEREST_TABLE_QUERY, path_to_config='utils/database.ini')
 
     df_liquidity_pool_tables = list(table_to_df(
-        command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%_%_0x%'")['tablename'])
+        command=f"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%_%_0x%'", path_to_config='utils/database.ini')['tablename'])
     df_liquidity_pool_tables = ['"' + tn +
                                 '"' for tn in df_liquidity_pool_tables]
     logger.info('Refreshing liquidity pool data tables')
@@ -115,7 +115,7 @@ def refresh_liquidity_pool_data():
 
         if table_name in df_liquidity_pool_tables:
             df = table_to_df(
-                command=f'SELECT max(id) as max_id, max(period_start_unix) as max_period_start_unix FROM {table_name};')
+                command=f'SELECT max(id) as max_id, max(period_start_unix) as max_period_start_unix FROM {table_name};', path_to_config='utils/database.ini')
             rows = get_block_data(
                 row['pool_address'], table_name, df['max_period_start_unix'].iloc[0])
 
