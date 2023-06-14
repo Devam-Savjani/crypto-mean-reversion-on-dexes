@@ -17,10 +17,7 @@ from strategies.granger_causality_strategy import Granger_Causality_Strategy
 from tqdm import tqdm
 from utils.database_interactions import table_to_df
 from utils.constants import GAS_USED_BY_SWAP, GAS_USED_BY_BUYING_ETH, GAS_USED_BY_DEPOSITING_COLLATERAL, GAS_USED_BY_WITHDRAWING_COLLATERAL, GAS_USED_BY_BORROW, GAS_USED_BY_REPAY, GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION, GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION
-
-
-def days_to_seconds(days): return int(days * 24 * 60 * 60)
-
+from utils.helpers import days_to_seconds
 
 class Backtest():
     def __init__(self):
