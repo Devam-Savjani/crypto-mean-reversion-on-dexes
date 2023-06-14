@@ -18,13 +18,13 @@ The design of each strategy and the backtesting system allow for extensive param
 \end{table}
 \vspace{-4ex}
 \section{Number of Standard Deviations away from the Mean}
-Varying the standard deviation in a mean reversion pairs trading strategy can have a significant impact on the strategy's returns. When the standard deviation threshold is set too high, it means that the spread between the pair's prices must deviate significantly from the mean before a signal is generated. In this case, the strategy may generate fewer trades, resulting in longer holding periods for positions, however this tends to have a greater return per trade. On the other hand, setting a lower standard deviation threshold makes the strategy more sensitive to smaller deviations from the mean. This increases the frequency of trade signals and potentially leads to more active trading. However, it also exposes the strategy to a higher risk of false signals or trading on noise in the price data. It can result in higher transaction costs and potentially lower returns due to increased trading activity, potentially resulting in losses.
+Varying the standard deviation in a mean reversion pairs trading strategy can have a significant impact on the strategy's returns. When the number of standard deviations is set too high, it means that the spread between the pair's prices must deviate significantly from the mean before a signal is generated. In this case, the strategy may generate fewer trades, resulting in longer holding periods for positions, however this tends to have a greater return per trade. On the other hand, setting a lower number of standard deviations makes the strategy more sensitive to smaller deviations from the mean. This increases the frequency of trade signals and potentially leads to more active trading. However, it also exposes the strategy to a higher risk of false signals or trading on noise in the price data. It can result in higher transaction costs and potentially lower returns due to increased trading activity, potentially resulting in losses. For the purpose of simplicity, $\#_{\sigma}$ denotes this parameter.
 \\[5mm]
 Table \ref{tab:varying_sigma} displays the returns as the standard deviations away from the mean the threshold is set. For the purpose of this experiment the other parameters were; 100 ETH worth of initial investment, the window size set to 30 days, a gas price threshold of 1 ETH (i.e. not having a threshold), the interactions with the blockchain to be seperately executed and finally the lag that the lagged strategy uses is set to 1 hour. The period that trading occurs is from 18th December 2021 to 9th June 2023.
 \\[5mm]
-We can see that as $\sigma \rightarrow 0$, the number of trades increases however causes the returns to be more negative (and in some cases terminating early with 100\% loss) than positive, likely due to trades being opened when gas fees are substantially larger than the profit. However, if $\sigma$ is larger, although the profits from each trade increases, the number of opportunities that were actionable were limited. Another interesting feature that can easily be spotted is that the Constant Hedge Ratio Strategy makes little to no profit in all cases whereas the other strategies perform better as $\sigma \rightarrow \sim2$. Furthermore, all of the strategies return a profit on pool pair 6 with the exception of the Kalman Filter Strategy, albeit with a higher threshold.
+We can see that as $\#_{\sigma} \rightarrow 0$, the number of trades increases however causes the returns to be more negative (and in some cases terminating early with 100\% loss) than positive, likely due to trades being opened when gas fees are substantially larger than the profit. However, if $\#_{\sigma}$ is larger, although the profits from each trade increases, the number of opportunities that were actionable were limited. Another interesting feature that can easily be spotted is that the Constant Hedge Ratio Strategy makes little to no profit in all cases whereas the other strategies perform better as $\#_{\sigma} \rightarrow \sim2$. Furthermore, all of the strategies return a profit on pool pair 6 with the exception of the Kalman Filter Strategy, albeit with a higher threshold.
 \\[5mm]
-Consistent profit among all of the pool pairs, excluding pool pair 6, is also achieved at different $\sigma$s. We can see in Figure \ref{fig:varyStd} that the average return across all liquidity pool pairs that each strategy generates at each standard deviation. The Kalman Filter becomes largely profitable at $\sigma = 0.5$, whereas the lagged, sliding window and granger causality strategies become profitable at $\sigma = 2$. This is highly due to the fact that the Kalman Filter is better able to find underlying trends thus being better at selecting the hedge ratio.
+Consistent profit among all of the pool pairs, excluding pool pair 6, is also achieved at different $\#_{\sigma}$s. We can see in Figure \ref{fig:varyStd} that the average return across all liquidity pool pairs that each strategy generates at each standard deviation. The Kalman Filter becomes largely profitable at $\#_{\sigma} = 0.5$, whereas the lagged, sliding window and granger causality strategies become profitable at $\#_{\sigma} = 2$. This is highly due to the fact that the Kalman Filter is better able to find underlying trends thus being better at selecting the hedge ratio.
 
 \definecolor{green}{RGB}{0,153,0}
 \begin{table}[!htb]
@@ -214,7 +214,7 @@ Overall, the analysis of varying gas price thresholds reveals that adjusting the
 \section{Initial Investment Volume}
 Another import factor that contributes to the profit is the initial investment therefore Table \ref{tab:VaryInitialInvestments} and Figure \ref{fig:VaryInitialInvestments} displays the returns obtained by various initial investments. It can immediately be seen that the higher the investment, the greater the return. However, the smallest investments fall to a loss immediately for all strategies, this is because the fee that are incurred by gas fees are fixed regardless of the volume whereas the costs incurred by Aave and Uniswap are proportional to the volume being traded. This fixed fee means that a greater volume is required to cover the cost of the gas fee in order to generate profit, which is of course proportional to the volume being traded. Hence, as the investment increases the return increases however, begins to platau after 25ETH as the fixed fee becomes negligible in comparison to the investment.
 \\[5mm]
-Upon comparing the different strategies, the Kalman Filter is able to generate a profit with least amount of investment, followed by the Lagged strategy, then, interestingly, the Granger Causality and Sliding Window strategies perform exactly the same and finally the Constant strategy fails to make any money with any investment. This similarity between the Granger Causality and Sliding Window strategies is also evident in the other sections showing similar returns and trends as can be seen in Figures \ref{fig:VaryGasPriceThresholds} and \ref{fig:varyStd}.
+Upon comparing the different strategies, the Kalman Filter is able to generate a profit with least amount of investment, followed by the Lagged strategy, then, interestingly, the Granger Causality and Sliding Window strategies perform exactly the same and finally the Constant strategy fails to make any money with any investment. This similarity between the Granger Causality and Sliding Window strategies is also evident in the other sections showing similar returns and trends as can be seen in Figures \ref{fig:varyStd} and \ref{fig:VaryGasPriceThresholds}.
 
 \begin{figure}[H]
     \centering
@@ -292,8 +292,140 @@ Upon comparing the different strategies, the Kalman Filter is able to generate a
 \end{table}
 
 \section{Window Size}
+The final parameter that also has an effect on the returns is the window size. This window size is used when calculating the mean and standard deviation that are used to calculate the thresholds. As we can see in the excerpt below, the greater the window size, the more data the strategy would use to calculate the thresholds.
+\vspace{5mm}
+\begin{lstlisting}[language=Python]
+spread = self.history_p1[-self.window_size_in_hours:] - self.hedge_ratio * self.history_p2[-self.window_size_in_hours:]
+spread_mean = spread.mean()
+spread_std = spread.std()
+self.upper_threshold = spread_mean + self.number_of_sds_from_mean * spread_std
+self.lower_threshold = spread_mean - self.number_of_sds_from_mean * spread_std
+\end{lstlisting}
+\vspace{5mm}
+To evaluate how the window size effects the returns, backtesting is conducted over the period 9th June 2022 to the 9th June 2023, exactly 1 year. The results can be found in Table \ref{tab:VaryWS} and Figure \ref{fig:VaryWS} where we can see that, as the window sizes increase, the returns increase however for the smaller window sizes, the return are more eratic and volatile. This volatility decreases as the window size is increases platauing to each strategies respective returns.
+\\[5mm]
+It is also interesting to see that in this period of trading the Kalman Filter performs the worst which is surprising as in has outperformed each of the strategies in the experiment that have been previously mentioned.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{evaluation/Images/VarWS.png}
+    \caption{Average Returns of each strategy using different Window Sizes}
+    \label{fig:VaryWS}
+\end{figure}
+
+\begin{table}[!htb]
+    \centering
+    \begin{adjustwidth}{-0.8in}{-0.9in}
+        \begin{tabular}{|p{4em}|p{2em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|}\hline
+            Window Size & Pool Pair & \multicolumn{10}{|c|}{Strategy's Return} \\\cline{3-12}
+            &   & \multicolumn{2}{|c|}{Constant} & \multicolumn{2}{|c|}{Sliding Window} & \multicolumn{2}{|c|}{Lagged} & \multicolumn{2}{|c|}{Granger Causality} & \multicolumn{2}{|c|}{Kalman Filter}\\\cline{3-12}
+            & & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades\\\hline
+
+            & 0 & \textcolor{green}{29.57} & 287 & \textcolor{green}{42.3} & 230 & \textcolor{green}{73.88} & 233 & \textcolor{green}{30.42} & 252 & \textcolor{green}{23.53} & 271\\\cline{3-12}
+            & 1 & \textcolor{red}{-0.77} & 182 & \textcolor{green}{5.81} & 150 & \textcolor{green}{26.1} & 175 & \textcolor{green}{1.27} & 144 & \textcolor{green}{1.48} & 142\\\cline{3-12}
+            & 2 & \textcolor{green}{33.63} & 252 & \textcolor{green}{31.28} & 220 & \textcolor{green}{66.32} & 205 & \textcolor{green}{27.2} & 214 & \textcolor{green}{22.12} & 211\\\cline{3-12}
+            7 days & 3 & \textcolor{red}{-8.07} & 185 & \textcolor{green}{1.44} & 151 & \textcolor{green}{22.42} & 168 & \textcolor{red}{-3.93} & 146 & \textcolor{red}{-0.98} & 141\\\cline{3-12}
+            & 4 & \textcolor{green}{25.2} & 249 & \textcolor{green}{35.35} & 225 & \textcolor{green}{72.91} & 226 & \textcolor{green}{23.7} & 231 & \textcolor{green}{32.57} & 249\\\cline{3-12}
+            & 5 & \textcolor{green}{5.04} & 132 & \textcolor{green}{9.19} & 113 & \textcolor{green}{41.86} & 132 & \textcolor{green}{7.02} & 103 & \textcolor{green}{4.98} & 108\\\cline{3-12}
+            & 6 & \textcolor{red}{-15.21} & 42 & \textcolor{red}{-5.42} & 40 & \textcolor{green}{12.7} & 35 & \textcolor{red}{-9.84} & 34 & \textcolor{red}{-29.19} & 62\\\hline\hline
+
+            & 0 & \textcolor{green}{15.64} & 249 & \textcolor{green}{18.97} & 221 & \textcolor{green}{53.47} & 233 & \textcolor{green}{15.29} & 254 & \textcolor{green}{16.32} & 220\\\cline{3-12}
+            & 1 & \textcolor{red}{-2.75} & 161 & \textcolor{green}{1.28} & 127 & \textcolor{green}{15.18} & 154 & \textcolor{red}{-4.86} & 136 & \textcolor{red}{-6.22} & 124\\\cline{3-12}
+            & 2 & \textcolor{green}{12.32} & 223 & \textcolor{green}{20.42} & 204 & \textcolor{green}{44.04} & 228 & \textcolor{green}{14.21} & 201 & \textcolor{green}{9.71} & 203\\\cline{3-12}
+            14 days & 3 & \textcolor{red}{-15.12} & 176 & \textcolor{red}{-6.42} & 132 & \textcolor{green}{6.98} & 161 & \textcolor{red}{-13.09} & 131 & \textcolor{red}{-17.25} & 159\\\cline{3-12}
+            & 4 & \textcolor{green}{20.55} & 220 & \textcolor{green}{22.92} & 188 & \textcolor{green}{46.76} & 197 & \textcolor{green}{16.48} & 208 & \textcolor{green}{18.3} & 182\\\cline{3-12}
+            & 5 & \textcolor{green}{0.95} & 123 & \textcolor{green}{8.35} & 95 & \textcolor{green}{21.37} & 125 & \textcolor{green}{2.81} & 102 & \textcolor{red}{-1.34} & 105\\\cline{3-12}
+            & 6 & \textcolor{red}{-13.59} & 29 & \textcolor{red}{-5.78} & 31 & \textcolor{green}{9.48} & 20 & \textcolor{red}{-6.5} & 31 & \textcolor{red}{-13.93} & 32\\\hline\hline
+            
+            & 0 & \textcolor{green}{21.12} & 207 & \textcolor{green}{32.86} & 205 & \textcolor{green}{61.17} & 197 & \textcolor{green}{18.65} & 237 & \textcolor{green}{29.15} & 254\\\cline{3-12}
+            & 1 & \textcolor{red}{-15.8} & 198 & \textcolor{green}{12.41} & 111 & \textcolor{green}{27.29} & 117 & \textcolor{red}{-1.61} & 135 & \textcolor{red}{-8.44} & 153\\\cline{3-12}
+            & 2 & \textcolor{green}{22.24} & 155 & \textcolor{green}{35.21} & 136 & \textcolor{green}{55.67} & 142 & \textcolor{green}{16.04} & 148 & \textcolor{green}{17.91} & 170\\\cline{3-12}
+            30 days & 3 & \textcolor{red}{-15.71} & 178 & \textcolor{green}{9.32} & 101 & \textcolor{green}{22.54} & 114 & \textcolor{red}{-4.67} & 113 & \textcolor{red}{-12.4} & 155\\\cline{3-12}
+            & 4 & \textcolor{green}{21.07} & 180 & \textcolor{green}{41.27} & 137 & \textcolor{green}{58.07} & 132 & \textcolor{green}{26.92} & 172 & \textcolor{green}{26.21} & 186\\\cline{3-12}
+            & 5 & \textcolor{green}{0.13} & 140 & \textcolor{green}{17.82} & 81 & \textcolor{green}{36.66} & 81 & \textcolor{green}{7.29} & 92 & \textcolor{red}{-2.01} & 129\\\cline{3-12}
+            & 6 & \textcolor{red}{-3.69} & 21 & \textcolor{red}{-1.22} & 24 & \textcolor{green}{7.03} & 15 & \textcolor{red}{-9.98} & 21 & \textcolor{red}{-9.14} & 20\\\hline\hline
+
+            & 0 & \textcolor{green}{23.26} & 232 & \textcolor{green}{39.1} & 234 & \textcolor{green}{53.18} & 233 & \textcolor{green}{33.79} & 237 & \textcolor{green}{21.36} & 233\\\cline{3-12}
+            & 1 & \textcolor{red}{-1.49} & 118 & \textcolor{green}{6.38} & 112 & \textcolor{green}{24.68} & 106 & \textcolor{green}{0.67} & 128 & \textcolor{red}{-1.68} & 112\\\cline{3-12}
+            & 2 & \textcolor{green}{19.33} & 88 & \textcolor{green}{27.29} & 79 & \textcolor{green}{49.65} & 72 & \textcolor{green}{19.62} & 83 & \textcolor{green}{17.2} & 75\\\cline{3-12}
+            60 days & 3 & \textcolor{green}{2.29} & 80 & \textcolor{green}{9.32} & 61 & \textcolor{green}{35.81} & 53 & \textcolor{green}{5.01} & 65 & \textcolor{red}{-2.89} & 75\\\cline{3-12}
+            & 4 & \textcolor{green}{25.53} & 105 & \textcolor{green}{40.58} & 97 & \textcolor{green}{57.12} & 93 & \textcolor{green}{25.4} & 115 & \textcolor{green}{25.95} & 98\\\cline{3-12}
+            & 5 & \textcolor{green}{12.35} & 53 & \textcolor{green}{32.81} & 44 & \textcolor{green}{41.18} & 47 & \textcolor{green}{15.33} & 54 & \textcolor{green}{14.45} & 48\\\cline{3-12}
+            & 6 & \textcolor{red}{-7.43} & 24 & \textcolor{red}{-4.33} & 24 & \textcolor{red}{-4.71} & 24 & \textcolor{red}{-10.57} & 26 & \textcolor{red}{-6.3} & 25\\\hline\hline
+
+            & 0 & \textcolor{green}{26.57} & 269 & \textcolor{green}{45.71} & 272 & \textcolor{green}{51.48} & 266 & \textcolor{green}{29.2} & 265 & \textcolor{green}{27.05} & 271\\\cline{3-12}
+            & 1 & \textcolor{green}{3.09} & 111 & \textcolor{green}{9.17} & 109 & \textcolor{green}{19.79} & 114 & \textcolor{green}{2.62} & 116 & \textcolor{green}{0.42} & 110\\\cline{3-12}
+            & 2 & \textcolor{green}{24.38} & 54 & \textcolor{green}{31.02} & 51 & \textcolor{green}{40.09} & 51 & \textcolor{green}{22.79} & 52 & \textcolor{green}{20.87} & 49\\\cline{3-12}
+            90 days & 3 & \textcolor{green}{10.46} & 57 & \textcolor{green}{19.31} & 49 & \textcolor{green}{28.97} & 46 & \textcolor{green}{8.07} & 47 & \textcolor{green}{5.11} & 47\\\cline{3-12}
+            & 4 & \textcolor{green}{32.58} & 85 & \textcolor{green}{46.23} & 83 & \textcolor{green}{57.24} & 78 & \textcolor{green}{28.66} & 86 & \textcolor{green}{30.72} & 87\\\cline{3-12}
+            & 5 & \textcolor{green}{16.96} & 51 & \textcolor{green}{24.71} & 50 & \textcolor{green}{49.7} & 47 & \textcolor{green}{16.17} & 55 & \textcolor{green}{12.96} & 52\\\cline{3-12}
+            & 6 & \textcolor{red}{-6.82} & 24 & \textcolor{red}{-8.06} & 26 & \textcolor{red}{-4.12} & 24 & \textcolor{red}{-9.15} & 25 & \textcolor{red}{-8.44} & 25\\\hline
+            
+        \end{tabular}
+    \end{adjustwidth}
+    \caption{Returns of various standard deviation thresholds of each strategy \label{tab:VaryWS}}.
+\end{table}
+
+\section{Evaluation of Strategies}
+Overall, given the experiments conducted the optimal paramters for each strategy are different and thus to evaluate each strategy, the following paramters are used:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{4em}|p{8em}|p{4em}|p{4em}|p{4em}|p{8em}|}
+    \hline
+        Strategy & Number of Standard Deviations from the mean, $\#_{\sigma}$ & Gas Price Threshold in ETH & Initial Investment in ETH & Window Size in Days & Type of Execution, Seperate or Batched \\ \hline
+        Constant & 3 & 4.7E-08 & 100 & 60 & Batched \\ \hline
+        Sliding Window & 2 & 8.83E-08 & 100 & 60 & Batched \\ \hline
+        Lagged & 2 & 1.29E-07 & 100 & 30 & Batched \\ \hline
+        Granger Causality & 2 & 8.83E-08 & 100 & 60 & Batched \\ \hline
+        Kalman Filter & 0.5 & 1.29E-07 & 100 & 30 & Batched \\ \hline
+    \end{tabular}
+    \caption{Optimal Parameters for each strategy \label{tab:OptimParams}}
+\end{table}
+
+By running the backtesting system from 18th December 2021 to 9th June 2023, we can see in Figure \ref{tab:FinalResults} the Kalman Filter outperforms all of the other strategies in all liquidity pool pairs except pair 6. The Lagged strategy has also performed well, whereas the Granger Causality and the Sliding Window strategies also resulting in similar mediocre returns. Finally, the Constant strategy fails to obtain a significantly profitable result as we have seen in the experiments above.
+
+\begin{table}[!htb]
+    \centering
+    \begin{adjustwidth}{-0.8in}{-0.9in}
+        \begin{tabular}{|p{4em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|}\hline
+            Pool Pair & \multicolumn{10}{|c|}{Strategy's Return} \\\cline{2-11}
+            & \multicolumn{2}{|c|}{Constant} & \multicolumn{2}{|c|}{Sliding Window} & \multicolumn{2}{|c|}{Lagged} & \multicolumn{2}{|c|}{Granger Causality} & \multicolumn{2}{|c|}{Kalman Filter}\\\cline{2-11}
+            & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades\\\hline
+            0 & \textcolor{green}{33.47} & 75 & \textcolor{green}{57.95} & 250 & \textcolor{green}{90.51} & 242 & \textcolor{green}{51.77} & 227 & \textcolor{green}{267.18} & 354\\\cline{2-11}
+            1 & \textcolor{red}{-2.46} & 44 & \textcolor{green}{22.35} & 122 & \textcolor{green}{35.75} & 162 & \textcolor{green}{24.11} & 130 & \textcolor{green}{82.26} & 425\\\cline{2-11}
+            2 & \textcolor{red}{-3.5} & 37 & \textcolor{green}{54.08} & 148 & \textcolor{green}{81.65} & 181 & \textcolor{green}{43.86} & 147 & \textcolor{green}{297.14} & 371\\\cline{2-11}
+            3 & \textcolor{red}{-5.97} & 48 & \textcolor{green}{19.87} & 117 & \textcolor{green}{28.08} & 158 & \textcolor{green}{13.84} & 115 & \textcolor{green}{48.13} & 399\\\cline{2-11}
+            4 & \textcolor{green}{6.45} & 40 & \textcolor{green}{56.57} & 146 & \textcolor{green}{88.87} & 175 & \textcolor{green}{52.29} & 170 & \textcolor{green}{270.08} & 363\\\cline{2-11}
+            5 & \textcolor{red}{-2.32} & 34 & \textcolor{green}{31.25} & 100 & \textcolor{green}{44.05} & 127 & \textcolor{green}{25.47} & 104 & \textcolor{green}{96.64} & 366\\\cline{2-11}
+            6 & \textcolor{red}{-1.65} & 3 & \textcolor{red}{-14.4} & 30 & \textcolor{red}{-20.29} & 50 & \textcolor{red}{-15.27} & 28 & \textcolor{red}{-100} & 53\\\hline\hline            
+            Average & \textcolor{green}{1.59} & 40.1 & \textcolor{green}{32.52} & 130.4 & \textcolor{green}{49.8} & 156.4 & \textcolor{green}{28.01} & 131.6 & \textcolor{green}{137.35} & 333\\\hline            
+        \end{tabular}
+    \end{adjustwidth}
+    \caption{Returns of each strategy with their optimal parameters \label{tab:FinalResults}}.
+\end{table}
+
+In addition to this, Figure \ref{fig:ValueHistory} shows the account value over time of each of the strategies, it is easy the see that the account values seem to follow a trend however, the gradients of the return are less drastic in some strategies i.e. the Kalman Filter. It is also notable that the number of profitable trades and decreased since the beginning of 2023, with the Kalman Filter strategy taking a large loss in January of this year, 2023.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{evaluation/Images/ValueHistory.png}
+    \caption{Account Value over Time from backtesting Pair 0}
+    \label{fig:ValueHistory}
+\end{figure}
+
+Another valuable insight can be seen in Figure \ref{fig:HedgeRatioPerStrat} where the evolution of the hedge ratio is plotted for each strategy. It can be seen that the sliding window and the granger causality strategies' hedge ratio is fairly consistent in comparison to the lagged strategy's hedge ratio. However, the Kalman Filter calculates the Hedge Ratio slightly lower and also more constant with only minor deviations, as can be seen in Figure \ref{fig:evolving_hedge_ratio_kf}. This indicates a more persistent relationship between the paired assets. The minor deviations observed in the hedge ratio can be attributed to temporary fluctuations in market dynamics or noise in the data.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{evaluation/Images/HedgeRatioPerStrat.png}
+    \caption{The Hedge Ratio over time for Pair 0}
+    \label{fig:HedgeRatioPerStrat}
+\end{figure}
+
 
 \section{Beta}
+
 
 \section{Sharpe Ratio}
 
