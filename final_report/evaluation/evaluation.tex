@@ -427,7 +427,7 @@ Another valuable insight can be seen in Figure \ref{fig:HedgeRatioPerStrat} wher
 \section{Beta}
 An important metric when evaluating trading strategies or investments that is used in industry is Beta, $\beta$. It measures how correlated the strategy's return is with the market return rate. It is often used as a risk-reward measure, allowing investor to make better decisions when investing, balancing the risk and reward. $\beta$ is defined as $\beta = \frac{Cov(R_M, R_S)}{Var(R_M)}$, where $R_M$ is the market's returns and $R_S$ is the strategy's or stock's returns, the higher the $\beta$ value the more correlated the strategy's return is with the market whereas a lower one, i.e. $\rightarrow - \infty$, the strategy swings the opposing direction to the market. Therefore, in risk neutral strategies, a low absolute value is ideal as it minimizes the risk.
 \\[5mm]
-Therefore, to analyse the $\beta$ of each strategy, the conversion from WETH to USD is used as the strategies use WETH as their base currency. As we can see in Table \ref{tab:betas} the $\beta$s are very close to 0 indicating that the strategy's dependence on the market returns is very low. The low $\beta$ values imply that the trading strategy may be designed to generate returns based on factors other than general market movements. It suggests that the strategy relies more on specific signals, indicators, or market inefficiencies rather than the broader market conditions. This can be advantageous in certain situations, as it may allow the strategy to perform well even when the overall market is experiencing volatility or downturns.
+Therefore, to analyse the $\beta$ of each strategy, the conversion from WETH to USD is used as the strategies use WETH as their base currency. As we can see in Table \ref{tab:betas}, the $\beta$s are very close to 0 indicating that the strategy's dependence on the market returns is very low. The low $\beta$ values imply that the trading strategy may be designed to generate returns based on factors other than general market movements. It suggests that the strategy relies more on specific signals, indicators, or market inefficiencies rather than the broader market conditions. This can be advantageous in certain situations, as it may allow the strategy to perform well even when the overall market is experiencing volatility or downturns.
 
 \begin{table}[!htb]
     \centering
@@ -435,20 +435,41 @@ Therefore, to analyse the $\beta$ of each strategy, the conversion from WETH to 
         \begin{tabular}{|p{5em}|p{7em}|p{7em}|p{7em}|p{8em}|p{7em}|}\hline
             Pool Pair & \multicolumn{5}{|c|}{Strategy's Beta, $\beta$} \\\cline{1-6}
             & Constant & Sliding Window & Lagged & Granger Causality & Kalman Filter\\\cline{2-6}
-            0 & -0.0054 & -0.0083596 & -0.0105042 & -0.0085415 & -0.0085415\\\cline{2-6}
-            1 & -0.0007 & -0.0056642 & -0.0077704 & -0.0061343 & -0.0061343\\\cline{2-6}
-            2 & 0.0002 & -0.0082718 & -0.0100794 & -0.0070316 & -0.0070316\\\cline{2-6}
-            3 & -0.0004 & -0.006005 & -0.0068239 & -0.0048919 & -0.0048919\\\cline{2-6}
-            4 & -0.001 & -0.0074551 & -0.0103428 & -0.0069803 & -0.0069803\\\cline{2-6}
-            5 & -0.0002 & -0.0060318 & -0.0077201 & -0.0049521 & -0.0049521\\\cline{2-6}
-            6 & 0.0003 & 0.0016306 & 0.0031887 & 0.0016742 & 0.0016742\\\hline\hline
-            Average & -0.001037 & -0.005737 & -0.007150 & -0.005265 & -0.005265\\\hline
+            0 & -0.0011 & -0.0027987 & -0.0069576 & -0.0041534 & -0.0659306\\\cline{2-6}
+            1 & -0.0006 & -0.0035851 & -0.0064798 & -0.0045647 & -0.0438947\\\cline{2-6}
+            2 & -0.0002 & -0.0058748 & -0.0088261 & -0.0054649 & -0.0696322\\\cline{2-6}
+            3 & -0.0006 & -0.0046291 & -0.0063303 & -0.0041478 & -0.0295122\\\cline{2-6}
+            4 & -0.0007 & -0.0047436 & -0.0089812 & -0.004779 & -0.0652175\\\cline{2-6}
+            5 & -0.0002 & -0.0046104 & -0.0071561 & -0.0041453 & -0.045186\\\cline{2-6}
+            6 & -0.0009 & 0.0013075 & 0.0037716 & 0.0024716 & 0.0004015\\\hline\hline
+            Average & -0.000626 & -0.003562 & -0.005851 & -0.003541 & -0.045567\\\hline
         \end{tabular}
     \end{adjustwidth}
     \caption{$\beta$s of each strategy \label{tab:betas}}.
 \end{table}
 
 \section{Sharpe Ratio}
+Another metric that is commonly used in finance is the Sharpe Ratio, the reason for this is that it is important to evaluate how risky the strategies are compared to the risk free rate. The metric is given by the formula below:$$\text{Sharpe Ratio} = \frac{R_p - R_f}{\sigma_p}$$ Where $R_p$ is the return of a portfolio, $R_f$ is the risk-free rate and $\sigma_p$ is the standard deviation of the portfolio. A higher Sharpe ratio indicates a better risk-adjusted return, as it signifies a higher return relative to the amount of risk taken. It implies that the investment has achieved a greater excess return compared to the risk-free rate, considering the level of volatility. Conversely, a lower Sharpe ratio suggests a lower risk-adjusted return, indicating a relatively higher level of risk for the given return. The Sharpe ratio also helps investors compare different investments or strategies based on their risk adversity performance. It provides a way to assess whether the return generated by an investment adequately compensates for the level of risk taken. 
+\\[5mm]
+To calculate each of the strategies Sharpe Ratios, the Bank of England's interest rate of 4.5\%~\cite{boe_interest}. Table \ref{tab:sharpes} displays the sharpe ratios of each strategy, we see that the Lagged Strategy exhibits the highest hedge ratio, followed by the Granger Causality and Sliding Window strategies, while the Kalman Filter and Constant strategies have the lowest Sharpe ratios. This discrepancy can be attributed to the Kalman Filter strategy having a higher variance, indicating a greater level of risk compared to the Sliding Window, Lagged, and Granger Causality strategies. However, it is worth noting that Pool Pair 6 significantly diminishes the average Sharpe ratio due to generating losses in all strategies.We see that the average Sharpe ratio for the lagged strategy, excluding pair 6, it have a Sharpe ratio $>2$ which is considered to be `very good' and a Sharpe ratio $>1$ is considerer to be `good' according to Forbes~\cite{forbes_sharpe_ratio}. Overall, with the exception of the Constant strategy, all strategies yield desirable Sharpe ratios, indicating favorable risk-adjusted returns.
 
+\begin{table}[!htb]
+    \centering
+    \begin{adjustwidth}{-0.8in}{-0.9in}
+        \begin{tabular}{|p{5em}|p{7em}|p{7em}|p{7em}|p{8em}|p{7em}|}\hline
+            Pool Pair & \multicolumn{5}{|c|}{Strategy's Sharpe Ratios} \\\cline{1-6}
+            & Constant & Sliding Window & Lagged & Granger Causality & Kalman Filter\\\cline{2-6}
+            0 & 2.1902 & 2.6611189 & 2.9222798 & 2.8685778 & 1.8181869\\\cline{2-6}
+            1 & -1.2426 & 1.625967 & 2.3434127 & 1.9508066 & 1.8170602\\\cline{2-6}
+            2 & -3.8312 & 2.2247116 & 2.5841394 & 2.1145482 & 1.936907\\\cline{2-6}
+            3 & -1.4968 & 1.5303011 & 2.2002525 & 1.443948 & 1.6968243\\\cline{2-6}
+            4 & -0.1346 & 2.1651834 & 2.5181573 & 2.264082 & 1.9388748\\\cline{2-6}
+            5 & -1.4287 & 1.4943642 & 2.148777 & 1.6072208 & 1.769034\\\cline{2-6}
+            6 & -1.8643 & -2.5635465 & -2.2529314 & -2.6360359 & -2.0231933\\\hline\hline
+            Average & -1.115422 & 1.305443 & 1.780584 & 1.373307 & 1.279099 \\\hline
+        \end{tabular}
+    \end{adjustwidth}
+    \caption{Sharpe Ratios of each strategy \label{tab:sharpes}}.
+\end{table}
 
 \section{Comparison with Other results}
