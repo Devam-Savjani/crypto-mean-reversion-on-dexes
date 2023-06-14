@@ -436,7 +436,6 @@ pairs = cointegrated_pairs[particular_idx:particular_idx +
 
 bad_pairs = []
 
-
 percent_to_invest = 1.00
 should_batch_trade = True
 initial_investment = 100
