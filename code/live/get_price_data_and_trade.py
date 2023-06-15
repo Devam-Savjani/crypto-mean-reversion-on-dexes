@@ -126,8 +126,10 @@ prices = {
 
 timestamp, gas_price_in_wei = get_gas_price()
 
+strategy = state['strategy']
+
 # Now generate signal and execute ....
-signal = state['strategy'].generate_signal(
+signal = strategy.generate_signal(
     {
         'open_positions': state['open_positions'],
         'account': state['account'],
@@ -152,7 +154,7 @@ if len(signal) > 0:
 with open('state.pickle', 'wb') as f:
     new_state = {
         'pair': state['pair'],
-        'strategy': state['strategy'],
+        'strategy': strategy,
         'open_positions': new_open_positions,
         'account': new_account
     }
