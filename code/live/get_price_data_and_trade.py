@@ -8,7 +8,6 @@ import pickle
 from live.live_trade_execution import execute_signal
 from utils.database_interactions import insert_rows, table_to_df
 from utils.graphql_client import GraphqlClient
-from backtest.calculate_cointegrated_pairs import load_cointegrated_pairs
 
 TOKEN_ADDRESSES = {
     'WETH': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
