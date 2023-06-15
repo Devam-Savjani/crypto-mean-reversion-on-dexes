@@ -2,6 +2,7 @@
 This section provides a comprehensive overview of the two trading system implementations. The first one focuses on the backtesting system, which involves simulating and evaluating strategies in a controlled environment. In this system, historical market data is utilized to test and analyze the performance of various strategies. The second implementation is the live system, designed to execute trades on the Ethereum blockchain using smart contracts. This system operates in real-time and interacts with the live market, allowing for actual trades to be executed based on predefined strategies. Together, these two implementations provide a comprehensive framework for testing, evaluating, and deploying trading strategies, both in simulated environments and on the live blockchain.
 
 \section{Buying and Selling}
+\label{sec:buying-selling}
 The process of buying and selling in traditional markets is relatively straightforward as brokers and exchanges play a crucial role in executing orders on behalf of individuals. However, when it comes to trading cryptocurrencies, the responsibility falls directly on the trader, such as myself. Therefore, it becomes essential to clearly define what buying and selling entail in the context of cryptocurrency trading.
 
 \subsection{Buying}
@@ -47,16 +48,8 @@ The fee is calculated by multiplying the gas price (expressed in Gwei, where 1 G
 
 \begin{figure}[!htb]
     \centering
-    \begin{subfigure}[b]{\textwidth}
-        \makebox[\textwidth]{\includegraphics[width=1.15\textwidth]{project/Images/gas_price_1.png}}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{\textwidth}
-        \centering
-        \makebox[\textwidth]{\includegraphics[width=1.15\textwidth]{project/Images/gas_price_2.png}}
-    \end{subfigure}
-    \vspace{-0.8cm}
-    \caption{The top picture shows the gas price over time, while the bottom picture is a zoomed-in plot.}
+    \makebox[\textwidth]{\includegraphics[width=1.15\textwidth]{project/Images/gas_price_1.png}}
+    \caption{The gas price over time}
     \label{fig:gwei_over_time}
 \end{figure}
 
@@ -287,7 +280,7 @@ self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amou
 \end{lstlisting}
 
 \subsection{Gas Fees}
-The remaining fee that is yet to be discussed is gas fees of each order. To best approximate the gas fee it is paramount to have an approximation to how much gas is used in each. Therefore, smart contracts were written and run on a forked Ethereum mainnet, to be able to accurately simulate the contracts behaviour. Using Hardhat, the gas usage of each function was tested and Figure \ref{fig:gasResult} shows the results. It can be seen that some functions have a tighter spread, between the maximum and minimum, compared to others therefore to better understand this, plots of using various parameters on the different functions provided a deeper insight into the cause of this, Figures \ref{fig:gasPlots1} and \ref{fig:gasPlots2}.
+The remaining fee that is yet to be discussed is gas fees of each order. To best approximate the gas fee it is paramount to have an approximation to how much gas is used in each. Therefore, the smart contract for trading was written and run on a forked Ethereum mainnet, to be able to accurately simulate the contracts behaviour, see Subsection \ref{sec:smart-contracts} to see the implementation of the smart contract. Using Hardhat, the gas usage of each function was tested and Figure \ref{fig:gasResult} shows the results. It can be seen that some functions have a tighter spread, between the maximum and minimum, compared to others therefore to better understand this, plots of using various parameters on the different functions provided a deeper insight into the cause of this, Figures \ref{fig:gasPlots1} and \ref{fig:gasPlots2}.
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.9\textwidth]{project/Images/gas_fee_results.png}
@@ -368,4 +361,185 @@ if round(curr_value_of_loan_pct, 4) > liquidation_threshold:
     raise Exception(f'Short position liquidated')
 \end{lstlisting}
 
-\section{Live Trading - TODO}
+\section{Live Trading}
+To run the strategies, a similar approach is required however the executions system and balance tracking is altered. For the system there are multiple components that are required for live trading to occur. The first is the ability to interact with the blockchain to execute the orders, this is done by smart contracts, the second is to manage the state of the strategy, accounts and the open positions for the stratgies to use to generate signals and finally a method to convert the signal into smart contract invokations to execute the orders.
+
+\subsection{Smart Contracts}
+\label{sec:smart-contracts}
+In order to be able to interact with uniswap and aave over ethereum, smart contracts are written, which are then deployed on the blockchain network. Functions that the smart contract posseses can then be executed with anyone that knows the address of the contract on the network. Smart contracts are programmable protocols that are written in Solidity, a high-level programming language designed for creating and executing smart contracts on Ethereum. For the purpose of trading using the aforementioned strategies, a few the following functionalities are required to be implemented; wrapping ETH for WETH, unwrapping WETH, swapping token A for token B using a given liquidity pool and finally borrowing and repaying some of token A using WETH as collateral. The first 2 functions are required if the trader has only ETH in their account, thus by wrapping the ETH, they would be able to trade ETH as a ERC-20 token.
+
+\subsubsection{Wrapping of ETH and Unwrapping WETH}
+This functionality are required as if the trader has only ETH in their account, thus by wrapping the ETH, they would be able to trade ETH in it's ERC-20 token, WETH. ERC-20 is a widely adopted technical standard utilized for the creation of interchangeable tokens on the Ethereum blockchain. It provides developers with the framework to design tokens that are compatible with various applications and services operating within the Ethereum ecosystem. These tokens are designed to represent a variety of assets, most importantly cryptocurrencies. The functions of these functionalities can be seen below, where \texttt{swapEthForWeth} wraps ETH and \texttt{swapWethForEth} unwraps WETH. The \texttt{swapEthForWeth} function first uses the \texttt{IWETH} interface, which is itself an ERC20 interface, to allow functions such as tranfer of ownership of the token, to deposit an amount of ETH in exchange for WETH, which is then transfered back to the address of the caller. The \texttt{swapWethForEth} function unwraps the WETH by first sending the specified volume of WETH from the caller to the smart contract, withdrawing the specified amount from the IERC20, which calls the \texttt{receive} function to enable recieving of ETH and once the ETH is withdrawn into the smart contract's account, it is transfered back to the caller.
+\begin{lstlisting}
+interface IWETH is IERC20 {
+  function deposit() external payable;
+
+  function withdraw(uint amount) external;
+}
+
+address public immutable wethAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
+function swapEthForWeth() external payable {
+    IWETH weth = IWETH(wethAddress);
+    weth.deposit{ value: msg.value }();
+    weth.transfer(msg.sender, msg.value);
+}
+
+function swapWethForEth(uint256 amount) external payable {
+    IWETH(wethAddress).transferFrom(msg.sender, address(this), amount);
+    IWETH(wethAddress).withdraw(amount);
+    msg.sender.transfer(address(this).balance);
+}
+
+receive() external payable {}
+\end{lstlisting}
+
+\subsubsection{Swapping using a Uniswap Liquidity Pool}
+Swapping using a Uniswap liquidity pool is also another key functionality. This is done by using the \texttt{IUniswapV3Pool} interface to expose the liquidity pool's functions and calling swap on it using the necessary parameters. The parameters, in their respective order, are the address of the recipient of the swapped tokens, a boolean on whether the swap direction is from token0 to token1 or vice versa, the volume of the source token that would like to be swapped, an integer (sqrtPriceLimitX96) that manages how much slippage is acceptable, and finally abi encoded data that is used in the callback function. When calling \texttt{swap} function, the sqrtPriceLimitX96 parameter is set to ignore the effects of slippage and proceed with the swap. Finally, once the swap has taken place, Uniswap calls the callback function \texttt{uniswapV3SwapCallback} with transfers the swapped tokens to the caller of the function.
+
+\begin{lstlisting}
+function swapExactUsingPool(address poolAddress, bool zeroForOne, int256 amountIn) public returns (int256, int256) {
+    IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
+    return
+        pool.swap(
+            msg.sender,
+            zeroForOne,
+            amountIn,
+            zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
+            abi.encode(poolAddress, pool.token0(), pool.token1(), msg.sender)
+        );
+}
+
+function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external override {
+    (address poolAddress, address token0, address token1, address userAddress) = abi.decode(data, (address, address, address, address));
+    require(msg.sender == address(poolAddress));
+    if (amount0Delta > 0) {
+        IERC20(token0).transferFrom(
+            userAddress,
+            msg.sender,
+            uint256(amount0Delta)
+        );
+    }
+    if (amount1Delta > 0) {
+        IERC20(token1).transferFrom(
+            userAddress,
+            msg.sender,
+            uint256(amount1Delta)
+        );
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Borrowing and Repaying Tokens using Aave}
+To allow for short selling, borrowing and repaying of tokens are required, therefore interacting with Aave in the smart contract is essential. The first step is to instantiate the lending pool using Aave's \texttt{PoolAddressesProvider}. When borrowing, some collateral is set aside in order to be able to borrow any number of tokens, thus the first step is to deposit this collateral into the lending pool and allow it to be used as collateral (Lines 1-8). Secondly, the specified token is borrowed from the lending pool using the variable interest rate, specified by the third argument in the \texttt{borrow} function, once received, the tokens are sent to the caller's address. The opposite methodology is true for the repayment of a loan, the tokens are transfered from the callers address to the smart contract's address which the sent back to the lending pool by the \texttt{repay} function and the collateral is withdrawn and automatically sent to the caller's address.
+\begin{lstlisting}
+IPool public immutable lendingPool = IPool(IPoolAddressesProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e).getPool());
+
+function borrowToken(address tokenAddress, uint256 borrowAmount, uint256 collatoralAmount) public {
+    // Deposit Collatoral
+    IERC20(wethAddress).transferFrom(msg.sender, address(this), collatoralAmount);
+    IERC20(wethAddress).approve(address(lendingPool), collatoralAmount);
+    lendingPool.deposit(wethAddress, collatoralAmount, address(this), 0);
+    lendingPool.setUserUseReserveAsCollateral(wethAddress, true);
+
+    // Borrow token
+    lendingPool.borrow(tokenAddress, borrowAmount, 2, 0, address(this));
+    IERC20(tokenAddress).transferFrom(address(this), msg.sender, borrowAmount);
+}
+
+function repayBorrowedToken(address tokenAddress, uint256 repayAmount, uint256 collateralWithdrawAmount) public {
+    IERC20(tokenAddress).transferFrom(msg.sender, address(this), repayAmount);
+    IERC20(tokenAddress).approve(address(lendingPool), repayAmount);
+    lendingPool.repay(tokenAddress, repayAmount, 2, address(this));
+    lendingPool.withdraw(wethAddress, collateralWithdrawAmount, msg.sender);
+}
+\end{lstlisting}
+
+\subsubsection{Opening and Closing of Trading Positions}
+In addition to these functions, it is know that batching transactions together is more efficient than having to execute them separately, therefore as the strategies being explored for this project require both a buying and selling trade each time, the functions \texttt{openBuySellPositions} and \texttt{closeBuySellPositions} have been implemented such that it follows the method mentioned in Subsection \ref{sec:buying-selling}.
+
+\begin{lstlisting}
+function openBuySellPositions(
+    address buyPoolAddress,
+    bool buyZeroForOne,
+    int256 buyAmount,
+    address sellTokenAddress,
+    uint256 sellAmount,
+    uint256 collatoralAmount,
+    address sellPoolAddress,
+    bool sellZeroForOne
+    ) external {
+        swapExactUsingPool(buyPoolAddress, buyZeroForOne, buyAmount);
+        borrowToken(sellTokenAddress, sellAmount, collatoralAmount);
+        swapExactUsingPool(sellPoolAddress, sellZeroForOne, int256(sellAmount));
+}
+
+function closeBuySellPositions(
+    address buyPoolAddress,
+    bool buyZeroForOne,
+    int256 buyAmount,
+    address sellTokenAddress,
+    uint256 sellAmount,
+    uint256 collatoralAmount,
+    address sellPoolAddress,
+    bool sellZeroForOne
+    ) external {
+        swapExactUsingPool(buyPoolAddress, buyZeroForOne, buyAmount);
+        swapExactUsingPool(sellPoolAddress, sellZeroForOne, int256(sellAmount));
+        repayBorrowedToken(sellTokenAddress, sellAmount, collatoralAmount);
+}
+\end{lstlisting}
+
+\subsection{State}
+Storing the state of the strategy is important as the strategies need to store and maintain it's history and vairables to ensure consistency when trading, therefore the state is stored as a dictionary in a pickle file. The State contains the liquidity pool pair that is being traded, the strategy instance, a dictionary of the open positions (initially empty) and the account balance. The state is updated after every exectution and is stored back into the pickle file.
+
+\subsection{Retreival of Data and Signal Generation}
+The frequency at which signals and data is collected is easily variable, however to ensure consistency, the current design has a frequency of every hour. This frequency is set in a Cron job. The Cron job runs a script is to collect the current price data and generate a signal. The data collected is retrieved from the Uniswap GraphQL endpoint:
+\begin{multicols}{2}
+\noindent Fetching Liquidity Pool Price data
+\begin{lstlisting}
+query ($id: ID!) {
+    pool(id: $id) {
+        token0 {
+            symbol
+        }
+        token1 {
+            symbol
+        }
+        token0Price
+        token1Price
+        liquidity
+    }
+}
+\end{lstlisting}
+\columnbreak
+\vspace*{3ex}
+Fetching Gas Price data
+\vspace*{-1ex}
+\begin{lstlisting}
+query {
+    transactions(first:1, orderBy: timestamp, orderDirection:desc) {
+        gasPrice
+        timestamp
+    }
+}
+\end{lstlisting}
+\end{multicols}
+
+\noindent The price data queries the liquidity pool returning it's current prices whereas the gas price data is retrieved from the most recent transaction on Uniswap, regardless of type. These data points are inserted into their corresponding tables in the database, and is also sent to the strategy to generate a signal, which is sent to the execution system for exectution.
+
+\subsection{Trade Execution}
+Once the signal has been received, it is sent to the trade exectution system. Once the signal is required to be actualized, the execution system breaks the signal into the different types of orders and executes them. For each type of order, its parameters are extracted, e.g. volume to buy, volume to sell, the target token and the prices in the case of opening a position. These parameters are then used to calculate the remaining paramters that are required to call the corresponding smart contract function, e.g. the swap direction's zeroForOne. Finally, once all of the necessary function parameters has been defined, the order is executed on the blockchain by performing 4 steps. The first is calling the smart contract function, signing the transaction, sending the transaction and waiting for the transaction to complete.
+\begin{lstlisting}[language=Python]
+# Call the order's corresponding function
+call_function = contract.functions.<Smart Contract Function Name>(<Function Paramters>).buildTransaction({"chainId": Chain_id, "from": caller, "nonce": nonce})
+# Sign transaction
+signed_tx = web3.eth.account.sign_transaction(call_function, private_key=private_key)
+# Send transaction
+send_tx = web3.eth.send_raw_transaction(signed_tx.rawTransaction)
+# Wait for transaction receipt
+tx_receipt = web3.eth.wait_for_transaction_receipt(send_tx)
+\end{lstlisting}
+
+\noindent After all of the orders have been executed, the new balances of each token along with the updated \texttt{open\_positions} is returned to then be stored as the new state.
+
