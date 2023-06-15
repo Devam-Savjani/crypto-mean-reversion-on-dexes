@@ -115,7 +115,6 @@ with open('state.pickle', 'rb') as f:
     state = pickle.load(f)
     f.close()
 
-
 latest_pool1_data, latest_pool2_data = get_pool_prices(
     state['pair'][0].split('_')[2], state['pair'][1].split('_')[2])
 update_pool_table({state['pair'][0]: latest_pool1_data,
@@ -140,6 +139,9 @@ signal = state['strategy'].generate_signal(
         'uniswap_fees': get_uniswap_fees()
     }, prices)
 
+
+new_account, new_open_positions = state['account'], state['open_positions']
+
 if len(signal) > 0:
     token0_addr = TOKEN_ADDRESSES[state['pair'][0].split("_")[0] if state['pair'][0].split(
         "_")[1] == 'WETH' else state['pair'][0].split("_")[1]]
@@ -147,3 +149,13 @@ if len(signal) > 0:
         "_")[1] == 'WETH' else state['pair'][1].split("_")[1]]
     new_account, new_open_positions = execute_signal(
         state['pair'], token0_addr, token0_addr, signal, state['account'], state['open_positions'], 0.825)
+    
+with open('state.pickle', 'wb') as f:
+    new_state = {
+        'pair': state['pair'],
+        'strategy': state['strategy'],
+        'open_positions': new_open_positions,
+        'account': new_account
+    }
+    pickle.dump(new_state, f)
+f.close()

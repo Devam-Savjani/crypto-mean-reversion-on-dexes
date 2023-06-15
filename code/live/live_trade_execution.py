@@ -39,7 +39,7 @@ def execute_signal(pair, token0_address, token1_address, signal, account, open_p
         # Wait for transaction receipt
         tx_receipt = web3.eth.wait_for_transaction_receipt(send_tx)
 
-    elif 'DEPOSIT' in signal:
+    if 'DEPOSIT' in signal:
         # weth_balance = web3.from_wei(web3.eth.get_balance('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'), 'ether')
         amount_to_deposit = sum(signal['DEPOSIT'])
         call_function = contract.functions.depositCollateral(amount_to_deposit).buildTransaction(
@@ -52,7 +52,7 @@ def execute_signal(pair, token0_address, token1_address, signal, account, open_p
         # Wait for transaction receipt
         tx_receipt = web3.eth.wait_for_transaction_receipt(send_tx)
 
-    elif 'CLOSE' in signal:
+    if 'CLOSE' in signal:
         for type, token, volume, price in signal['CLOSE']:
             if type == 'BUY':
                 pool = pair[0] if token == 'T1' else pair[1]
@@ -79,7 +79,7 @@ def execute_signal(pair, token0_address, token1_address, signal, account, open_p
         tx_receipt = web3.eth.wait_for_transaction_receipt(send_tx)
         open_positions = {}
 
-    elif 'OPEN' in signal:
+    if 'OPEN' in signal:
         for type, token, volume, price in signal['OPEN']:
             if type == 'BUY':
                 pool = pair[0] if token == 'T1' else pair[1]
