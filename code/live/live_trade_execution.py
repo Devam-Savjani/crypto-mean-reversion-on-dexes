@@ -5,8 +5,7 @@ import time
 
 
 def execute_signal(pair, token0_address, token1_address, signal, account, open_positions, ltv):
-    web3 = Web3(Web3.HTTPProvider(
-        'https://eth-mainnet.g.alchemy.com/v2/F5gSnV_OJ77nOQWI6VKUq6t2l4Pxp2ts'))
+    web3 = Web3(Web3.HTTPProvider('ETHEREUM NETWORK ADDRESS'))
     if not web3.is_connected():
         raise Exception('Failed to connect to Blockchain')
 
@@ -40,7 +39,6 @@ def execute_signal(pair, token0_address, token1_address, signal, account, open_p
         tx_receipt = web3.eth.wait_for_transaction_receipt(send_tx)
 
     if 'DEPOSIT' in signal:
-        # weth_balance = web3.from_wei(web3.eth.get_balance('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'), 'ether')
         amount_to_deposit = sum(signal['DEPOSIT'])
         call_function = contract.functions.depositCollateral(amount_to_deposit).buildTransaction(
             {"chainId": Chain_id, "from": caller, "nonce": nonce})
