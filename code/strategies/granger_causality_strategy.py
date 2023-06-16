@@ -21,7 +21,7 @@ class Granger_Causality_Strategy(Abstract_Strategy):
 
         data = pd.DataFrame({'Asset1': p1, 'Asset2': p2})
         granger_results = statsmodels.tsa.stattools.grangercausalitytests(data, maxlag=[1], verbose=False)
-        self.hedge_ratio = granger_results[1][1][0].params[0]
+        self.hedge_ratio = granger_results[1][1][1].params[0]
 
         spread = self.history_p1[-self.window_size_in_hours:] - \
             self.hedge_ratio * self.history_p2[-self.window_size_in_hours:]
@@ -54,5 +54,5 @@ class Granger_Causality_Strategy(Abstract_Strategy):
         p1, p2 = self.history_p1, self.history_p2
         data = pd.DataFrame({'Asset1': p1, 'Asset2': p2})
         granger_results = statsmodels.tsa.stattools.grangercausalitytests(data, maxlag=[1], verbose=False)
-        self.hedge_ratio = granger_results[1][1][0].params[0]
+        self.hedge_ratio = granger_results[1][1][1].params[0]
         self.hedge_ratio_history.append(self.hedge_ratio)
