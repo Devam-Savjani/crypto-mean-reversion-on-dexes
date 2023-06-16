@@ -144,8 +144,6 @@ class Backtest():
             'SELL': {}
         }
 
-        foo = set()
-
         def close_buy_position(buy_id):
             buy_token, bought_price, buy_volume, buy_timestamp = self.open_positions[
                 'BUY'][buy_id]
@@ -316,17 +314,17 @@ class Backtest():
 
                 elif order_type == 'CLOSE':
                     position_type, position_ids = order[1]
-                    if position_type == 'BUY':
-                        for buy_id in position_ids:
-                            close_buy_position(buy_id=buy_id)
-                            self.check_account(
-                                'CLOSE', f'BUY {buy_id}', signal=signal)
-
                     if position_type == 'SELL':
                         for sell_id in position_ids:
                             close_sell_position(sell_id=sell_id, apy=apy)
                             self.check_account(
                                 'CLOSE', f'SELL {sell_id}', signal=signal)
+
+                    if position_type == 'BUY':
+                        for buy_id in position_ids:
+                            close_buy_position(buy_id=buy_id)
+                            self.check_account(
+                                'CLOSE', f'BUY {buy_id}', signal=signal)
 
                 elif order_type == 'OPEN':
                     open_type, token, volume = order[1]
@@ -422,10 +420,18 @@ class Backtest():
 
 cointegrated_pairs = load_cointegrated_pairs('../utils/cointegrated_pairs.pickle')
 
+cointegrated_pairs = [('USDC_WETH_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640', 'USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f'),
+                    ('USDC_WETH_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8', 'USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f'),
+                    ('WETH_USDT_0x11b815efb8f581194ae79006d24e0d814b7697f6', 'USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f'),
+                    ('WETH_USDT_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36', 'USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f'),
+                    ('DAI_WETH_0x60594a405d53811d3bc4766596efd80fd545a270', 'USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f'),
+                    ('DAI_WETH_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8', 'USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f'),
+                    ('USDC_WETH_0xe0554a476a092703abdb3ef35c80e0d76d32939f', 'WETH_USDT_0xc5af84701f98fa483ece78af83f11b6c38aca71d')]
+
 print(*cointegrated_pairs, sep="\n")
 
-particular_idx = 0
 particular_idx = None
+particular_idx = 6
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
@@ -574,9 +580,9 @@ for idx, cointegrated_pair in enumerate(pairs):
         print(
             f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[91m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
     
-    apy_adj = ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365*24*60*60))
-    foo = [constant_return_percent, sw_return_percent, lagged_return_percent, gc_return_percent, kf_return_percent]
-    returns.loc[idx] = [((100 * (((r / 100) + 1)**(1 / apy_adj))) - 100) for r in foo]
+    # apy_adj = ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365*24*60*60))
+    # foo = [constant_return_percent, sw_return_percent, lagged_return_percent, gc_return_percent, kf_return_percent]
+    # returns.loc[idx] = [((100 * (((r / 100) + 1)**(1 / apy_adj))) - 100) for r in foo]
 
     #### Prints for Tables
     # rounding_num = 2
@@ -646,14 +652,21 @@ for idx, cointegrated_pair in enumerate(pairs):
     # betas.loc[idx] = [idx, beta_constant, beta_sw, beta_lagged, beta_GC, beta_KF]
 
     # round_num = 7
-    # interest_rate = ((1.045 ** ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365 * 24*60*60))) - 1) * 100
+    # interest_rate = (1.045 ** ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365 * 24*60*60))) - 1
+
+    # def calculate_sharpe_ratio(account_value_history):
+    #     account_value_history = np.array(account_value_history)
+    #     returns = account_value_history[1:] / np.roll(account_value_history, 1)[1:]
+    #     return (returns.mean() - interest_rate) / (returns).std()
+
+
     # sharpe_ratios.loc[idx] = [
     #     idx,
-    #     (np.array(backtest_constant_hr.account_value_history).mean() - 100 - interest_rate) / (np.array(backtest_constant_hr.account_value_history) - 100).std(),
-    #     (np.array(backtest_sliding_window.account_value_history).mean() - 100 - interest_rate) / (np.array(backtest_sliding_window.account_value_history) - 100).std(),
-    #     (np.array(backtest_lagged.account_value_history).mean() - 100 - interest_rate) / (np.array(backtest_lagged.account_value_history) - 100).std(),
-    #     (np.array(backtest_gc.account_value_history).mean() - 100 - interest_rate) / (np.array(backtest_gc.account_value_history) - 100).std(),
-    #     (np.array(backtest_kalman_filter.account_value_history).mean() - 100 - interest_rate) / (np.array(backtest_kalman_filter.account_value_history) - 100).std()]
+    #     calculate_sharpe_ratio(backtest_constant_hr.account_value_history),
+    #     calculate_sharpe_ratio(backtest_sliding_window.account_value_history),
+    #     calculate_sharpe_ratio(backtest_lagged.account_value_history),
+    #     calculate_sharpe_ratio(backtest_gc.account_value_history),
+    #     calculate_sharpe_ratio(backtest_kalman_filter.account_value_history)]
     
     # to_print = f"{idx} & {round(sharpe_ratios.iloc[idx]['Constant'], 4)} & {round(sharpe_ratios.iloc[idx]['SW'], round_num)} & {round(sharpe_ratios.iloc[idx]['Lagged'], round_num)} & {round(sharpe_ratios.iloc[idx]['GC'], round_num)} & {round(sharpe_ratios.iloc[idx]['KF'], round_num)}\\\\\\cline{{2-6}}"
     # results.append(to_print)
@@ -720,4 +733,7 @@ for idx, cointegrated_pair in enumerate(pairs):
 # print(sharpe_ratios)
 
 # returns.loc['avg'] = returns.mean()
+# returns.loc['std'] = returns.std()
+# returns.loc['sharpe_ratio'] = (returns.mean() - 4.5) / returns.std()
+
 # print(returns)

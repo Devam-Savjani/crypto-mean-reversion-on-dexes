@@ -48,6 +48,7 @@ class Abstract_Strategy():
         apy = ctx['apy']
         ltv_eth = ctx['ltv_eth']
         liquidation_threshold = ctx['liquidation_threshold']
+        uniswap_fees = ctx['uniswap_fees']
 
         if self.initial_WETH is None:
             self.initial_WETH = account['WETH']
@@ -80,18 +81,30 @@ class Abstract_Strategy():
                 if account['ETH'] - (self.gas_used_by_closing_positions * gas_price_in_eth) < 0:
                     orders += [('BUY ETH', 0.1)]
 
-                return orders + [
-                    ('CLOSE', ('SELL', [
-                     sell_position for sell_position in open_positions['SELL']])),
-                    ('CLOSE', ('BUY', [
-                     buy_position for buy_position in open_positions['BUY']])),
-                ]
+                has_added_sell_order = False
+
+                for buy_id in open_positions['BUY']:
+                    buy_token, bought_price, buy_volume, buy_timestamp = open_positions['BUY'][buy_id]
+                    if account[buy_token] - (buy_volume * (1 - uniswap_fees[buy_token])) < 0:
+                        orders += [('CLOSE', ('SELL', [sell_position for sell_position in open_positions['SELL']]))]
+                        orders += [('SWAP', (True, [(buy_token, abs(account[buy_token] - (buy_volume * (1 - uniswap_fees[buy_token]))) / (1 - uniswap_fees[buy_token]))]))]
+                        has_added_sell_order = True
+                    
+                if not has_added_sell_order:
+                    orders += [('CLOSE', ('SELL', [sell_position for sell_position in open_positions['SELL']]))]
+
+                return orders + [('CLOSE', ('BUY', [buy_position for buy_position in open_positions['BUY']]))]
+            
+            deposit_amount = ((sell_volume * current_token_price) /
+                              liquidation_threshold) - account['collateral_WETH']
+            
+            if should_deposit_more and account['WETH'] - deposit_amount < 0:
+                token_to_swap = list(open_positions['BUY'].values())[0][0]
+                orders += [('SWAP', (False, [(token_to_swap, abs(account['WETH'] - deposit_amount) / (1 - uniswap_fees[token_to_swap]))]))]
             
             if should_deposit_more and account['ETH'] - (GAS_USED_BY_DEPOSITING_COLLATERAL * gas_price_in_eth) < 0:
                 orders += [('BUY ETH', 0.1)]
 
-            deposit_amount = ((sell_volume * current_token_price) /
-                              liquidation_threshold) - account['collateral_WETH']
             return (orders + [('DEPOSIT', deposit_amount)]) if should_deposit_more else []
 
         else:
