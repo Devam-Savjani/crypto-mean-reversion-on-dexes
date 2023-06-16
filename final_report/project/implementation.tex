@@ -86,12 +86,17 @@ Another aspect of Aave for the trading strategy is collateralization and the avo
 
 \section{Backtesting System}
 
-To develop a resilient backtesting system, a dedicated class was constructed to streamline the process of testing trading strategies. Upon evaluating a particular strategy the \texttt{backtest} function requires \texttt{cointegrated\_pair}, a tuple of the names of the liquidity pools that the strategy is to be evaluated on, \texttt{strategy}, the strategy, and finally, the \texttt{initial\_investment} in ETH. The first argument is required and used to retrieve the relevant historical prices. The second parameter is self-explanatory, the strategy to test. Finally, the inclusion of the initial investment amount as an input parameter enables users to simulate the performance of their strategies with a specific starting capital, it also helps analyze how the various transaction costs affect the ability to trade if any trades do result in a loss. The \texttt{backtest} function iterates through historical data calling the strategy's \texttt{generate\_signal} and executing the trade orders it receives at each timestep. However, to do this historical data is required hence, the first step is to collect the historical data.
+To develop a resilient backtesting system, a dedicated class was constructed to streamline the process of testing trading strategies, the system is entirely written in Python as it possesses countless libraries including Pandas and Numpy which are extensively used to data manipulation and analysis, it also is good with integrating with many data sources such as GraphQL which is required for this project. To evaluate a particular strategy, the \texttt{backtest} function requires \texttt{cointegrated\_pair}, a tuple of the names of the liquidity pools that the strategy is to be evaluated on, \texttt{strategy}, the strategy, and finally, the \texttt{initial\_investment} in ETH. The first argument is required and used to retrieve the relevant historical prices. The second parameter is self-explanatory, the strategy to test. Finally, the inclusion of the initial investment amount as an input parameter enables users to simulate the performance of their strategies with a specific starting capital, it also helps analyze how the various transaction costs affect the ability to trade if any trades do result in a loss. The \texttt{backtest} function iterates through historical data calling the strategy's \texttt{generate\_signal} and executing the trade orders it receives at each timestep. However, to do this historical data is required hence, the first step is to collect the historical data. The logical process of backtesting a pair can be seen in Figure \ref{fig:backtesting-flow}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth]{project/Images/backtesting-diagram.png}
+    \caption{Flowchart of backtesting a strategy on a liquidity pool pair \label{fig:backtesting-flow}}
+\end{figure}
 
 \subsection{Data Collection and Storage}
 In order to simulate the market as accurately as possible the system should have access to reliable and accurate historical market data, including price, volume, and other relevant indicators. Therefore, I retrieve all of my data from the Uniswap and Aave protocols' subgraph using the Graph~\cite{noauthor_graph_nodate}. The Graph is a decentralized protocol for indexing and querying blockchain data hence making the data provided 100\% reliable as it indexes directly on the Ethereum blockchain. Subgraphs serve as GraphQL APIs designed to facilitate querying and extracting data from the blockchain. These APIs adhere to a specific schema outlined by the protocol, enabling seamless communication between the protocol and the underlying blockchain. Therefore, I employ the Uniswap V3, Aave V2, and Aave V3 subgraphs to obtain the data required for the backtesting system.
 \\[5mm]
-The database has the following tables:
+To store the necessary data for backtesting and trading, a PostgreSQL database is used this is to provide consistency, flexibility with numerous data types and also supports a large set of SQL functions that allow for advanced querying. The database adopts the following schema:
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.8\textwidth]{project/Images/database_tables.png}
@@ -362,7 +367,12 @@ if round(curr_value_of_loan_pct, 4) > liquidation_threshold:
 \end{lstlisting}
 
 \section{Live Trading}
-To run the strategies, a similar approach is required however the executions system and balance tracking is altered. For the system there are multiple components that are required for live trading to occur. The first is the ability to interact with the blockchain to execute the orders, this is done by smart contracts, the second is to manage the state of the strategy, accounts and the open positions for the stratgies to use to generate signals and finally a method to convert the signal into smart contract invokations to execute the orders.
+To run the strategies, a similar approach is required however the executions system and balance tracking is altered. For the system there are multiple components that are required for live trading to occur. The first is the ability to interact with the blockchain to execute the orders, this is done by smart contracts, the second is to manage the state of the strategy, accounts and the open positions for the stratgies to use to generate signals and finally a method to convert the signal into smart contract invokations to execute the orders. The workflow of trading on the live executiom system.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth]{project/Images/live-trading-system-diagram.png}
+    \caption{Flowchart of trading a strategy live \label{fig:live-flow}}
+\end{figure}
 
 \subsection{Smart Contracts}
 \label{sec:smart-contracts}
