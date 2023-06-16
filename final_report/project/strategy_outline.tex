@@ -1,88 +1,8 @@
-\chapter{Key Decisions and Outline of Trading Strategies}
-
-\section{Liquidity Pools} \label{sec:liquidity-pools}
-As previously mentioned, Uniswap is a decentralized exchange protocol that facilitates swapping of cryptocurrencies through the use of liquidity pools. One of the remarkable features of Uniswap is its support for even the smallest cryptocurrencies. In fact, it currently possesses 12,182 liquidity pools, as obtained via the Uniswap V3 subgraph. The subgraph provides valuable insights into the liquidity pools within the Uniswap ecosystem.
-\\[5mm]
-Table \ref{tab:liquidity_pools} showcases the diversity of these pools. Some pools exhibit high trading volumes, indicating significant activity and demand for those specific pairs. On the other hand, there are also pools with zero liquidity, which could be attributed to various reasons. It could be due to a lack of demand for one of the token pairs offered in the pool, or it may indicate that the pool is relatively new and has not attracted significant participation yet.
-\\[5mm]
-To enhance the chances of successful swaps and maximize potential profitability, my strategy is centered on liquidity pools with a trading volume surpassing \$10,000,000 (or \$10 million) and pools that include tokens supported by Aave. Additionally, I exclude any liquidity pools that do not involve WETH, which is a tokenized form of ETH (Ethereum's native cryptocurrency). WETH's key advantage lies in its ability to align with ERC-20 standards, enabling broader compatibility and utilization across the Ethereum ecosystem.
-
-\begin{table}[!ht]
-    \centering
-    \begin{tabular}{|p{7em}|p{4em}|p{4em}|p{10em}|p{\linewidth / 6}|p{4em}|}
-    \hline
-        pool address & token0 & token1 & volume in USD & created at timestamp & feetier \\ \hline
-        \truncate{7em}{0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & USDC & WETH & \truncate{10em}{375230561243.465} & 1620250931 & 500 \\ \hline
-        \truncate{7em}{0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & USDC & WETH & \truncate{10em}{70454095868.0967} & 1620169800 & 3000 \\ \hline
-        \truncate{7em}{0x11b815efb8f581194ae79006d24e0d814b7697f6} & WETH & USDT & \truncate{10em}{62385006691.8387} & 1620251172 & 500 \\ \hline
-        \truncate{7em}{0x3416cf6c708da44db2624d63ea0aaef7113527c6} & USDC & USDT & \truncate{10em}{57192593471.8346} & 1636825557 & 100 \\ \hline
-        \truncate{7em}{0x4585fe77225b41b697c938b018e2ac67ac5a20c0} & WBTC & WETH & \truncate{10em}{49170385539.9928} & 1620246230 & 500 \\ \hline
-        \truncate{7em}{0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & WETH & USDT & \truncate{10em}{30135014933.0963} & 1620232628 & 3000 \\ \hline
-        \truncate{7em}{0x60594a405d53811d3bc4766596efd80fd545a270} & DAI & WETH & \truncate{10em}{26075053939.434} & 1620237823 & 500 \\ \hline
-        \truncate{7em}{0xcbcdf9626bc03e24f779434178a73a0b4bad62ed} & WBTC & WETH & \truncate{10em}{21870989841.1326} & 1620158974 & 3000 \\ \hline
-        \truncate{7em}{0x5777d92f208679db4b9778590fa3cab3ac9e2168} & DAI & USDC & \truncate{10em}{16143305036.8948} & 1636771503 & 100 \\ \hline
-        \truncate{7em}{0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf} & USDC & USDT & \truncate{10em}{15473402409.0591} & 1620159478 & 500 \\ \hline
-        \truncate{7em}{0x99ac8ca7087fa4a2a1fb6357269965a2014abc35} & WBTC & USDC & \truncate{10em}{12568187132.1649} & 1620241995 & 3000 \\ \hline
-        \truncate{7em}{0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & DAI & WETH & \truncate{10em}{12519316091.9979} & 1620159368 & 3000 \\ \hline
-        \truncate{7em}{0xe0554a476a092703abdb3ef35c80e0d76d32939f} & USDC & WETH & \truncate{10em}{9381529300.20357} & 1636926269 & 100 \\ \hline
-        \truncate{7em}{0x6c6bc977e13df9b0de53b251522280bb72383700} & DAI & USDC & \truncate{10em}{7219493916.70291} & 1620158293 & 500 \\ \hline
-        \truncate{7em}{0xac4b3dacb91461209ae9d41ec517c2b9cb1b7daf} & APE & WETH & \truncate{10em}{6621032721.87519} & 1647516735 & 3000 \\ \hline
-        \truncate{7em}{0x8c54aa2a32a779e6f6fbea568ad85a19e0109c26} & FEI & USDC & \truncate{10em}{6206853090.73714} & 1621839430 & 500 \\ \hline\hline
-        \truncate{7em}{0x53dd58b3143f428b449c16dd5706cee7d7bcf408} & sOHM & gOHM & 0 & 1652914688 & 10000 \\ \hline
-        \truncate{7em}{0xbc90c4de85a4b559060cb28abfd4476ab6711f1a} & SHIB & NSTIC & 0 & 1652910391 & 100 \\ \hline
-        \truncate{7em}{0xaa1297b08d0035f06309c1bfa36582c24b4ae361} & BUSD & DPC & 0 & 1674655715 & 100 \\ \hline
-        \truncate{7em}{0x75087e5330c97f7ec7f716c6566f214cb0029f6a} & DAI & ICAP & 0 & 1652899566 & 10000 \\ \hline
-        \truncate{7em}{0xc65a680191bd17a18c957c8aa2d1155ed2322792} & stkAAVE & FRAX & 0 & 1652817927 & 10000 \\ \hline
-        \truncate{7em}{0x94589b18b95b355ee9a900f3df671b431779e20a} & VVV & SOL & 0 & 1674701603 & 10000 \\ \hline
-        \truncate{7em}{0xf42f0def92337b6a83753c9fae6d579f7d67aaa9} & APEFI & ApeUSD & 0 & 1652808878 & 3000 \\ \hline
-        \truncate{7em}{0xb9ba65f1568b318ffc1879a4a6368ef2b5ac96b8} & FRAX & ApeUSD & 0 & 1652808680 & 500 \\ \hline
-        \truncate{7em}{0x1dfb167f1ba47f3bf835eb60a9317b4601925642} & GHD & WETH & 0 & 1652784327 & 3000 \\ \hline
-    \end{tabular}
-    \caption{A selection of liquidity pools on Uniswap \label{tab:liquidity_pools}}
-\end{table}
-
-\subsection{Correlated and Cointegrated Liquidity Pools}
-Once the liquidity pools of interested in have been identified, it is crucial to filter the pool pairs based on their correlation. This is because correlated pairs tend to exhibit similar pricing movements thus would be possible to apply the mean reversion trading strategies. However, it is important to strike a balance between a highly correlated pair and a low correlated pair, as excessively high correlation can result in minimal price deviations, leading to fees that exceed the deviations and resulting in overall losses instead of profits. To address this, I have set a condition where the correlation coefficient ($\rho$) should fall within the range of $0.992 \leq \rho \leq 0.997$. Figure \ref{fig:correlationMatrix} shows the correlation matrix of the liquidity pools that meet the initial requirement of having a volume greater than \$10 million volume ratio and include WETH. Notably, the pools associated with tokens aiming to be pegged to the US Dollar, such as USDT, USDC, and DAI, exhibit the expected high correlation with each other. However, an exception is observed with pool 0xe0554a476a092703abdb3ef35c80e0d76d32939f, which exhibits a lower correlation with other liquidity pools containing these stable coins. Consequently, this lower correlation opens up additional avenues for potential arbitrage opportunities within the pool.
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[width=\textwidth]{project/Images/correlationMatrix.png}
-    \caption{Correlation Matrix of the Liquidity Pools that meet the \$10 million volume and include WETH \label{fig:correlationMatrix}}
-\end{figure}
-\\[5mm]
-To determine which liquidity pools are cointegrated, I employed the Engle-Granger approach. The Engle-Granger test for cointegration involves several steps. Firstly, a unit root test is performed individually on each time series using methods like the Augmented Dickey-Fuller (ADF) test or the Phillips-Perron (PP) test. These tests assess whether the time series are stationary or exhibit unit roots (non-stationary) individually. For cointegration to hold, both time series must be non-stationary.
-\\[5mm]
-Once it is established that both time series are non-stationary, an estimation of the cointegration equation is derived. Typically, a linear regression model is employed to capture the long-term relationship between the time series variables. This equation provides an understanding of how the variables are linked over a long period.
-\\[5mm]
-Subsequently, a unit root test is conducted on the residuals obtained from the regression analysis. If the residuals are stationary (indicating the absence of unit roots), it suggests the presence of cointegration between the time series. This implies that the variables move together in the long run, even if short-term deviations occur.
-\\[5mm]
-By following the aforementioned sequence of steps in the Engle-Granger test, it enables us to determine which liquidity pools demonstrate cointegration, thereby emphasizing their interconnectedness and mutual relationship over time. The outcome of the cointegration tests for all possible combinations of liquidity pools is presented in Table \ref{tab:coin_pools}. This table provides a comprehensive list of the liquidity pool pairs along with the results of their respective cointegration tests and the correlation coefficient of each combination.
-\begin{table}[!ht]
-    \centering
-    \begin{adjustwidth}{-1in}{-0.9in}
-        \begin{tabular}{|p{12em}|p{12em}|p{5em}|p{4.2em}|p{4.2em}|p{4.2em}|p{3.5em}|}\hline
-            pool1 & pool2 & t-statistic of unit-root test on residuals & \multicolumn{3}{|c|}{Critical Values} & Corr Coeff\\[-1ex]\cline{4-6}
-            &   &   & 1\% & 5\% & 10\% & \\\hline
-            \truncate{12em}{USDC\_WETH\_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -11.306176 & -3.898069 & -3.337038 & -3.045081 & 0.99347\\\hline
-            \truncate{12em}{USDC\_WETH\_0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -11.210146 & -3.898082 & -3.337046 & -3.045086 & 0.99307\\\hline
-            \truncate{12em}{WETH\_USDT\_0x11b815efb8f581194ae79006d24e0d814b7697f6} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -10.010746 & -3.898069 & -3.337038 & -3.045081 & 0.99315\\\hline
-            \truncate{12em}{WETH\_USDT\_0x4e68ccd3e89f51c3074ca5072bbac773960dfa36} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -9.913205 & -3.898081 & -3.337045 & -3.045085 & 0.99291\\\hline
-            \truncate{12em}{DAI\_WETH\_0x60594a405d53811d3bc4766596efd80fd545a270} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -11.395276 & -3.898069 & -3.337038 & -3.045081 & 0.99338\\\hline
-            \truncate{12em}{DAI\_WETH\_0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8} & \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & -10.418722 & -3.89831 & -3.337173 & -3.045174 & 0.99298\\\hline
-            \truncate{12em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & \truncate{12em}{WETH\_USDT\_0xc5af84701f98fa483ece78af83f11b6c38aca71d} & -9.7789 & -3.901414 & -3.338902 & -3.046374 & 0.99243\\\hline
-        \end{tabular}
-    \end{adjustwidth}
-    \caption{Cointegration test on Liquidity Pool pairs \label{tab:coin_pools}}
-\end{table}
-\\[5mm]
-\noindent Based on the results obtained, we focus our further investigation solely on the pairs of liquidity pools that exhibit cointegration under a 1\% confidence level. This filtering process allows us to narrow down our analysis to those pairs where a long-term relationship exists, suggesting that they move together in a concerted manner.
-\\[5mm]
-By concentrating on the cointegrated pairs, we can delve deeper into exploring their dynamics, assessing their behavior, and leverage the interconnectedness between these liquidity pools. This approach enables us to prioritize our analysis and concentrate on the most relevant liquidity pool combinations that offer potential opportunities for profitable trading or other related activities.
- 
-\section{Strategy}
-
+\chapter{Outline of Trading Strategies}
+\label{sec:strats}
 As previously mentioned, the strategy I employ is the mean reversion trading strategy. The basic concept of a mean reversion strategy identifying two closely related assets or securities, typically referred to as a pair, and taking advantage of deviations from their historical price relationship. This works by initially identifying a pair of assets that have a historically stable relationship as I have done in Section \ref{sec:liquidity-pools}. Then as prices change you calculate the spread, which is the difference between their prices. Look for deviations from the historical mean spread, upon a deviation one buys the undervalued asset and sells the other. The positions are then closed once the spread reverts back to its historical mean.
 
-\subsection{Abstract Strategy}
+\section{Abstract Strategy}
 The implementation of the generalization of these strategies is intricate and designed to be scalable and highly customizable with various parameters. Additionally, since the trading strategies being investigated are based on mean reversion, an abstract strategy is created to allow for quick exploration and research into different approaches and the impact of hedge ratio calculations on returns. This abstract strategy encompasses the core logic of generating trading signals, determining optimal trade timing and volumes, and transmitting them to the live or backtesting system. The strategy-specific classes contain operations that calculate the hedge ratio and establish the thresholds that trigger the generation of trading signals. Below shows the functions that the abstract strategy possesses.
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
@@ -121,7 +41,7 @@ The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} a
     In addition, prior to opening or closing a position, a preliminary check is conducted to ensure that the ETH balance remains positive. If the anticipated balance after executing the orders indicates a potential shortfall, an order to \texttt{BUY\ ETH} is automatically initiated. This precautionary measure ensures that the strategy maintains a positive ETH balance and avoids entering into positions that could lead to negative balances.
 \end{enumerate}
 
-\subsubsection{Volume of Trades}
+\subsection{Volume of Trades}
 A major part of the strategy is at which volumes to trade, therefore in order to be able to trade the maximum amount a minimization problem must be solved. However, before delving into thie problem it is important to highlight the influence of the hedge ratio of the trading volumes. If the hedge ratio is positive, for every unit of pair0 traded, \texttt{hedge\_ratio} units of pair1 should be traded. However, the inverse is true if the hedge ratio is negative, for every \texttt{-hedge\_ratio} units of pair0 traded, 1 unit of pair1 should be traded.
 \\[5mm]
 Given that $Z$ is amount of WETH in the account, $p_0, p_1$ are the prices of pairs 0 and 1 respectively, $LTV$ is the loan-to-value ratio and $x, y$ are the volumes to be traded on pair0 and pair1 respectively. Additionally, to generalize the problem for both positive and negative hedge ratios, let $n:k$ represent the ratio of volume traded for pair0:pair1. Assuming we are buying pair0 and selling pair1. The following problem states finds the maximum volumes that can be traded to leave the least amount of WETH remaining.
@@ -145,9 +65,7 @@ Therefore, as all terms in the objective function are positive therefore, the mi
 \end{align*}
 \noindent Thus the resulting values of $x$ and $y$ represent the solution that minimizes the problem while maximizing the tradable volume. The case above shows that $x$ units of pair0 can be bought and thus $y$ units of pair1 must be sold. Similarly, if pair0 is sold and pair1 is bought, the maximum volumes are determined by $x = \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$ and $y = \frac{n}{k} \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$.
 
-\subsection{Constant Hedge Ratio Strategy}
-In the mean reversion strategies, the hedge ratio refers to the ratio or proportion between the positions of two assets involved in a pairs trading strategy. It determines the optimal allocation of capital between the assets to minimize risk and create a market-neutral position. The hedge ratio represents the number of units or shares of one asset that should be held for each unit or share of the other asset in order to create a balanced or hedged position. It is derived through statistical techniques such as regression analysis.
-\\[5mm]
+\section{Constant Hedge Ratio Strategy}
 In the most simplistic mean reversion strategy, the approach relies on a given historical dataset, assuming that the hedge ratio between the paired assets remains consistent over the long term. To determine this hedge ratio, the Ordinary Least Squares (OLS) regression method is employed. In Python, the calculation can be carried out using the following steps:
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
@@ -164,7 +82,7 @@ In Figure \ref{fig:f1}, the observed trend reveals that the gradient, representi
     \caption{Conducting OLS to obtain the Hedge Ratio \label{fig:f1}}
 \end{figure}
 
-\subsection{Sliding Window Strategy}
+\section{Sliding Window Strategy}
 As mentioned earlier, the hedge ratio plays a crucial role in minimizing risk and achieving a market-neutral position in trading strategies. However, employing a static hedge ratio may prove suboptimal since market conditions and the correlation between paired assets can evolve over time. To tackle this challenge, a dynamic approach is adopted using a sliding window approach. In this approach, the hedge ratio is continuously updated at each tick by considering the most recent data. The length of the data window used for the calculation is determined by the value specified in the \texttt{window\_size} argument. By incorporating the sliding window mechanism, the hedge ratio remains adaptive to the changing market dynamics, providing a more accurate and responsive estimation for effective risk management and trading decisions. Therefore, the following function is ran every price tick,
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
@@ -175,7 +93,7 @@ def update_hedge_ratio(self):
     self.hedge_ratio = results.params[1]
 \end{lstlisting}
 
-\subsection{Lagged Strategy}
+\section{Lagged Strategy}
 A lagged strategy was also a implemented as an extension of the sliding window strategy. In the context of the sliding window strategy, the hedge ratio is updated using the most recent data within a specified window size. However, due to potential delays or lags in the synchronization of liquidity pools, the instantaneous prices of the assets may not fully reflect their actual relationship. Therefore, this approach aims to account for potential lags in the synchronization of liquidity pools. The lagged strategy extends the existing sliding window approach by using \texttt{sm.tsa.lagmat} function to perform the lag, which is then used to perform OLS.
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
@@ -188,7 +106,7 @@ def update_hedge_ratio(self):
     self.hedge_ratio = results.params[1]
 \end{lstlisting}
 
-\subsection{Granger Causality Test}
+\section{Granger Causality Test}
 Similarly, to account for lag and causality, a strategy that was employed was using the Granger Causality Test. The Granger Causality Test is a statistical hypothesis test that assesses the predictive value of one time series in forecasting another. Part of the test the results provide insights into the relationship between the variables and help determine the presence of Granger causality in the form of an OLS regression for both the restricted and unrestricted models. The restricted model is a regression model that includes only the lagged values of the dependent variable whereas the unrestricted model includes both the lagged values of the dependent variable and the potentially causal variable. The restricted model's regression parameters are used to calculate the hedge ratio.
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
@@ -199,7 +117,7 @@ def update_hedge_ratio(self):
     self.hedge_ratio = granger_results[1][1][0].params[0]
 \end{lstlisting}
 
-\subsection{Kalman Filter Strategy}
+\section{Kalman Filter Strategy}
 Another method that is often used to ensure market-neutral positions is the use of Kalman Filters as a dynamic tool to update and adapt the hedge ratio, taking into account the changing market conditions and the evolving relationship between the paired assets. This allows for a more responsive and adaptive approach to maintaining a market-neutral position. The Kalman Filter takes into consideration not only the current price data but also the historical information and the underlying dynamics of the assets. It provides a more robust and accurate estimation of the optimal hedge ratio, which aligns with the mean reversion strategy's objective of capturing potential price divergences and profiting from their eventual convergence.
 \\[5mm]
 The Kalman Filter works by iteratively updating and refining its estimate of the system state using a prediction step and an update step. For this an initial `guess' of the parameters that I use is the using the Ordinary Least Squares from the historical information provided. The remainder of the parameters that are selected can be seen below:

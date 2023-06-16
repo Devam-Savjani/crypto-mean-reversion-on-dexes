@@ -1,43 +1,6 @@
 \chapter{Implementation of the Trading Systems}
 This section provides a comprehensive overview of the two trading system implementations. The first one focuses on the backtesting system, which involves simulating and evaluating strategies in a controlled environment. In this system, historical market data is utilized to test and analyze the performance of various strategies. The second implementation is the live system, designed to execute trades on the Ethereum blockchain using smart contracts. This system operates in real-time and interacts with the live market, allowing for actual trades to be executed based on predefined strategies. Together, these two implementations provide a comprehensive framework for testing, evaluating, and deploying trading strategies, both in simulated environments and on the live blockchain.
 
-\section{Buying and Selling}
-\label{sec:buying-selling}
-The process of buying and selling in traditional markets is relatively straightforward as brokers and exchanges play a crucial role in executing orders on behalf of individuals. However, when it comes to trading cryptocurrencies, the responsibility falls directly on the trader, such as myself. Therefore, it becomes essential to clearly define what buying and selling entail in the context of cryptocurrency trading.
-
-\subsection{Buying}
-Prices on Uniswap are represented as ratios for example 1 USDC = $P$ WETH. With this understanding, let's delve into the process of buying one unit of USDC/WETH on Uniswap:
-\begin{itemize}
-    \item Opening a Buy position:\begin{itemize}
-        \item Starts with $P_{0}$ WETH
-        \item Swaps the WETH for USDC, hence ends with 1 USDC
-    \end{itemize}
-    \item Closing a Buy position:\begin{itemize}
-        \item Starts with 1 USDC
-        \item Swaps the USDC for WETH, hence ends with $P_1$ WETH
-    \end{itemize}
-\end{itemize}
-\noindent Consequently, if the price of USDC/WETH increases from the moment the buy position is opened to the time it is closed, the trader realizes a profit. On the other hand, if the price declines during this period, the trader incurs a loss.
-
-\subsection{Selling}
-Selling an asset is a more complex process compared to buying because it involves trading an asset that the trader doesn't initially possess. In traditional markets, this is facilitated by the trader borrowing the desired asset from a broker or another party. When the trader decides to close the position, they repurchase the same amount of the borrowed asset and return it to the lender, hoping that its value has declined. This borrowing and returning process is typically managed automatically by brokers and exchanges. However, in decentralized exchanges (DEXes), such mechanisms are not in place.
-\\[5mm]
-To simplify this process, I have opted to utilize Aave as a lending platform to borrow any required assets. It is worth noting that Aave supports only a limited range of tokens available for borrowing, namely DAI, EURS, USDC, USDT, AAVE, LINK, WBTC, and WETH. Therefore, shorting would be feasible only if I focus on liquidity pools that involve these cryptocurrencies. By leveraging Aave as a lending platform, I can access the necessary assets for shorting. The process of selling is as follows:
-\begin{itemize}
-    \item Opening a Sell position:\begin{itemize}
-        \item Borrow 1 USDC
-        \item Swaps the USDC for WETH, hence ends with $P_0$ WETH
-    \end{itemize}
-    \item Closing a Sell position:\begin{itemize}
-        \item Starts with $P_0$ WETH
-        \item Swaps the WETH for USDC, hence ends with $\frac{P_0}{P_1}$ USDC
-        \item Return the borrowed USDC, leaving $\frac{P_0}{P_1} - 1$ USDC
-    \end{itemize}
-\end{itemize}
-Consequently, if the price of USDC/WETH decreases, i.e. $P_1 < P_0$ from the moment the sell position is opened to the time it is closed, the trader realizes a profit. On the other hand, if the price increases during this period, the trader incurs a loss.
-\\[5mm]
-Note that this is is merely an illustrative example and does not account for any potential fees that the trader might incur.
-
 \section{Fees that are incurred when trading}
 As previously mentioned, when engaging in trading activities, there are several fees that are deducted. These fees serve multiple purposes, including compensating the liquidity providers and addressing the potential lack of access to assets from the lender. Therefore, in this section, we will delve into the various costs associated with implementing and executing the strategy.
 
