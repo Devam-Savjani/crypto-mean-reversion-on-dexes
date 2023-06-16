@@ -35,13 +35,13 @@ Consistent profit among all of the pool pairs, excluding pool pair 6, is also ac
             &   & \multicolumn{2}{|c|}{Constant} & \multicolumn{2}{|c|}{Sliding Window} & \multicolumn{2}{|c|}{Lagged} & \multicolumn{2}{|c|}{Granger Causality} & \multicolumn{2}{|c|}{Kalman Filter}\\\cline{3-12}
             & & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades\\\hline
 
-            & 0 & \textcolor{green}{5.44} & 360 & \textcolor{green}{29.28} & 661 & \textcolor{green}{66.29} & 687 & \textcolor{green}{26.34} & 704 & \textcolor{red}{-100} & 70\\\cline{3-12}
-            & 1 & \textcolor{red}{-100} & 104 & \textcolor{red}{-83.7} & 660 & \textcolor{red}{-77.28} & 653 & \textcolor{red}{-85.49} & 680 & \textcolor{red}{-100} & 71\\\cline{3-12}
+            & 0 & \textcolor{green}{5.44} & 360 & \textcolor{green}{29.28} & 661 & \textcolor{green}{66.29} & 687 & \textcolor{green}{26.34} & 704 & \textcolor{green}{83.01} & 228\\\cline{3-12}
+            & 1 & \textcolor{red}{-54.34} & 397 & \textcolor{red}{-83.7} & 660 & \textcolor{red}{-77.28} & 653 & \textcolor{red}{-85.49} & 680 & \textcolor{red}{-14.99} & 307\\\cline{3-12}
             & 2 & \textcolor{green}{5.83} & 454 & \textcolor{red}{-2.1} & 634 & \textcolor{green}{43.6} & 619 & \textcolor{red}{-4.04} & 730 & \textcolor{green}{89.13} & 236\\\cline{3-12}
-            $\sigma=0.1$& 3 & \textcolor{red}{-67.51} & 535 & \textcolor{red}{-70.51} & 572 & \textcolor{red}{-73.24} & 604 & \textcolor{red}{-100} & 671 & \textcolor{red}{-100} & 74\\\cline{3-12}
-            & 4 & \textcolor{green}{11.14} & 375 & \textcolor{green}{10.06} & 759 & \textcolor{green}{58.61} & 669 & \textcolor{green}{22.59} & 802 & \textcolor{red}{-100} & 70\\\cline{3-12}
-            & 5 & \textcolor{red}{-53.44} & 396 & \textcolor{red}{-75.16} & 587 & \textcolor{red}{-68.27} & 593 & \textcolor{red}{-100} & 587 & \textcolor{red}{-100} & 71\\\cline{3-12}
-            & 6 & \textcolor{red}{-100} & 26 & \textcolor{red}{-82.0} & 213 & \textcolor{red}{-76.2} & 198 & \textcolor{red}{-75.63} & 195 & \textcolor{red}{-100} & 27\\\hline\hline
+            $\sigma=0.1$3 & \textcolor{red}{-67.51} & 535 & \textcolor{red}{-70.51} & 572 & \textcolor{red}{-73.24} & 604 & \textcolor{red}{-100} & 671 & \textcolor{red}{-14.05} & 301\\\cline{3-12}
+            & 4 & \textcolor{green}{11.14} & 375 & \textcolor{green}{10.06} & 759 & \textcolor{green}{58.61} & 669 & \textcolor{green}{22.59} & 802 & \textcolor{green}{71.83} & 227\\\cline{3-12}
+            & 5 & \textcolor{red}{-53.44} & 396 & \textcolor{red}{-75.16} & 587 & \textcolor{red}{-68.27} & 593 & \textcolor{red}{-100} & 587 & \textcolor{red}{-24.99} & 328\\\cline{3-12}
+            & 6 & \textcolor{red}{-15.76} & 72 & \textcolor{red}{-82.0} & 213 & \textcolor{red}{-76.2} & 198 & \textcolor{red}{-75.63} & 195 & \textcolor{red}{-6.12} & 84\\\hline\hline
 
             & 0 & \textcolor{green}{11.77} & 723 & \textcolor{red}{-15.81} & 1223 & \textcolor{green}{104.48} & 1185 & \textcolor{red}{-2.31} & 1234 & \textcolor{green}{241.96} & 378\\\cline{3-12}
             & 1 & \textcolor{red}{-100} & 832 & \textcolor{red}{-100} & 920 & \textcolor{red}{-100} & 936 & \textcolor{red}{-100} & 978 & \textcolor{green}{60.2} & 456\\\cline{3-12}
@@ -49,7 +49,7 @@ Consistent profit among all of the pool pairs, excluding pool pair 6, is also ac
             $\sigma=0.5$& 3 & \textcolor{red}{-93.51} & 794 & \textcolor{red}{-100} & 944 & \textcolor{red}{-92.35} & 1063 & \textcolor{red}{-100} & 808 & \textcolor{green}{37.63} & 425\\\cline{3-12}
             & 4 & \textcolor{green}{26.01} & 826 & \textcolor{red}{-16.12} & 1243 & \textcolor{green}{112.45} & 1213 & \textcolor{green}{16.25} & 1217 & \textcolor{green}{244.51} & 391\\\cline{3-12}
             & 5 & \textcolor{red}{-95.02} & 837 & \textcolor{red}{-100} & 854 & \textcolor{red}{-100} & 905 & \textcolor{red}{-100} & 824 & \textcolor{green}{90.57} & 388\\\cline{3-12}
-            & 6 & \textcolor{red}{-100} & 40 & \textcolor{red}{-96.69} & 359 & \textcolor{red}{-84.14} & 301 & \textcolor{red}{-95.26} & 367 & \textcolor{red}{-100} & 61\\\hline\hline
+            & 6 & \textcolor{red}{-37.47} & 124 & \textcolor{red}{-96.69} & 359 & \textcolor{red}{-84.14} & 301 & \textcolor{red}{-95.26} & 367 & \textcolor{red}{-39.65} & 150\\\hline\hline
             
             & 0 & \textcolor{red}{-21.41} & 675 & \textcolor{red}{-1.59} & 864 & \textcolor{green}{129.7} & 865 & \textcolor{green}{20.4} & 913 & \textcolor{green}{164.34} & 442\\\cline{3-12}
             & 1 & \textcolor{red}{-100} & 791 & \textcolor{red}{-100} & 814 & \textcolor{red}{-93.81} & 1022 & \textcolor{red}{-100} & 818 & \textcolor{red}{-10.31} & 505\\\cline{3-12}
@@ -383,7 +383,7 @@ Overall, given the experiments conducted the optimal paramters for each strategy
     \caption{Optimal Parameters for each strategy \label{tab:OptimParams}}
 \end{table}
 
-By running the backtesting system from 18th December 2021 to 9th June 2023, we can see in Figure \ref{tab:FinalResults} the Kalman Filter outperforms all of the other strategies in all liquidity pool pairs except pair 6. The Lagged strategy has also performed well, whereas the Granger Causality and the Sliding Window strategies also resulting in similar mediocre returns. Finally, the Constant strategy fails to obtain a significantly profitable result as we have seen in the experiments above.
+By running the backtesting system from 18th December 2021 to 9th June 2023, we can see in Table \ref{tab:FinalResults} the Kalman Filter outperforms all of the other strategies in all liquidity pool pairs except pair 6. The Lagged strategy has also performed well, whereas the Constant, Granger Causality and the Sliding Window strategies also resulting in similar mediocre returns, with the Granger Causality strategy performing the worst.
 
 \begin{table}[!htb]
     \centering
@@ -392,15 +392,15 @@ By running the backtesting system from 18th December 2021 to 9th June 2023, we c
             Pool Pair & \multicolumn{10}{|c|}{Strategy's Return - Trading from 18th December 2021 to 9th June 2023} \\\cline{2-11}
             & \multicolumn{2}{|c|}{Constant} & \multicolumn{2}{|c|}{Sliding Window} & \multicolumn{2}{|c|}{Lagged} & \multicolumn{2}{|c|}{Granger Causality} & \multicolumn{2}{|c|}{Kalman Filter}\\\cline{2-11}
             & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades & Return \% & \# of Trades\\\hline
-            0 & \textcolor{green}{33.47} & 75 & \textcolor{green}{57.95} & 250 & \textcolor{green}{90.51} & 242 & \textcolor{green}{51.77} & 227 & \textcolor{green}{267.18} & 354\\\cline{2-11}
-            1 & \textcolor{red}{-2.46} & 44 & \textcolor{green}{22.35} & 122 & \textcolor{green}{35.75} & 162 & \textcolor{green}{24.11} & 130 & \textcolor{green}{82.26} & 425\\\cline{2-11}
-            2 & \textcolor{red}{-3.5} & 37 & \textcolor{green}{54.08} & 148 & \textcolor{green}{81.65} & 181 & \textcolor{green}{43.86} & 147 & \textcolor{green}{297.14} & 371\\\cline{2-11}
-            3 & \textcolor{red}{-5.97} & 48 & \textcolor{green}{19.87} & 117 & \textcolor{green}{28.08} & 158 & \textcolor{green}{13.84} & 115 & \textcolor{green}{48.13} & 399\\\cline{2-11}
-            4 & \textcolor{green}{6.45} & 40 & \textcolor{green}{56.57} & 146 & \textcolor{green}{88.87} & 175 & \textcolor{green}{52.29} & 170 & \textcolor{green}{270.08} & 363\\\cline{2-11}
-            5 & \textcolor{red}{-2.32} & 34 & \textcolor{green}{31.25} & 100 & \textcolor{green}{44.05} & 127 & \textcolor{green}{25.47} & 104 & \textcolor{green}{96.64} & 366\\\cline{2-11}
-            6 & \textcolor{red}{-1.65} & 3 & \textcolor{red}{-14.4} & 30 & \textcolor{red}{-20.29} & 50 & \textcolor{red}{-15.27} & 28 & \textcolor{red}{-100} & 53\\\hline\hline            
-            Average & \textcolor{green}{1.59} & 40.1 & \textcolor{green}{32.52} & 130.4 & \textcolor{green}{49.8} & 156.4 & \textcolor{green}{28.01} & 131.6 & \textcolor{green}{137.35} & 333\\\hline            
-            Average of APR return of each pool & \textcolor{green}{2.3391} &  & \textcolor{green}{20.8808} &   & \textcolor{green}{31.0540} &  & \textcolor{green}{18.0922} &  & \textcolor{green}{69.9687} & \\\hline            
+            0 & \textcolor{green}{33.47} & 75 & \textcolor{green}{57.95} & 250 & \textcolor{green}{90.51} & 242 & \textcolor{green}{55.36} & 250 & \textcolor{green}{267.18} & 354\\\cline{2-11}
+            1 & \textcolor{green}{32.46} & 32 & \textcolor{green}{20.7} & 127 & \textcolor{green}{35.75} & 162 & \textcolor{green}{8.83} & 136 & \textcolor{green}{82.26} & 425\\\cline{2-11}
+            2 & \textcolor{green}{30.48} & 44 & \textcolor{green}{45.55} & 103 & \textcolor{green}{81.65} & 181 & \textcolor{green}{38.55} & 104 & \textcolor{green}{297.14} & 371\\\cline{2-11}
+            3 & \textcolor{green}{24.94} & 29 & \textcolor{green}{20.52} & 86 & \textcolor{green}{28.08} & 158 & \textcolor{green}{11.02} & 94 & \textcolor{green}{48.13} & 399\\\cline{2-11}
+            4 & \textcolor{green}{38.87} & 42 & \textcolor{green}{57.69} & 122 & \textcolor{green}{88.87} & 175 & \textcolor{green}{40.3} & 139 & \textcolor{green}{270.08} & 363\\\cline{2-11}
+            5 & \textcolor{green}{31.17} & 24 & \textcolor{green}{37.84} & 77 & \textcolor{green}{44.05} & 127 & \textcolor{green}{23.78} & 83 & \textcolor{green}{96.64} & 366\\\cline{2-11}
+            6 & \textcolor{red}{-2.46} & 13 & \textcolor{red}{-14.07} & 30 & \textcolor{red}{-20.29} & 50 & \textcolor{red}{-16.96} & 27 & \textcolor{red}{-31.93} & 147\\\hline\hline           
+            Average & \textcolor{green}{26.99} & 37 & \textcolor{green}{32.31} & 113.6 & \textcolor{green}{49.80} & 156.4 & \textcolor{green}{22.98} & 119 & \textcolor{green}{147.07} & 346.4\\\hline            
+            Average of APR return of each pool pair & \textcolor{green}{18.48} &  & \textcolor{green}{21.70} &   & \textcolor{green}{32.52} &  & \textcolor{green}{15.51} &  & \textcolor{green}{85.64} & \\\hline            
         \end{tabular}
     \end{adjustwidth}
     \caption{Returns of each strategy with their optimal parameters \label{tab:FinalResults}}.
