@@ -17,7 +17,14 @@ The design of each strategy and the backtesting system allow for extensive param
     \caption{Liquidity pool pairs and their corresponding labels}
 \end{table}
 \vspace{-4ex}
-\section{Trading Systems}
+\section{Trading System}
+The implemented backtesting system is designed to be robust and comprehensive, taking into account all the necessary costs associated with trading, as discussed in Section \ref{sec:backtesting-sys}. However, there are a couple of areas that could benefit from further improvement.
+\\[5mm]
+One aspect that could be enhanced is the data granularity of the pricing data used in the backtesting system. Currently, the system utilizes hourly data points, which may not capture all the nuances and intraday price movements. By incorporating more granular data, such as minute-by-minute or even tick-level data, the system could provide a more accurate representation of market dynamics and potentially improve the accuracy of the backtest results.
+\\[5mm]
+Additionally, when executing swaps or trades, it is important to consider the impact of slippage. Slippage refers to the price difference that occurs when executing a trade due to changes in the market conditions, such as supply differences between trading pairs. To account for slippage, the system should incorporate realistic price adjustments to accurately simulate the trading environment. This can help ensure that the backtest results reflect the actual performance that would be achieved in real trading scenarios. However, this is somewhat mitigated as only larger liquidity pools, with volume of $\geq \$10 million$, are used and with only a maximum of 100ETH (\$394,626.00) being traded in each pool, the effects of slippage become very small in such scenarios.
+\\[5mm]
+By addressing these aspects and refining the data granularity and furthering the slippage considerations, the backtesting system can provide more precise and reliable results, leading to improved insights into the profitability and viability of the trading strategy under evaluation.
 
 \section{Strategy Parameters}
 
