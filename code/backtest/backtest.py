@@ -236,14 +236,14 @@ class Backtest():
                     'uniswap_fees': swap_fees
                 }, prices)
 
-            # self.account_value_history.append(
-            #     self.get_account_value_in_WETH(prices))
-            # self.times.append(timestamp)
+            self.account_value_history.append(
+                self.get_account_value_in_WETH(prices))
+            self.times.append(timestamp)
 
-            if len([order[0] for order in signal if order[0] == 'OPEN']) > 0:
-                self.account_value_history.append(
-                    self.get_account_value_in_WETH(prices))
-                self.times.append(timestamp)
+            # if len([order[0] for order in signal if order[0] == 'OPEN']) > 0:
+            #     self.account_value_history.append(
+            #         self.get_account_value_in_WETH(prices))
+            #     self.times.append(timestamp)
 
             for order in signal:
                 order_type = order[0]
@@ -385,9 +385,9 @@ class Backtest():
                 else:
                     self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth)
 
-                self.account_value_history.append(
-                    self.get_account_value_in_WETH(prices))
-                self.times.append(timestamp)
+                # self.account_value_history.append(
+                #     self.get_account_value_in_WETH(prices))
+                # self.times.append(timestamp)
                 self.check_account('CLOSE', f'BUY and SELL position', signal=signal)
 
 
@@ -430,8 +430,8 @@ cointegrated_pairs = [('USDC_WETH_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640', '
 
 print(*cointegrated_pairs, sep="\n")
 
+particular_idx = 0
 particular_idx = None
-particular_idx = 6
 
 num = particular_idx if particular_idx is not None else 0
 pairs = cointegrated_pairs[particular_idx:particular_idx +
@@ -439,166 +439,207 @@ pairs = cointegrated_pairs[particular_idx:particular_idx +
 
 bad_pairs = []
 
-percent_to_invest = 1.00
-should_batch_trade = True
-initial_investment = 100
-
-start_timestamp = calendar.timegm(date.fromisoformat('2022-06-09').timetuple())
 start_timestamp = None
+start_timestamp = calendar.timegm(date.fromisoformat('2022-06-09').timetuple())
 
-window_size_in_seconds = days_to_seconds(60)
-history_size = window_size_in_seconds
-
-results = []
 betas = pd.DataFrame({}, columns=["Pool Pair", "Constant", "SW", "Lagged", "GC", "KF"])
 sharpe_ratios = pd.DataFrame({}, columns=["Pool Pair", "Constant", "SW", "Lagged", "GC", "KF"])
 returns = pd.DataFrame({}, columns=["Constant", "SW", "Lagged", "GC", "KF"])
 
-for idx, cointegrated_pair in enumerate(pairs):
-    print(num)
-    num += 1
-    print(f'cointegrated_pair: {cointegrated_pair}')
+use_same_params = True
 
-    try:
-        number_of_sds_from_mean = 3
-        gas_price_threshold = 4.7e-08
-        constant_hr_strategy = Constant_Hedge_Ratio_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
-                                                          window_size_in_seconds=window_size_in_seconds,
-                                                          percent_to_invest=percent_to_invest,
-                                                          gas_price_threshold=gas_price_threshold,
-                                                          rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                          should_batch_trade=should_batch_trade)
+if use_same_params:
+    percent_to_invest = 1
+    number_of_sds_from_mean = 1.75
+    gas_price_threshold = 1.29e-07
+    window_size_in_seconds = days_to_seconds(30)
+    history_size = window_size_in_seconds
+    should_batch_trade = True
+    initial_investment = 100
 
-        backtest_constant_hr = Backtest()
-        constant_return_percent = backtest_constant_hr.backtest_pair(
-            cointegrated_pair, constant_hr_strategy, initial_investment, history_size, start_timestamp)
-    except Exception as e:
-        constant_return_percent = -100
-    
+results_for_table = []
+results_for_plot = []
 
-    if constant_return_percent > 0:
-        print(
-            f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{constant_return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
-    else:
-        print(
-            f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{constant_return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
+for window_size_in_seconds in [days_to_seconds(num_of_days) for num_of_days in [7, 14, 30, 60, 90]]:
+
+    for idx, cointegrated_pair in enumerate(pairs):
+        print(idx)
+        num += 1
+        print(f'cointegrated_pair: {cointegrated_pair}')
+
+        try:
+            if not use_same_params:
+                percent_to_invest = 1
+                number_of_sds_from_mean = 3
+                gas_price_threshold = 4.7e-08
+                window_size_in_seconds = days_to_seconds(60)
+                history_size = window_size_in_seconds
+                should_batch_trade = True
+
+            constant_hr_strategy = Constant_Hedge_Ratio_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                            window_size_in_seconds=window_size_in_seconds,
+                                                            percent_to_invest=percent_to_invest,
+                                                            gas_price_threshold=gas_price_threshold,
+                                                            rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                            should_batch_trade=should_batch_trade)
+
+            backtest_constant_hr = Backtest()
+            constant_return_percent = backtest_constant_hr.backtest_pair(
+                cointegrated_pair, constant_hr_strategy, initial_investment, history_size, start_timestamp)
+        except Exception as e:
+            constant_return_percent = -100
         
-    try:
-        number_of_sds_from_mean = 2
-        gas_price_threshold = 8.83e-08
-        sliding_window_strategy = Sliding_Window_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
-                                                        window_size_in_seconds=window_size_in_seconds,
-                                                        percent_to_invest=percent_to_invest,
-                                                        gas_price_threshold=gas_price_threshold,
-                                                        rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                        should_batch_trade=should_batch_trade)
 
-        backtest_sliding_window = Backtest()
-        sw_return_percent = backtest_sliding_window.backtest_pair(
-            cointegrated_pair, sliding_window_strategy, initial_investment, history_size, start_timestamp)
-    except Exception as e:
-        sw_return_percent = -100
-
-    if sw_return_percent > 0:
-        print(
-            f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[92m{sw_return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
-    else:
-        print(
-            f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[91m{sw_return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
-    
-    try:
-        number_of_sds_from_mean = 0.5
-        gas_price_threshold = 1.29e-07
-        window_size_in_seconds = days_to_seconds(30)
-        history_size = window_size_in_seconds
-        kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
-                                                        window_size_in_seconds=window_size_in_seconds,
-                                                        percent_to_invest=percent_to_invest,
-                                                        gas_price_threshold=gas_price_threshold,
-                                                        rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                        should_batch_trade=should_batch_trade)
-
-        backtest_kalman_filter = Backtest()
-        kf_return_percent = backtest_kalman_filter.backtest_pair(
-            cointegrated_pair, kalman_filter_strategy, initial_investment, history_size, start_timestamp)
-    except Exception as e:
-        kf_return_percent = -100
-
-    if kf_return_percent > 0:
-        print(
-            f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{kf_return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
-    else:
-        print(
-            f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{kf_return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+        if constant_return_percent > 0:
+            print(
+                f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[92m{constant_return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
+        else:
+            print(
+                f"\033[95mConstant_Hedge_Ratio_Strategy\033[0m Total returns \033[91m{constant_return_percent}%\033[0m - trading from {datetime.fromtimestamp(backtest_constant_hr.times[0])} to {datetime.fromtimestamp(backtest_constant_hr.times[-1])} with {len(backtest_constant_hr.trades)} trades")
             
-    try:
-        number_of_sds_from_mean = 2
-        gas_price_threshold = 1.29e-07
-        window_size_in_seconds = days_to_seconds(30)
-        history_size = window_size_in_seconds
-        lagged_strategy = Lagged_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
-                                                        window_size_in_seconds=window_size_in_seconds,
-                                                        percent_to_invest=percent_to_invest,
-                                                        gas_price_threshold=gas_price_threshold,
-                                                        rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                        should_batch_trade=should_batch_trade,
-                                                        lag=1)
+        try:
+            if not use_same_params:
+                number_of_sds_from_mean = 2
+                gas_price_threshold = 8.83e-08
+                percent_to_invest = 1
+                window_size_in_seconds = days_to_seconds(60)
+                history_size = window_size_in_seconds
+                should_batch_trade = True
 
-        backtest_lagged = Backtest()
-        lagged_return_percent = backtest_lagged.backtest_pair(
-            cointegrated_pair, lagged_strategy, initial_investment, history_size, start_timestamp)
-    except Exception as e:
-        lagged_return_percent = -100
-    
-    if lagged_return_percent > 0:
-        print(
-            f"\033[33mLagged_Strategy\033[0m Total returns \033[92m{lagged_return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
-    else:
-        print(
-            f"\033[33mLagged_Strategy\033[0m Total returns \033[91m{lagged_return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
-    
-    try:
-        number_of_sds_from_mean = 2
-        gas_price_threshold = 8.83e-08
-        gc_strategy = Granger_Causality_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
-                                                        window_size_in_seconds=window_size_in_seconds,
-                                                        percent_to_invest=percent_to_invest,
-                                                        gas_price_threshold=gas_price_threshold,
-                                                        rebalance_threshold_as_percent_of_initial_investment=0.5,
-                                                        should_batch_trade=should_batch_trade)
+            sliding_window_strategy = Sliding_Window_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                            window_size_in_seconds=window_size_in_seconds,
+                                                            percent_to_invest=percent_to_invest,
+                                                            gas_price_threshold=gas_price_threshold,
+                                                            rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                            should_batch_trade=should_batch_trade)
 
-        backtest_gc = Backtest()
-        gc_return_percent = backtest_gc.backtest_pair(
-            cointegrated_pair, gc_strategy, initial_investment, history_size, start_timestamp)
-    except Exception as e:
-        gc_return_percent = -100
+            backtest_sliding_window = Backtest()
+            sw_return_percent = backtest_sliding_window.backtest_pair(
+                cointegrated_pair, sliding_window_strategy, initial_investment, history_size, start_timestamp)
+        except Exception as e:
+            sw_return_percent = -100
 
-    if gc_return_percent > 0:
-        print(
-            f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[92m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
-    else:
-        print(
-            f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[91m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
-    
-    # apy_adj = ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365*24*60*60))
-    # foo = [constant_return_percent, sw_return_percent, lagged_return_percent, gc_return_percent, kf_return_percent]
-    # returns.loc[idx] = [((100 * (((r / 100) + 1)**(1 / apy_adj))) - 100) for r in foo]
+        if sw_return_percent > 0:
+            print(
+                f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[92m{sw_return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
+        else:
+            print(
+                f"\033[94mSliding_Window_Strategy\033[0m Total returns \033[91m{sw_return_percent}%\033[0m with {len(backtest_sliding_window.trades)} trades")
+        
+        try:
+            if not use_same_params:
+                percent_to_invest = 1
+                gas_price_threshold = 1.29e-07
+                number_of_sds_from_mean = 0.5
+                window_size_in_seconds = days_to_seconds(30)
+                history_size = window_size_in_seconds
+                should_batch_trade = True
 
-    #### Prints for Tables
-    # rounding_num = 2
-    # constant_return_percent_str = f"\\textcolor{{{'green' if constant_return_percent > 0 else 'red'}}}{{{round(constant_return_percent, rounding_num)}}}"
-    # sw_return_percent_str = f"\\textcolor{{{'green' if sw_return_percent > 0 else 'red'}}}{{{round(sw_return_percent, rounding_num)}}}"
-    # lagged_return_percent_str = f"\\textcolor{{{'green' if lagged_return_percent > 0 else 'red'}}}{{{round(lagged_return_percent, rounding_num)}}}"
-    # gc_return_percent_str = f"\\textcolor{{{'green' if gc_return_percent > 0 else 'red'}}}{{{round(gc_return_percent, rounding_num)}}}"
-    # kf_return_percent_str = f"\\textcolor{{{'green' if kf_return_percent > 0 else 'red'}}}{{{round(kf_return_percent, rounding_num)}}}"
-    # to_print = f"{idx} & {constant_return_percent_str} & {len(backtest_constant_hr.trades)} & {sw_return_percent_str} & {len(backtest_sliding_window.trades)} & {lagged_return_percent_str} & {len(backtest_lagged.trades)} & {gc_return_percent_str} & {len(backtest_gc.trades)} & {kf_return_percent_str} & {len(backtest_kalman_filter.trades)}\\\\\\cline{{3-12}}"
+            kalman_filter_strategy = Kalman_Filter_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                            window_size_in_seconds=window_size_in_seconds,
+                                                            percent_to_invest=percent_to_invest,
+                                                            gas_price_threshold=gas_price_threshold,
+                                                            rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                            should_batch_trade=should_batch_trade)
 
-    # if idx == 6:
-    #     to_print = to_print[:-11] + "hline\\hline"
+            backtest_kalman_filter = Backtest()
+            kf_return_percent = backtest_kalman_filter.backtest_pair(
+                cointegrated_pair, kalman_filter_strategy, initial_investment, history_size, start_timestamp)
+        except Exception as e:
+            kf_return_percent = -100
 
-    # results.append(to_print)
+        if kf_return_percent > 0:
+            print(
+                f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[92m{kf_return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+        else:
+            print(
+                f"\033[96mKalman_Filter_Strategy\033[0m Total returns \033[91m{kf_return_percent}%\033[0m with {len(backtest_kalman_filter.trades)} trades")
+                
+        try:
+            if not use_same_params:
+                percent_to_invest = 1
+                number_of_sds_from_mean = 2
+                gas_price_threshold = 1.29e-07
+                window_size_in_seconds = days_to_seconds(30)
+                history_size = window_size_in_seconds
+                should_batch_trade = True
 
-    # font_size = 13
+            lagged_strategy = Lagged_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                            window_size_in_seconds=window_size_in_seconds,
+                                                            percent_to_invest=percent_to_invest,
+                                                            gas_price_threshold=gas_price_threshold,
+                                                            rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                            should_batch_trade=should_batch_trade,
+                                                            lag=1)
+
+            backtest_lagged = Backtest()
+            lagged_return_percent = backtest_lagged.backtest_pair(
+                cointegrated_pair, lagged_strategy, initial_investment, history_size, start_timestamp)
+        except Exception as e:
+            lagged_return_percent = -100
+        
+        if lagged_return_percent > 0:
+            print(
+                f"\033[33mLagged_Strategy\033[0m Total returns \033[92m{lagged_return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
+        else:
+            print(
+                f"\033[33mLagged_Strategy\033[0m Total returns \033[91m{lagged_return_percent}%\033[0m with {len(backtest_lagged.trades)} trades")
+        
+        try:
+            if not use_same_params:
+                percent_to_invest = 1
+                number_of_sds_from_mean = 2
+                gas_price_threshold = 8.83e-08
+                window_size_in_seconds = days_to_seconds(60)
+                history_size = window_size_in_seconds
+                should_batch_trade = True
+
+            gc_strategy = Granger_Causality_Strategy(number_of_sds_from_mean=number_of_sds_from_mean,
+                                                            window_size_in_seconds=window_size_in_seconds,
+                                                            percent_to_invest=percent_to_invest,
+                                                            gas_price_threshold=gas_price_threshold,
+                                                            rebalance_threshold_as_percent_of_initial_investment=0.5,
+                                                            should_batch_trade=should_batch_trade)
+
+            backtest_gc = Backtest()
+            gc_return_percent = backtest_gc.backtest_pair(
+                cointegrated_pair, gc_strategy, initial_investment, history_size, start_timestamp)
+        except Exception as e:
+            gc_return_percent = -100
+
+        if gc_return_percent > 0:
+            print(
+                f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[92m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
+        else:
+            print(
+                f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[91m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
+        
+        apy_adj = ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365*24*60*60))
+        foo = [constant_return_percent, sw_return_percent, lagged_return_percent, gc_return_percent, kf_return_percent]
+        returns.loc[idx] = [((100 * (((r / 100) + 1)**(1 / apy_adj))) - 100) for r in foo]
+        # returns.loc[idx] = foo
+
+        #### Prints for Tables
+    #     rounding_num = 2
+    #     constant_return_percent_str = f"\\textcolor{{{'green' if constant_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][0], rounding_num)}}}"
+    #     sw_return_percent_str = f"\\textcolor{{{'green' if sw_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][1], rounding_num)}}}"
+    #     lagged_return_percent_str = f"\\textcolor{{{'green' if lagged_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][2], rounding_num)}}}"
+    #     gc_return_percent_str = f"\\textcolor{{{'green' if gc_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][3], rounding_num)}}}"
+    #     kf_return_percent_str = f"\\textcolor{{{'green' if kf_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][4], rounding_num)}}}"
+    #     to_print = f"& {idx} & {constant_return_percent_str} & {len(backtest_constant_hr.trades)} & {sw_return_percent_str} & {len(backtest_sliding_window.trades)} & {lagged_return_percent_str} & {len(backtest_lagged.trades)} & {gc_return_percent_str} & {len(backtest_gc.trades)} & {kf_return_percent_str} & {len(backtest_kalman_filter.trades)}\\\\\\cline{{3-12}}"
+    #     if idx == 6:
+    #         to_print = to_print[:-11] + "hline\\hline"
+
+    #     if idx == 3:
+    #         to_print = f"{int(window_size_in_seconds / (24 * 60 * 60))} days " + to_print
+
+    #     results_for_table.append(to_print)
+    #     results_for_plot.append(f'{int(window_size_in_seconds / (24 * 60 * 60))},{idx},{round(constant_return_percent, rounding_num)},{len(backtest_constant_hr.trades)},{round(sw_return_percent, rounding_num)},{len(backtest_sliding_window.trades)},{round(lagged_return_percent, rounding_num)},{len(backtest_lagged.trades)},{round(gc_return_percent, rounding_num)},{len(backtest_gc.trades)},{round(kf_return_percent, rounding_num)},{len(backtest_kalman_filter.trades)}')
+
+    # print(*results_for_table,sep='\n')
+    # print(*results_for_plot,sep='\n')
+
+    font_size = 13
 
     #### Plot for Account History
     # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_constant_hr.times]), backtest_constant_hr.account_value_history, label='Constant')
@@ -612,11 +653,11 @@ for idx, cointegrated_pair in enumerate(pairs):
     # plt.show()
 
     #### Plot for Evolving Hedge Ratio
-    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_constant_hr.times]), constant_hr_strategy.hedge_ratio_history[1:], label='Constant')
-    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_sliding_window.times]), sliding_window_strategy.hedge_ratio_history, label='Sliding Window')
-    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_lagged.times]), lagged_strategy.hedge_ratio_history, label='Lagged')
-    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_gc.times]), gc_strategy.hedge_ratio_history, label='Granger Causality')
-    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_gc.times]), kalman_filter_strategy.hedge_ratio_history, label='Kalman Filter')
+    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_constant_hr.times[:len(constant_hr_strategy.hedge_ratio_history)]]), constant_hr_strategy.hedge_ratio_history, label='Constant')
+    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_sliding_window.times[:len(sliding_window_strategy.hedge_ratio_history)]]), sliding_window_strategy.hedge_ratio_history, label='Sliding Window')
+    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_lagged.times[:len(lagged_strategy.hedge_ratio_history)]]), lagged_strategy.hedge_ratio_history, label='Lagged')
+    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_gc.times[:len(gc_strategy.hedge_ratio_history)]]), gc_strategy.hedge_ratio_history, label='Granger Causality')
+    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_kalman_filter.times[:len(kalman_filter_strategy.hedge_ratio_history)]]), kalman_filter_strategy.hedge_ratio_history, label='Kalman Filter')
     # plt.xlabel('Date', fontsize=font_size)
     # plt.ylabel('Hedge Ratio', fontsize=font_size)
     # plt.title(f'How the Hedge Ratio evolves over time between {cointegrated_pair[0]} and {cointegrated_pair[1]}')
@@ -725,15 +766,16 @@ for idx, cointegrated_pair in enumerate(pairs):
 
     # print(*backtest_mean_reversion.trades, sep='\n')
 
-# print(*results,sep='\n')
+print(*results_for_table,sep='\n')
+print(*results_for_plot,sep='\n')
 # betas.loc['average'] = betas.mean()
 # print(betas)
 
 # sharpe_ratios.loc['avg'] = sharpe_ratios.mean()
 # print(sharpe_ratios)
 
-# returns.loc['avg'] = returns.mean()
+returns.loc['avg'] = returns.mean()
 # returns.loc['std'] = returns.std()
 # returns.loc['sharpe_ratio'] = (returns.mean() - 4.5) / returns.std()
 
-# print(returns)
+print(returns)
