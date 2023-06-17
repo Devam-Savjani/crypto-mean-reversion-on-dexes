@@ -43,7 +43,7 @@ The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} a
 
 \subsection{Volume of Trades}
 A major part of the strategy is at which volumes to trade, therefore in order to be able to trade the maximum amount a minimization problem must be solved. However, before delving into thie problem it is important to highlight the influence of the hedge ratio of the trading volumes. If the hedge ratio is positive, for every unit of pair0 traded, \texttt{hedge\_ratio} units of pair1 should be traded. However, the inverse is true if the hedge ratio is negative, for every \texttt{-hedge\_ratio} units of pair0 traded, 1 unit of pair1 should be traded.
-\\[5mm]
+\\[3mm]
 Given that $Z$ is amount of WETH in the account, $p_0, p_1$ are the prices of pairs 0 and 1 respectively, $LTV$ is the loan-to-value ratio and $x, y$ are the volumes to be traded on pair0 and pair1 respectively. Additionally, to generalize the problem for both positive and negative hedge ratios, let $n:k$ represent the ratio of volume traded for pair0:pair1. Assuming we are buying pair0 and selling pair1. The following problem states finds the maximum volumes that can be traded to leave the least amount of WETH remaining.
 \begin{equation}
 \begin{aligned}
@@ -115,7 +115,7 @@ def update_hedge_ratio(self):
 
 \section{Kalman Filter Strategy}
 Another method that is often used to ensure market-neutral positions is the use of Kalman Filters as a dynamic tool to update and adapt the hedge ratio, taking into account the changing market conditions and the evolving relationship between the paired assets. This allows for a more responsive and adaptive approach to maintaining a market-neutral position. The Kalman Filter takes into consideration not only the current price data but also the historical information and the underlying dynamics of the assets. It provides a more robust and accurate estimation of the optimal hedge ratio, which aligns with the mean reversion strategy's objective of capturing potential price divergences and profiting from their eventual convergence.
-\\[5mm]
+\\[3mm]
 The Kalman Filter works by iteratively updating and refining its estimate of the system state using a prediction step and an update step. For this an initial `guess' of the parameters that I use is the using the Ordinary Least Squares from the historical information provided. The remainder of the parameters that are selected can be seen below:
 \begin{lstlisting}[language=Python]
 model = sm.OLS(price_history_2, sm.add_constant(price_history_1))
@@ -141,7 +141,7 @@ kf = KalmanFilter(
 \end{itemize}
 
 Figures \ref{fig:evolving_hedge_ratio_kf} and \ref{fig:ratios_kf} provide visual representations of the hedge ratio's evolution over time. These figures illustrate that the hedge ratio, while exhibiting subtle variations, does indeed change over the observed period. One notable event is the significant drop that occurs at the timestamp 1.655e9 or June 2022. This particular shift in the hedge ratio is likely attributed to the migration from the Proof of Work (PoW) consensus mechanism to the Proof of Stake (PoS) consensus mechanism on the Ethereum network.
-\\[5mm]
+\\[3mm]
 During the transition from PoW to PoS, there are fundamental changes in how the Ethereum network reaches consensus and validates transactions. This change in consensus mechanism can impact various aspects of the network, including the dynamics of the hedge ratio. It is plausible that the observed drop in the hedge ratio during the migration period reflects the adjustments and reconfiguration of the underlying mechanisms in response to the shift to PoS.
 
 \begin{figure}[!htb]

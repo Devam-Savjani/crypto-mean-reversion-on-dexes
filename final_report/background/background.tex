@@ -28,11 +28,11 @@ The building blocks of cryptocurrencies come from blockchain technology. Blockch
 \end{itemize}
 
 \noindent In addition to these components, a major feature of blockchain technology is its property of being decentralised. The state of the blockchain is managed by a distributed network of nodes that are maintained by voluntary node operators. Node operators maintain the blockchain by synchorizing with the network, validating, propogating transactions and blocks and finally participating in consensus mechanisms to ensure all of the nodes agree on the current state before updating the blockchain. For this blockchain networks are typically built on a peer-to-peer (P2P) architecture. Each participant in the network, or node, has an equal status and communicates directly with other nodes. Transactions and data are shared among participants without the need for intermediaries or central servers. When transitioning to the next state, the node broadcasts the transaction, $T$, to the blockchain network and each node applies the transition function to obtain the new and same state, $\sigma' = transition\_func(\sigma, T)$. All nodes arrive to the same state as the transition function is deterministic. Once each node has applied the transition function, the network uses a consensus mechanism to the globally agreed $\sigma'$ and the transactions become actualised.
-\\[5mm]
+\\[3mm]
 Consensus mechanisms are used to achieve agreement among participants on the validity of transactions and the order in which they are added to the blockchain. Examples of consensus mechanisms include Proof of Work (PoW), Proof of Stake (PoS), and Delegated Proof of Stake (DPoS), however current blockchains predominantly use Proof of Work or Proof of Stake~\cite{noauthor_consensus_nodate}. In addition to reaching consensus, the consensus algorithms also determine which node should be the create of a new block, which node should be granted a monetary reward.
-\\[5mm]
+\\[3mm]
 The Proof of Work (PoW) consensus algorithm was first used in Bitcoin and is where the nodes compete to solve complex mathematical problems to verify that the transactions from a new block are valid in order to add them to the blockchain. These nodes are called miners. Once the first miner obtains the solution of the mathematical puzzle, it broadcasts the new block on the network so that the other nodes verify the solution and update their local replica. Consensus is then reaches when 51\% of the nodes agree on the new state of the blockchain. The main drawback of this algorithm is that it requires miners to perform extensive computational calculations repeatedly until they find the solution to the mathematical problem, hence once the solution has been found by a miner, after expensive work, the solution is sent along in the broadcast to the other nodes to easily and cheaply verify the solution of the problem.
-\\[5mm]
+\\[3mm]
 To address this issue, some blockchains have opted to use the Proof of Stake (PoS) consensus algorithm as it is more energy efficient and scalable. Unlike Proof of Work, Proof of Stake use validators to create new blocks. Validators stake an amount of cryptocurrency as collatoral and the creator of a block is chosen at random from the validators, with the probability of selection based on the amount they have staked. Due to the advantages that PoS has over PoW, Ethereum has transitioned from PoW to PoS in Ethereum 2.0.
 
 \subsection{Ethereum}
@@ -51,7 +51,7 @@ Ethereum's architecture is similar to bitcoin's but has a few differences, one o
 \end{figure}
 
 \noindent Ethereum's state $\sigma$ consists of the states of all accounts where the state of an account is represented by four components: balance of ETH (the native cryptocurrency on Ethereum), a nonce, hash of the smart contract code (if account is a smart contract) and the Merkle root of smart contract storage which maintains the contracts variables (again, if account is a smart contract)~\cite{ethereum_yellowpaper}. A nonce, `Number only used once', is a number that is added to a hashed block to make the transaction more secure. It is randomly generated and used to validate a transaction. A miner first guesses a nonce and appends the guess to the hash of the current header. The miner then rehashes the value and compares this to the target hash. If the guess was correct, the miner is granted the block~\cite{noauthor_components_2021}.
-\\[5mm]
+\\[3mm]
 Ethereum supports two types of transactions: contract creation and message calls. Message calls are used to transfer ETH from account to account and also for invoking smart contract. The process of how transactions are validated is below:
 \begin{enumerate}
     \itemsep0em
@@ -65,7 +65,7 @@ Ethereum supports two types of transactions: contract creation and message calls
 
 \subsubsection{Gas Fees}
 Due to the capability of expressing loops in EVM bytecode, there is a possibility that smart contract execution could continue indefinitely. This presents a challenge as invoking a contract with an infinite loop would cause all Ethereum network nodes to become stuck executing it, resulting in a denial of service. To mitigate this issue, Ethereum has implemented a pricing mechanism. Every computation performed by a smart contract requires the payment of a fee called gas, which is denominated in ether.
-\\[5mm]
+\\[3mm]
 To measure how much computational effort is required to execute operations on the Ethereum network, gas is used~\cite{noauthor_gas_nodate}. Every block has a base fee, derived from the demand for the block space, which is burnt. Therefore, users of the network are expected to set a tip (priority fee) to reimburse miners for adding their transaction in blocks, thus the higher the tip, the greater the incentive for miners to validate the transaction. Using gas means that the Ethereum network is tolerant to spam and also has a maximum gas fee to make Ethereum tolerant to malicious code that would be used to waste resources.
 
 \subsection{Decentralised Finance}
@@ -79,9 +79,9 @@ In contrast, DEXes utilize blockchain technology and smart contracts to execute 
 
 \section{Arbitrage}
 Arbitrage is the process in which a trader simultaneously buys and sells an asset to take advantage of a market inefficiency~\cite{businessinsightsblog_2021}. Arbitrage is also possible in other types of securities by finding price inefficiencies in the prices of options, forward contracts and other exotics.
-\\[5mm]
+\\[3mm]
 Sources have shown that the word ``\textit{Arbitrage}'' has been used as early as the Renaissance era when surviving documents showed a large number of bills being exchanged~\cite{poitras_2021}. There has also been some evidence to suggest that arbitrage was used as early as the Greek and Roman eras. Early forms of arbitrage would likely have been purchasing a commodity then transporting them to a foreign land and selling them at a higher price. This type of arbitrage is called commodity arbitrage and is still applicable today. With the example above, transporting the goods takes a significant amount of to the merchant, or trader, which could cause variations in the price, however, in the modern day this has been reduced and with electronic exchanges, this time to buy and sell is very small. This means inefficiencies in the market, where a trader can profit purely by buying and selling, should not exist. This is called the ``Law of One Price''. The ``Law of One Price'' states that every identical commodity or asset should have the same price regardless of exchange or location, given there are no transaction costs, no transportation costs, no legal restrictions, the exchange rates are the same and no market manipulation occurs~\cite{noauthor_law_nodate}. This is because if this were not the case, an arbitrage opportunity would arise and someone would take advantage of the scenario causing the prices on both markets to converge due to the market forces. In the real world arbitrage opportunities are tremendously common, thus allowing a risk-free investment~\cite{10.2307/1828075, RICHARDSON1978341}.
-\\[5mm]
+\\[3mm]
 There are countless types of arbitrage such as spatial arbitrage, which profits off of different prices on exchanges in different locations, temporal arbitrage, which takes advantage of price differences at different times, risk arbitrage, which profits from perceived discrepancies in their risk-return profiles and finally market arbitrage which takes advantages of different prices on different exchanges/markets. Statistical methods include pairs trading, which involves buying and selling assets that are believed to be mispriced relative to one another, momentum trading, which identifies if assets have a strong momentum (either up or down) and profiting off of that, and finally, algorithmic trading which uses algorithms to analyze data and trades based on statistical analysis. This project shows how these opportunities can be exploited both in a pure manner as well as using statistical methods.
 
 \section{Pure Arbitrage Techniques}
@@ -104,9 +104,9 @@ The cointegration approach follows three key steps. The first is the selection o
 Another method that is used in statistical arbitrage is using the Kalman Filter. Recall the equation for spread:
 $$\varepsilon_{i j,t} = P_{i,t} + \gamma P_{j,t}$$
 \noindent The Kalman filter is a recursive algorithm for estimating the state of noisy data and that needs to be filtered to be able to estimate the state of a system based on a sequence of observations, taking into account both current measurements and the system dynamics~\cite{ALSADIK2019299}. This makes it very useful to estimate the hedge ratio $\gamma$. Initially, a book by Vidyamurthy discusses best practices for choosing cointegrated equities and found that the Kalman filter was found optimal when the state-space and observation equations are linear and the noise is Gaussian~\cite{vidyamurthy2004pairs}. Since then there have been many extensions of the filter such as the Extended Kalman Filter (EKF) and Unscented KF aimed to handle when the state-space and observation equations are non-linear and the noise is not Gaussian.
-\\[5mm]
+\\[3mm]
 The Kalman Filter works in 2 phases, prediction and update. The prediction phase is as follows $$\hat{\mathbf{x}}_k = \mathbf{F}_k \hat{\mathbf{x}}_{k-1} + \mathbf{B}_k \overset{\rightarrow}{\mathbf{u}}_k + \mathbf{w}_k$$ $$\mathbf{P}_k = \mathbf{F}_k \mathbf{P}_{k-1} \mathbf{F}_k^T + \mathbf{Q}_k $$ Where $\hat{\mathbf{x}}_k$ is the new best estimate (prediction) that is derived from $\hat{\mathbf{x}}_{k-1}$, the previous estimate and the prediction function $\mathbf{F}_k$. $\overset{\rightarrow}{\mathbf{u}}_k$ is the correction term, called the control vector, that is used when it is known that there are external influences in combination with $\mathbf{B}_k$ which is called the control matrix. In addition to this, the new uncertainty (covariance matrix), $\mathbf{P}_k$, is calculated using the previous uncertainty and additional uncertainty from the environment, $\mathbf{Q}_k $, $\mathbf{w}_k$ is called the state noise. The update is as follows $$\hat{\mathbf{x}}_k' = \hat{\mathbf{x}}_k + \mathbf{K}'(\overset{\rightarrow}{\mathbf{z}}_k - \mathbf{H}_k \hat{\mathbf{x}}_k)$$ $$\mathbf{P}_k' = \mathbf{P}_k - \mathbf{K}'\mathbf{H}_k \mathbf{P}_k$$ $$\mathbf{K}' = \mathbf{P}_k \mathbf{H}_k^T (\mathbf{H}_k \mathbf{P}_k \mathbf{H}_k^T + \mathbf{R}_k)^{-1}$$ Where $\mathbf{K}'$ is defined as the Kalman gain, $\mathbf{H}_k$ is the measurement matrix, $\overset{\rightarrow}{\mathbf{z}}_k$ is mean of the observed values, which is also calculated by $\overset{\rightarrow}{\mathbf{z}}_k = \mathbf{H}_k \hat{\mathbf{x}}_k + \mathbf{v}_k$ where $\mathbf{v}_k$ is the measurement noise, and $\mathbf{R}_k$ is the covariance of the uncertainty of the observed values~\cite{kalman_filter_bzarg}.
-\\[5mm]
+\\[3mm]
 A paper that investigated the use of the Kalman Filter on ETFs found that the strategy it employed worked well for in-sample data points and worse, but still profitable, results for out-of-sample data~\cite{dempsey_market_2017}. The paper adapted the Kalman Filter to be able to use it for pairs trading to the following: $$\mathbf{y}_t = \mathbf{x}_t \mathbf{\beta}_t + \mathbf{\epsilon}_t$$ $$\mathbf{\beta}_t = \mathbf{I} \mathbf{\beta}_{t-1} + \mathbf{\omega}_t$$ Then calculating the Kalman Gain: $$\text{Kalman Gain} = \frac{\text{Error in the estimate}}{\text{Error in the estimate + Error in the measurement}}$$ Then to calculate the estimate: $$\text{Estimate}_t = \text{Estimate}_{t-1} + \text{Kalman Gain} \times (\text{Measurement - }\text{Estimate}_{t-1})$$ And finally, calculating the new error: $$E_{\text{estimate}_t} = \frac{E_{\text{measurement}} \times E_{\text{estimate}_{t-1}}}{E_{\text{measurement}} + E_{\text{estimate}_{t-1}}}$$ $$E_{\text{estimate}_t} = E_{\text{estimate}_{t-1}} \times (1 - \text{Kalman Gain})$$
 
 \noindent The author states ``pairs trading strategies have gained widespread acceptance thus making profitability much more elusive'' to justify the disappointing results, however, the author fails to find evidence or provide sufficient evidence to justify the claim~\cite{dempsey_market_2017}.
@@ -116,7 +116,7 @@ A paper that investigated the use of the Kalman Filter on ETFs found that the st
     \caption{Aggregate average return of using the Kalman filter for pairs trading on ETFs~\cite{dempsey_market_2017}}
     \label{fig:kalman_results}
 \end{figure}
-\\[5mm]
+\\[3mm]
 Another paper used the combination of the Kalman Filter and Machine Learning, more specifically Extreme Learning Machine and Support Vector Regression (SVR) to build a statistical arbitrage strategy on the Brazilian Stock Exchange~\cite{6974093}. The strategies can simply be explained as using SVR and ELM to forecast returns and using the Kalman Filter to improve the forecast.
 \begin{figure}[htb!]
     \centering
@@ -179,11 +179,11 @@ Although the research in the papers previously mentioned does not investigate th
     \item $\gamma(X_0, X_i) = \frac{1}{n} \sum_{i=1}^{n} \gamma(x_0(k), x_i(k))$
 \end{enumerate}
 \noindent With $\varepsilon \in [0,1]$, the standard is set to $\varepsilon = 0.5$.
-\\[5mm]
+\\[3mm]
 The DCC-GARCH(1,1), \cite{engle2002dynamic}, model is also used to obtain conditional correlations for Bitcoin exchanges. The model was designed to use a combination of parameters such as the standard deviation of Bitcoin returns, traded volume, the volume of on-chain transactions, fees paid to miners, the ratio of current price and recent price history and internet hype/trends.
-\\[5mm]
+\\[3mm]
 Upon analysis of Grey and DCC-GARCH(1,1) correlations, it is found that the DCC correlations show a little variability whereas the Grey correlations are a lot more variable ranging from 0.29 to 1. In addition, the paper then further investigates these sources and finds that these opportunities are introduced when there is a large number of inter-exchange transfer requests, i.e. the network is congested, and high price volatility. In contrast, the high volume of exchanges and on-chain activity cause the arbitrage opportunities to decrease. This paper finds and explains these sources of statistical arbitrage however does not implement or devise an algorithm that uses statistical arbitrage to generate a profit from price discrepancies of Bitcoin on different exchanges.
-\\[5mm]
+\\[3mm]
 A paper that investigates statistical arbitrage on multiple cryptocurrencies is \cite{Figa-TalamancaGianna2021Cdff}. The authors of this paper analysed co-movements and cointegration of different cryptocurrencies on a centralised exchange using Augmented Dickey-Fuller (ADF) and  Kwiatkowsky-Phillips-Schmidt-Shin (KPSS), Ljung-Box autocorrelation tests on both stationary forms ($I(0)$) and the original form ($I(1)$). The paper then develops a dynamic factor model based on the assumption that the price dynamics of cryptocurrencies are driven by Bitcoin~\cite{blau2020comovement}, this is then evidenced by similar paths found in cryptocurrencies shown in Figure \ref{fig:pricebehaviour}.
 \begin{figure}[h!]
     \centering
@@ -218,7 +218,7 @@ $$g_{\tau + 1} =  \mathbb{E}_{\tau}[v_{\tau + 1}] = \sum_{i=1}^{\lfloor I / 2 \r
 \end{itemize}
 
 \noindent The researchers of the paper evaluated their trading strategy for 334 days and a moving window of 3 years, 1096 observations, every day to estimate the parameters for the dynamic factor model. We can see in Figure \ref{fig:gains} that the strategy was able to consistently generate a profit even when considering transaction costs.
-\\[5mm]
+\\[3mm]
 \begin{figure}[htb!]
     \centering
     \includegraphics[width=0.8\textwidth]{background/Images/gains.png}

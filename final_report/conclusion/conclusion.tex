@@ -1,1 +1,19 @@
-\chapter{Conclusion - TODO}
+\chapter{Conclusion}
+
+In conclusion, using the optimal paramters for each of the strategies, the Kalman Filter results in the best return of 81.14\%, Granger Causality with a return of 48.85\%, Lagged has a return of 38.70\% and the Sliding Window and Constant (benchmark) having returns of  21.70\% and 19.14\% respectively. It can clearly be seen that the former strategies perform well above the benchmark making it appealing for investors. Furthermore, the returns are also found to be not correlated to the market rate furthering its appeal to investors due to it's low $|\beta|$ values.
+\\[3mm]
+Overall, the strategies exhibit strong performance compared to the current state of the art. However, it is important to note that a significant initial investment, approximately 50 ETH equivalent to \$86,491.50 USD (based on the conversion rate on $17^{th}$ June 2023), is required to generate a substantial profit. This is primarily due to the transaction costs associated with executing trades on the Ethereum network. As a result, with a higher initial investment, the impact of gas fees becomes relatively insignificant, leading to more profitable outcomes rather than losses. Investors with enough capital would be able to employ these strategies, making the strategies not attractive to the average investor, however larger institutions may find these strategies appealing with the high return and also are good Sharpe ratio.
+
+\section{Future Work}
+
+\subsection{Running the Strategies Live}
+The next step would be to to execute and assess the real-time performance of the trading strategies. By running the strategies live, their effectiveness and profitability can be thoroughly examined, providing valuable insights into their practical application and potential for generating returns.
+
+\subsection{Different Decentralised Exchanges}
+To also further the research, an intriguing avenue for further exploration would be to assess the existence of statistical arbitrage opportunities in other decentralized exchanges (DEXes). By examining the performance of mean reversion strategies across various DEX platforms, valuable insights can be gained regarding the decentralized trading ecosystem as well as the potential profitability of such trading approaches.
+
+\subsection{Different Tokens}
+Furthermore, it is important to acknowledge the limitations of the liquidity pool selection process, specifically in terms of the availability of easily borrowable tokens. The current approach relied on tokens that were readily accessible through Aave, thus imposing a constraint on the pool of eligible tokens. However, as the decentralized ecosystem grows, the inclusion of additional tokens and lending protocols would facilitate the borrowing of a wider range of alt-coins, thereby unlocking a multitude of untapped arbitrage possibilities.
+
+\subsection{Different Blockchains}
+The Ethereum blockchain was chosen as the primary focus of this project due to its extensive ecosystem and diverse functionalities. However, with the rise in popularity of various other blockchains for different reasons, it becomes intriguing to explore the performance of the same trading strategies when applied to different blockchain networks. Evaluating the returns obtained from running the strategies on alternative blockchains can provide valuable insights into the comparative profitability and potential opportunities across different blockchain ecosystems.

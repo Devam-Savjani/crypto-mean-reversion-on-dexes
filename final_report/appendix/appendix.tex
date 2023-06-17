@@ -3,7 +3,7 @@
 \section{Pure Arbitrage}
 \label{appendix:add-background-pure-arb}
 As mentioned in Chapter \ref{sec:pure-arb}, research into this topic is still in its infancy thus which means a very thin slice of exploration on the subject matter. The majority of the research has been into the arbitrage on centralised exchanges~\cite{MakarovIgor2020Taai, crepelliere_arbitrage_2022, PAUNACristian2018ATSf}. Cristian Pauna investigates and implements an arbitrage strategy in~\cite{PAUNACristian2018ATSf}. The paper details the technical details of arbitrage trading from the data and the system architecture used. Pauna finds complications such as requesting data from multiple exchanges, converting the data such that it is homogeneous and also managing server load. Pauna presents the architecture such that the servers request data from the necessary exchanges, aggregating prices in a relational database which then triggers a server that is used to generate trading signals.
-\\[5mm]
+\\[3mm]
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.28\textwidth]{background/Images/Arbitrage-Architecture.png}
@@ -11,7 +11,7 @@ As mentioned in Chapter \ref{sec:pure-arb}, research into this topic is still in
 \end{figure}
 
 \noindent Triangular and cyclic arbitrage is one of the most used and purest forms of arbitrage to implement and analyse,~\cite{boonpeam2021arbitrage} explores triangular arbitrage on decentralised exchanges. Algorithm \ref{alg:arb_sys_on_dex} is the algorithm used to find the most profitable arbitrage route on a particular platform, once this is calculated, it is compared with other routes on other platforms. Initially, the system converts the base token into another token and converts it back into the base token, using only one token is used as a middle route, then using the algorithm below, increases the number of middle tokens.
-\\[5mm]
+\\[3mm]
 
 \begin{algorithm}
     \caption{Maximum Profit Route Searching (R)}\label{alg:arb_sys_on_dex}
@@ -35,7 +35,7 @@ As mentioned in Chapter \ref{sec:pure-arb}, research into this topic is still in
 \end{enumerate}
 
 \noindent Figure \ref{fig:arb_on_diff_exchanges} displays the revenues obtained by same trading token route, ETH $\rightarrow$ MKR $\rightarrow$ OMG $\rightarrow$ USDT $\rightarrow$ ETH. As we can see upon applying the strategy on multiple exchanges; Uniswap, 1inch, Kyberswap and Bancor, 1 inch was the only exchange that generated a profit whereas the others lose money~\cite{boonpeam2021arbitrage}. 
-\\[5mm]
+\\[3mm]
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.6\textwidth]{background/Images/revenue_oncyclic_arb.png}
@@ -75,7 +75,7 @@ As mentioned in Chapter \ref{sec:pure-arb}, research into this topic is still in
 \end{algorithm}
 
 \noindent After analyzing Ethereum block data and applying this strategy to identify the number of arbitrage opportunities, it was found that between May 4, 2020, and April 15, 2021, there were numerous exploitable and profitable arbitrage opportunities. These opportunities grew consistently to reach 1,750 in 11 months, as depicted in Figure \ref{fig:exploitable_ops}. Only cycles with length 3 were experimented with and only cycles including ETH as 80\% of the liquidity pools on Uniswap include ETH and another cryptocurrency~\cite{heimbach2021behavior}. Furthermore, it is found that 287,241 of the 292,606 arbitrages executed started with ETH, and 85\% of the arbitrages used a cycle of length 3. The total revenue of the cyclic arbitrage was 34,429 ETH. However, gas fees account for 24.6\% of the total revenue leaving an approximate 25,971 ETH profit.
-\\[5mm]
+\\[3mm]
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.6\textwidth]{background/Images/exploitable_ops.png}
@@ -83,7 +83,7 @@ As mentioned in Chapter \ref{sec:pure-arb}, research into this topic is still in
 \end{figure}
 
 \noindent The paper then delves into the implementation of the smart contract, and explores how both \textit{sequential} and \textit{atomic} implementations would affect the revenue and execution of the contracts. It was found that 52.3\% of the arbitrages that were executed sequentially generated a loss, likely due to the fact that, when one submits $n$ orders, the $n$ blockchain transactions are executed sequentially, meaning some external transactions can be inserted between these transactions. Thus using atomic transactions avoids this issue of external transactions does not affect the market price that may affect the outcome of the arbitrage.
-\\[5mm]
+\\[3mm]
 Furthermore, the authors of the paper also investigated the performance differences between using private smart contracts and public contracts. Deploying a smart contract that calls Uniswap functions, i.e. a private smart contract, is intuitively better and achieves a higher success rate of a lower bound of 52\% and a higher bound of 90\% in comparison to calling a public Uniswap smart contract which has a success rate of 27.3\%. Overall the paper provides an insightful look into cyclic arbitrage in DEXes and highlights important decisions made such as liquidity calculations and smart contracts while comparing the performance of different options available.
 
 \section{Optimal Portfolio Design for Mean Reversion}
@@ -120,9 +120,9 @@ There has been further research into optimizing mean reversion, one of which was
         -\sqrt{\mathbf{w}^T \mathbf{M}_0\mathbf{w}}  & \text{StdNeg(\textbf{w})}
     \end{cases}$$
 The variance term can be represented in any of the four forms.
-\\[5mm]
+\\[3mm]
 And the asset selection term: $$S(\mathbf{w}) \triangleq \big\| \mathbf{B} \mathbf{w}\big\|_0 = \sum_{m=1}^{M} sgn(\mid \bigl[ \mathbf{B} \mathbf{w} \bigr]_m \mid)$$ This asset selection criterion is not necessary however as trading incurs a cost, selecting all of the assets is costly, thus selecting a subset of assets to trade is more profitable. To formalize this goal, we would like to minimize the cointegration space thus we use the $\ell_0$ norm.
-\\[5mm]
+\\[3mm]
 The paper then goes on to solve the optimization problem using the successive convex approximation (SCA) method~\cite{scaOptimization}. The SCA method takes an optimization problem in the form of:
 \begin{equation*}
     \begin{aligned}
@@ -177,7 +177,7 @@ The first step is to generate a descent direction and then update the variable w
 \end{algorithm}
 
 \noindent After all of this analysis, the authors of the paper, \cite{8450775, ZipingZhao2019OMPW}, ran simulations on real data comparing underlying spread. It found that it resulted in consistent profits as shown in Figure \ref{fig:ROIsMRP}.
-\\[5mm]
+\\[3mm]
 \begin{figure}[htb!]
     \centering
     \includegraphics[width=0.4\textwidth]{background/Images/rois1.png}

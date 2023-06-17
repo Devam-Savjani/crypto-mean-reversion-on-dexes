@@ -13,7 +13,7 @@ To develop a resilient backtesting system, a dedicated class was constructed to 
 
 \subsection{Data Collection and Storage}
 In order to simulate the market as accurately as possible the system should have access to reliable and accurate historical market data, including price, volume, and other relevant indicators. Therefore, I retrieve all of my data from the Uniswap and Aave protocols' subgraph using the Graph~\cite{noauthor_graph_nodate}. The Graph is a decentralised protocol for indexing and querying blockchain data hence making the data provided 100\% reliable as it indexes directly on the Ethereum blockchain. Subgraphs serve as GraphQL APIs designed to facilitate querying and extracting data from the blockchain. These APIs adhere to a specific schema outlined by the protocol, enabling seamless communication between the protocol and the underlying blockchain. Therefore, I employ the Uniswap V3, Aave V2, and Aave V3 subgraphs to obtain the data required for the backtesting system.
-\\[5mm]
+\\[3mm]
 To store the necessary data for backtesting and trading, a PostgreSQL database is used this is to provide consistency, flexibility with numerous data types and also supports a large set of SQL functions that allow for advanced querying. The database adopts the following schema:
 \begin{figure}[!htb]
     \centering
@@ -21,7 +21,7 @@ To store the necessary data for backtesting and trading, a PostgreSQL database i
     \caption{Tables contained in the database \label{fig:database}}
 \end{figure}
 The \texttt{liquidity\_pools} contains data about the liquidity pools that exist on Uniswap V3. After obtaining all of the data it is found that it possesses 12,182 liquidity pools. However, a substantial portion of these pools exhibit minimal or negligible trading volume. As a result, a criterion is established to selectively include only those liquidity pools that involve tokens supported by Aave and possess a trading volume exceeding \$10,000,000 (or \$10 million). This filtering condition ensures that the collected and stored data holds significance and relevance for research purposes, as these pools would allow for short selling.
-\\[5mm]
+\\[3mm]
 Once these pools have been identified, pricing data about each pool that meets this condition is collected again using the Uniswap V3 subgraph. The following shows the GraphQL query:
 \vspace{5mm}
 \begin{lstlisting}
@@ -40,7 +40,7 @@ query ($id: ID!, $prev_max_time: Int!) {
 \end{lstlisting}
 \vspace{5mm}
 This query returns an array of dictionaries containing the pre-specified pricing datapoints at a frequency of every hour. Due to the limitations imposed by the subgraph, the results are constrained to a maximum size of 1000 entries. To overcome this limitation and obtain the complete dataset, the query is executed iteratively. The previous maximum time, referred to as \texttt{prev\_max\_time}, is passed as an argument in subsequent queries to fetch the remaining data, i.e. \texttt{prev\_max\_time = hourlyData[-1]['periodStartUnix'] if len(hourlyData) > 0 else prev\_max\_time}. This data is stored in tables of the form \textit{<pool\_address>}\_\textit{<token0>}\_\textit{<token1>}.
-\\[5mm]
+\\[3mm]
 In a similar manner, obtaining the interest rates for borrowing necessitates the utilization of two of Aave's subgraphs. This requirement arises due to Aave's migration to Version 3 in March 2022, resulting in a transitional period where both Uniswap V3 and Aave V2 were concurrently utilized. The schemas for the two are different, however for the data we require, the borrowing rate, loan-to-value and liquidity threshold, the schema is consistent and the same query can be used:
 \vspace{5mm}
 \begin{lstlisting}
@@ -62,7 +62,7 @@ query ($symbol: String!, $prev_max_time: Int!) {
 \end{lstlisting}
 \vspace{5mm}
 During the table initialization process, requests are made to both the V2 and V3 GraphQL endpoints. However, when updating the table, only the V3 endpoint is utilized for sending requests. The data is stored in tables of the form \textit{<symbol>}\_borrowing\_rates, where \textit{<symbol>} are all of the tokens that are present in the liquidity pools that are of interest.
-\\[5mm]
+\\[3mm]
 To collect the gas price history, the transaction history is queried at each hour since Uniswap migrated to V3. This is because querying in the same as the pricing data and borrowing rate history is too exhaustive as transactions occur every second. Therefore, it is more efficient to query at each hour with a window to retrieve the gas price at the closest hour as follows:
 \vspace{5mm}
 \begin{lstlisting}
@@ -225,11 +225,11 @@ The remaining fee that is yet to be discussed is gas fees of each order. To best
 \end{figure}
 
 \noindent Upon analyzing these plots, it becomes apparent that the majority of the functions exhibit a high level of consistency. However, it is noteworthy that for the smallest quantity tested, the gas consumption is significantly higher compared to that of larger quantities. Nevertheless, once this threshold is surpassed, the gas usage remains consistent. Therefore the average of the gas usage of each operation is used in the backtesting system as it provides a representative estimate of the gas consumption across different quantities.
-\\[5mm]
+\\[3mm]
 Furthermore, another feature that is interesting is the gas usage by swaps and the different methods. The initial method utilizes Uniswap's Router, which scans all available liquidity pools to identify the optimal price, whereas the second method involves direct swapping within a specific liquidity pool. Figure \ref{fig:gasPlots1} illustrates that, on average, the router-based approach exhibits higher gas usage compared to direct swapping using a liquidity pool. However, directly swapping using a liquidity pool exhibits greater volatility in terms of gas consumption but also consistently returns to values above 100,000, because of this the average gas usage of swapping using a liquidity pool is used.
-\\[5mm]
+\\[3mm]
 It can also be seen that combining the operations to open/close buy and sell positions consumes less gas compared to if were to be executed seperately. This also confirms the claims in Wang's paper, that batching the operations together is more effective than executing them seperately~\cite{wang_cyclic_2022}.
-\\[5mm]
+\\[3mm]
 To implement this in the backtesting system, each order deducts some ETH where this quantity is calculated by how much gas is used by the order type multiplied by the gas price. For example, in the case of buying more ETH:
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
