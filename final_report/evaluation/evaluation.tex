@@ -17,14 +17,18 @@ The design of each strategy and the backtesting system allow for extensive param
     \caption{Liquidity pool pairs and their corresponding labels}
 \end{table}
 \vspace{-4ex}
-\section{Number of Standard Deviations away from the Mean}
+\section{Trading Systems}
+
+\section{Strategy Parameters}
+
+\subsection{Number of Standard Deviations away from the Mean}
 Varying the standard deviation in a mean reversion pairs trading strategy can have a significant impact on the strategy's returns. When the number of standard deviations is set too high, it means that the spread between the pair's prices must deviate significantly from the mean before a signal is generated. In this case, the strategy may generate fewer trades, resulting in longer holding periods for positions, however this tends to have a greater return per trade. On the other hand, setting a lower number of standard deviations makes the strategy more sensitive to smaller deviations from the mean. This increases the frequency of trade signals and potentially leads to more active trading. However, it also exposes the strategy to a higher risk of false signals or trading on noise in the price data. It can result in higher transaction costs and potentially lower returns due to increased trading activity, potentially resulting in losses. For the purpose of simplicity, $\#_{\sigma}$ denotes this parameter.
 \\[5mm]
 Table \ref{tab:varying_sigma} displays the returns as the standard deviations away from the mean the threshold is set. For the purpose of this experiment the other parameters were; 100 ETH worth of initial investment, the window size set to 30 days, a gas price threshold of 1 ETH (i.e. not having a threshold), the interactions with the blockchain to be seperately executed and finally the lag that the lagged strategy uses is set to 1 hour. The period that trading occurs is from 18th December 2021 to 9th June 2023.
 \\[5mm]
-We can see that as $\#_{\sigma} \rightarrow 0$, the number of trades increases however causes the returns to be more negative (and in some cases terminating early with 100\% loss) than positive, likely due to trades being opened when gas fees are substantially larger than the profit. However, if $\#_{\sigma}$ is larger, although the profits from each trade increases, the number of opportunities that were actionable were limited. Another interesting feature that can easily be spotted is that the Constant Hedge Ratio Strategy makes little to no profit in all cases whereas the other strategies perform better as $\#_{\sigma} \rightarrow \sim2$. Furthermore, all of the strategies return a profit on pool pair 6 with the exception of the Kalman Filter Strategy, albeit with a higher threshold.
+We can see that as $\#_{\sigma} \rightarrow 0$, the number of trades increases however causes the returns to be more negative (and in some cases terminating early with 100\% loss) than positive, likely due to trades being opened when gas fees are substantially larger than the profit. However, if $\#_{\sigma}$ is larger, although the profits from each trade increases, the number of opportunities that were actionable were limited. Another interesting feature that can easily be spotted is that the Constant Hedge Ratio Strategy makes little to no profit in all cases whereas the other strategies perform better as $\#_{\sigma} \rightarrow \sim 1.75$. Furthermore, all of the strategies return a profit on pool pair 6 with the exception of the Kalman Filter Strategy, albeit with a higher threshold.
 \\[5mm]
-Consistent profit among all of the pool pairs, excluding pool pair 6, is also achieved at different $\#_{\sigma}$s. We can see in Figure \ref{fig:varyStd} that the average return across all liquidity pool pairs that each strategy generates at each standard deviation. The Kalman Filter becomes largely profitable at $\#_{\sigma} = 0.5$, whereas the lagged, sliding window and granger causality strategies become profitable at $\#_{\sigma} = 2$. This is highly due to the fact that the Kalman Filter is better able to find underlying trends thus being better at selecting the hedge ratio.
+Consistent profit among all of the pool pairs, excluding pool pair 6, is also achieved at different number of standard deviations. We can see in Figure \ref{fig:varyStd} that the average return across all liquidity pool pairs that each strategy generates at each standard deviation. The Kalman Filter becomes largely profitable at $\#_{\sigma} = 0.5$, whereas the lagged and sliding window strategies become profitable at $\#_{\sigma} = 2$. The reason for this is is highly due to the fact that the Kalman Filter and the Granger Causality tests are better able to find underlying trends thus being better at selecting the hedge ratio, which in turn effect the volumes being traded and hence the effect the returns.
 
 \definecolor{green}{RGB}{0,153,0}
 \begin{table}[!htb]
@@ -103,13 +107,13 @@ Consistent profit among all of the pool pairs, excluding pool pair 6, is also ac
     \label{fig:varyStd}
 \end{figure}
 
-\section{Gas Fees}
+\subsection{Gas Fees}
 Another aspect that could be changed is fees; the first is how the transactions are executed on the blockchain and also the maximum gas price if we want to open a position. As previously mentioned, the gas fee is calculated by a combination of the gas price and the gas used. Therefore, these 2 parameters allow the strategy control both the gas used and gas price.
 
-\subsection{Batched Transactions vs Seperately Executed Transactions}
+\subsubsection{Batched Transactions vs Seperately Executed Transactions}
 The method in which the transactions are executed effects how much gas is used. When transactions are executed separately, each transaction incurs its own gas cost. This means that for every individual transaction, there will be gas consumed for various operations such as contract interaction, data storage, and computational tasks. As a result, executing a large number of separate transactions can lead to a significant cumulative gas cost. On the other hand, when transactions are batched together, they are consolidated into a single transaction. This consolidation reduces the overhead associated with executing multiple transactions individually. By combining the operations of multiple transactions into a single execution, redundant computations and storage operations can be eliminated, resulting in more efficient gas usage. It can immediately be seen in Figure \ref{fig:gasResult} that the process of batching the transactions consumes less gas than the combined gas of the transactions required to exectue the openning and closing of the positions.
 \\[5mm]
-Furthermore, the effects of using seperate versus batched transactions can be seen in Table \ref{tab:BatchedVsSeperate}. The parameters used for this investigation were the same as above with the selection og $\sigma = 1.75$, 100 ETH worth of initial investment, the window size set to 30 days, a gas price threshold of 1 ETH (i.e. not having a threshold) and the testing period remained from 18th December 2021 to 9th June 2023.
+Furthermore, the effects of using seperate versus batched transactions can be seen in Table \ref{tab:BatchedVsSeperate}. The parameters used for this investigation were the same as above with the selection eg $\sigma = 1.75$, 100 ETH worth of initial investment, the window size set to 30 days, a gas price threshold of 1 ETH (i.e. not having a threshold) and the testing period remained from 18th December 2021 to 9th June 2023.
 
 \begin{table}[H]
     \centering
@@ -140,11 +144,11 @@ Furthermore, the effects of using seperate versus batched transactions can be se
 \end{table}
 \noindent When comparing the use of batched transactions to executing transactions separately, it is evident that utilizing batched transactions yields a higher return, as expected. The observed increase in return ranges from approximately 1\% to 8\% compared to executing the transactions individually. The higher return achieved through batched transactions can be attributed to several factors. First, as mentioned earlier, batching transactions reduces the gas costs associated with executing multiple transactions. By consolidating operations into a single transaction, redundant computations and storage operations are eliminated, resulting in more efficient gas usage. The reduction in gas costs directly contributes to the overall profitability of the trading strategy.
 
-\subsection{Gas Price Threshold}
+\subsubsection{Gas Price Threshold}
 A threshold on the gas price is also set to ensure positions that have a high transaction cost associated with it are avoided. As the gas price is variable, we can see in Figure \ref{fig:GasPriceHistogram} the distribution of the gas prices over time is similar to a geometric distribution therefore by thresholding high gas prices, the strategies would avoid making a trade where the trade's profit would be overshadowed by the cost of trading.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\linewidth]{evaluation/Images/GasPriceHistogram.png}
+    \includegraphics[width=0.7\linewidth]{evaluation/Images/GasPriceHistogram.png}
     \caption{Histogram Plot of Gas Prices in ETH}
     \label{fig:GasPriceHistogram}
 \end{figure}
@@ -212,10 +216,10 @@ Overall, the analysis of varying gas price thresholds reveals that adjusting the
     \caption{Returns of each strategy when using different gas price thresholds \label{tab:VaryGasPriceThresholds}}.
 \end{table}
 
-\section{Initial Investment Volume}
+\subsection{Initial Investment Volume}
 Another import factor that contributes to the profit is the initial investment therefore Table \ref{tab:VaryInitialInvestments} and Figure \ref{fig:VaryInitialInvestments} displays the returns obtained by various initial investments. It can immediately be seen that the higher the investment, the greater the return. However, the smallest investments fall to a loss immediately for all strategies, this is because the fee that are incurred by gas fees are fixed regardless of the volume whereas the costs incurred by Aave and Uniswap are proportional to the volume being traded. This fixed fee means that a greater volume is required to cover the cost of the gas fee in order to generate profit, which is of course proportional to the volume being traded. Hence, as the investment increases the return increases however, begins to platau after 25ETH as the fixed fee becomes negligible in comparison to the investment.
 \\[5mm]
-Upon comparing the different strategies, the Kalman Filter is able to generate a profit with least amount of investment, followed by the Lagged strategy, then, interestingly, the Granger Causality and Sliding Window strategies perform exactly the same and finally the Constant strategy fails to make any money with any investment. This similarity between the Granger Causality and Sliding Window strategies is also evident in the other sections showing similar returns and trends as can be seen in Figures \ref{fig:varyStd} and \ref{fig:VaryGasPriceThresholds}.
+Upon comparing the different strategies, the Kalman Filter is able to generate a profit with least amount of investment, followed by the Granger Causality strategy, then, the Lagged and Sliding Window strategies and finally the Constant strategy fails to make any money with any investment. Interestingly, although the Granger Causality test strategy is able to churn a better return at lower initial investments, when initial investment $\leq 20$, the Lagged strategy overtakes the returns of the Granger Causality strategy once returns hit 0\%. The Lagged strategy plataus to around 60\% whereas the Granger Causality strategy plataus to 50\%, indicating that although both of these methods assesses causality of the price dynamic between the two liquidity pairs, the lagged strategy estimates the hedge ratio better than the unrestricted model generated from the Granger Causality test.
 
 \begin{figure}[H]
     \centering
@@ -290,7 +294,7 @@ Upon comparing the different strategies, the Kalman Filter is able to generate a
     \caption{Returns of each strategy when using different initial investment volumes (Note: Ethereum to USD conversion rate is from 18th December 2021) \label{tab:VaryInitialInvestments}}.
 \end{table}
 
-\section{Window Size}
+\subsection{Window Size}
 The final parameter that also has an effect on the returns is the window size. This window size is used when calculating the mean and standard deviation that are used to calculate the thresholds. As we can see in the excerpt below, the greater the window size, the more data the strategy would use to calculate the thresholds.
 \vspace{5mm}
 \begin{lstlisting}[language=Python]
@@ -362,27 +366,28 @@ It is also interesting to see that in this period of trading the Kalman Filter p
             
         \end{tabular}
     \end{adjustwidth}
-    \caption{Returns of various standard deviation thresholds of each strategy \label{tab:VaryWS}}.
+    \caption{Returns of various Window Sizes \label{tab:VaryWS}}.
 \end{table}
 
+
 \section{Evaluation of Strategies}
-Overall, given the experiments conducted the optimal paramters for each strategy are different and thus to evaluate each strategy, the following paramters are used:
+Overall, given the experiments conducted the optimal paramters for each strategy are different and thus to evaluate each strategy, Table \ref{tab:OptimParams} displays the optimal parameters used for each strategy.
 
 \begin{table}[H]
     \centering
-    \begin{tabular}{|p{4em}|p{8em}|p{4em}|p{4em}|p{4em}|p{8em}|}
+    \begin{tabular}{|p{6em}|p{8em}|p{6em}|p{4em}|p{8em}|}
     \hline
-        Strategy & Number of Standard Deviations from the mean, $\#_{\sigma}$ & Gas Price Threshold in ETH & Initial Investment in ETH & Window Size in Days & Type of Execution, Seperate or Batched \\ \hline
-        Constant & 3 & 6.36e-08 & 100 & 60 & Batched \\ \hline
-        Sliding Window & 2 & 8.83e-08 & 100 & 60 & Batched \\ \hline
-        Lagged & 2 & 1.29e-07 & 100 & 60 & Batched \\ \hline
-        Granger Causality & 1.5 & 2.13e-05 & 100 & 60 & Batched \\ \hline
-        Kalman Filter & 0.5 & 2.13e-05 & 100 & 60 & Batched \\ \hline
+        Strategy & Number of Standard Deviations from the mean, $\#_{\sigma}$ & Gas Price Threshold in ETH & Window Size in Days & Type of Execution, Seperate or Batched \\ \hline
+        Constant & 3 & 6.36e-08 & 60 & Batched \\ \hline
+        Sliding Window & 2 & 8.83e-08 & 60 & Batched \\ \hline
+        Lagged & 2 & 1.29e-07 & 60 & Batched \\ \hline
+        Granger Causality & 1.5 & 2.13e-05 & 60 & Batched \\ \hline
+        Kalman Filter & 0.5 & 2.13e-05 & 60 & Batched \\ \hline
     \end{tabular}
     \caption{Optimal Parameters for each strategy \label{tab:OptimParams}}
 \end{table}
 
-By running the backtesting system from 14th January 2022 to 9th June 2023, we can see in Table \ref{tab:FinalResults} the Kalman Filter outperforms all of the other strategies in all liquidity pool pairs except pair 6. The Lagged strategy has also performed well, whereas the Constant, Granger Causality and the Sliding Window strategies also resulting in similar mediocre returns, with the Granger Causality strategy performing the worst.
+By running the backtesting system from 14th January 2022 to 9th June 2023 with an initial investment of 100ETH, we can see in Table \ref{tab:FinalResults} the Kalman Filter outperforms all of the other strategies in all liquidity pool pairs except pair 6. The Granger Causality strategy has also performed well, whereas the Lagged strategy returned mediocre a return, with the Constant and the Sliding Window strategies strategy performing similarly, both resulting in around 20\% APY.
 
 \begin{table}[!htb]
     \centering
@@ -422,11 +427,12 @@ Another valuable insight can be seen in Figure \ref{fig:HedgeRatioPerStrat} wher
     \label{fig:HedgeRatioPerStrat}
 \end{figure}
 
-
-\section{Beta}
+\subsection{Beta}
 An important metric when evaluating trading strategies or investments that is used in industry is Beta, $\beta$. It measures how correlated the strategy's return is with the market return rate. It is often used as a risk-reward measure, allowing investor to make better decisions when investing, balancing the risk and reward. $\beta$ is defined as $\beta = \frac{Cov(R_M, R_S)}{Var(R_M)}$, where $R_M$ is the market's returns and $R_S$ is the strategy's or stock's returns, the higher the $\beta$ value the more correlated the strategy's return is with the market whereas a lower one, i.e. $\rightarrow - \infty$, the strategy swings the opposing direction to the market. Therefore, in risk neutral strategies, a low absolute value is ideal as it minimizes the risk.
 \\[5mm]
 Therefore, to analyse the $\beta$ of each strategy, the conversion from WETH to USD is used as the strategies use WETH as their base currency. As we can see in Table \ref{tab:betas}, the $\beta$s are very close to 0 indicating that the strategy's dependence on the market returns is very low. The low $\beta$ values imply that the trading strategy may be designed to generate returns based on factors other than general market movements. It suggests that the strategy relies more on specific signals, indicators, or market inefficiencies rather than the broader market conditions. This can be advantageous in certain situations, as it may allow the strategy to perform well even when the overall market is experiencing volatility or downturns.
+\\[5mm]
+The comparison of account values and the evolution of ETH price over time are depicted in Figure \ref{fig:beta-vis}. The figure illustrates that there is a limited correlation between the returns of the trading strategy and the price of ETH. While the returns of the strategy do not closely follow the exact movements in the ETH price, it is evident that significant price fluctuations in ETH do have an impact on the strategy's performance. This observation suggests that the trading strategy's returns are influenced, to some extent, by the general trends and movements in the price of ETH. However, it is important to note that the relationship is not entirely linear or directly proportional. Analyzing the correlation between the strategy's returns and the price of ETH provides valuable insights into the dynamics of the trading strategy and its sensitivity to market movements. By understanding the impact of ETH price changes on the strategy's performance, traders and investors can make informed decisions and potentially adjust their strategies to optimize their returns and manage risks effectively. It can also be seen that the Constant, Sliding Window and Lagged strategies are less effected by the market compared to the Granger Causality and Kalman Filter strategies.
 
 \begin{table}[!htb]
     \centering
@@ -447,31 +453,34 @@ Therefore, to analyse the $\beta$ of each strategy, the conversion from WETH to 
     \caption{$\beta$s of each strategy \label{tab:betas}}.
 \end{table}
 
-\section{Sharpe Ratio}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{evaluation/Images/beta_visualisation.png}
+    \caption{Account Value of time with the price of ETH}
+    \label{fig:beta-vis}
+\end{figure}
+
+\subsection{Volatility \& Sharpe Ratio}
+
+
 Another metric that is commonly used in finance is the Sharpe Ratio, the reason for this is that it is important to evaluate how risky the strategies are compared to the risk free rate. The metric is given by the formula below:$$\text{Sharpe Ratio} = \frac{R_p - R_f}{\sigma_p}$$ Where $R_p$ is the return of a portfolio, $R_f$ is the risk-free rate and $\sigma_p$ is the standard deviation of the portfolio. A higher Sharpe ratio indicates a better risk-adjusted return, as it signifies a higher return relative to the amount of risk taken. It implies that the investment has achieved a greater excess return compared to the risk-free rate, considering the level of volatility. Conversely, a lower Sharpe ratio suggests a lower risk-adjusted return, indicating a relatively higher level of risk for the given return. The Sharpe ratio also helps investors compare different investments or strategies based on their risk adversity performance. It provides a way to assess whether the return generated by an investment adequately compensates for the level of risk taken. 
 \\[5mm]
-To calculate each of the strategies Sharpe Ratios, the Bank of England's interest rate of 4.5\%~\cite{boe_interest}. Table \ref{tab:sharpes} displays the sharpe ratios of each strategy, we see that the Lagged Strategy exhibits the highest hedge ratio, followed by the Granger Causality and Sliding Window strategies, while the Kalman Filter and Constant strategies have the lowest Sharpe ratios. This discrepancy can be attributed to the Kalman Filter strategy having a higher variance, indicating a greater level of risk compared to the Sliding Window, Lagged, and Granger Causality strategies. However, it is worth noting that Pool Pair 6 significantly diminishes the average Sharpe ratio due to generating losses in all strategies.We see that the average Sharpe ratio for the lagged strategy, excluding pair 6, it have a Sharpe ratio $>2$ which is considered to be `very good' and a Sharpe ratio $>1$ is considerer to be `good' according to Forbes~\cite{forbes_sharpe_ratio}. Overall, with the exception of the Constant strategy, all strategies yield desirable Sharpe ratios, indicating favourable risk-adjusted returns.
+To calculate each of the strategies Sharpe Ratios, the Bank of England's interest rate of 4.5\%~\cite{boe_interest}. Table \ref{tab:sharpes} displays the sharpe ratios of each strategy, we see that the Constant Strategy exhibits the highest hedge ratio, followed by the Lagged and Granger Causality strategies, while the Sliding Window and Kalman Filter strategies have the lowest Sharpe ratios. This discrepancy can be attributed to the Kalman Filter strategy having a higher variance, indicating a greater level of risk compared to the Sliding Window, Lagged, and Granger Causality strategies. According to Forbes, a Sharpe ratio $>1$ is considerer to be `good' as it suggests that the investment or strategy has generated a return that is more than one unit of risk. Overall, all strategies yield desirable Sharpe ratios, indicating favourable risk-adjusted returns.
 
 \begin{table}[!htb]
     \centering
-    \begin{adjustwidth}{-0.8in}{-0.9in}
-        \begin{tabular}{|p{5em}|p{7em}|p{7em}|p{7em}|p{8em}|p{7em}|}\hline
-            Pool Pair & \multicolumn{5}{|c|}{Strategies' Sharpe Ratios} \\\cline{1-6}
-            & Constant & Sliding Window & Lagged & Granger Causality & Kalman Filter\\\cline{2-6}
-            0 & -3.2526 & 1.8110752 & 3.0395512 & 4.4443604 & 7.8316423\\\cline{2-6}
-            1 & -5.7657 & -1.9847846 & -1.0781604 & 2.0794984 & 9.3622963\\\cline{2-6}
-            2 & -5.1014 & -2.5147845 & -2.0205469 & 1.4635559 & 8.8371452\\\cline{2-6}
-            3 & -6.3718 & -3.2722231 & -2.662211 & 1.0365837 & 7.4736901\\\cline{2-6}
-            4 & -5.1224 & -1.8365514 & -0.9838178 & 3.7724422 & 8.3383768\\\cline{2-6}
-            5 & -6.5222 & -3.1851225 & -2.2215528 & 3.8603568 & 7.7979282\\\cline{2-6}
-            6 & -6.1753 & -3.9558392 & -3.2670623 & -4.8689624 & 0.7866802\\\hline\hline
-            Average & -5.473072 & -2.134033 & -1.313400 & 1.683976 & 7.203966 \\\hline
+        \begin{tabular}{|p{7em}|p{7em}|p{7em}|p{7em}|}\hline
+            Strategy & Volatility & Average Return & Sharpe Ratio \\\hline
+            Constant & 9.28 & 19.14 & 1.46\\\hline
+            Sliding Window & 16.02 & 21.70 & 1.10\\\hline
+            Lagged & 27.04 & 38.70 & 1.29 \\\hline
+            Granger Causality & 38.35 & 48.85 & 1.20\\\hline
+            Kalman Filter & 68.34 & 81.14 & 1.17\\\hline
         \end{tabular}
-    \end{adjustwidth}
-    \caption{Sharpe Ratios of each strategy \label{tab:sharpes}}.
+    \caption{Volatility and Sharpe Ratios of each strategy \label{tab:sharpes}}.
 \end{table}
 
-\section{Comparison with Previous results}
+\subsection{Comparison with Previous results}
 Overall, the strategies seem to be a desirable investment for those with enough capital however how does these invests stand against other techniques used. There has not been any research into statistical arbitrage on decentralized exchanges, with the few that have looked into trading in DEXes evaluating pure arbitrage, searching for miss-pricing and executing them. One of which found there to be little to no profitable arbitrage opportunities on various decentralised exchanges, including Uniswap, regardless of volume size~\cite{boonpeam2021arbitrage}. This happens as the pair prices as automatically adjusted based on the supply and demand, making the opportunities limited, short lived and costly. In comparing, the results from the strategies implemented in this paper do generate a profit in comparison to the cyclic arbitrage approach.
 \\[5mm]
-Other research into statistical approaches to arbitrage have been done on more mainstream assets such as ETFs however, they have not been experimented on cryptocurrencies. One paper used the Kalman Filter on ETFs and ETNs and found there to be an average of 25.17\% returns in 1 year in insample backtesting, however failed to generate any profit in its out of sample results~\cite{dempsey_market_2017}. The implemented Kalman Filter and Lagged trading strategies yeild a greater APR compared to this. In addition to this, another peice of research used a combination of machine learning and the Kalman Filter on assets on the BM\&FBovespa Exchange, yeilding a return of 26.13\% in the out of sample results~\cite{6974093}. In comparison, the Kalman Filter and the Lagged strategies implemented in this paper have a greater return, however the strategy implemented by Oliveira and Nóbrega, posses greater Sharpe ratio meaning the risk-adjusted returns are more favourable. To summarize, the two of the five strategies implemented out perform the current research out there on both purer forms of arbitrage, i.e. cyclic arbitrage, and also the use of Kalman Filter on other types of assets, i.e. ETFs and ETNs.
+Other research into statistical approaches to arbitrage have been done on more mainstream assets such as ETFs however, they have not been experimented on cryptocurrencies. One paper used the Kalman Filter on ETFs and ETNs and found there to be an average of 25.17\% returns in 1 year in insample backtesting, however failed to generate any profit in its out of sample results~\cite{dempsey_market_2017}. The implemented Lagged, Kalman Filter and Granger Causality trading strategies yeild a greater APR compared to this. In addition to this, another peice of research used a combination of machine learning and the Kalman Filter on assets on the BM\&FBovespa Exchange, yeilding a return of 26.13\% in the out of sample results~\cite{6974093}. In comparison, the Lagged, Kalman Filter and the Granger Causality strategies implemented in this paper have a greater return, however the strategy implemented by Oliveira and Nóbrega, possesses a greater Sharpe ratio meaning the risk-adjusted returns are more favourable. To summarize, the two of the five strategies implemented out perform the current research out there on both purer forms of arbitrage, i.e. cyclic arbitrage, and also the use of Kalman Filter on other types of assets, i.e. ETFs and ETNs.
