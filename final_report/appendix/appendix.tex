@@ -189,6 +189,7 @@ The first step is to generate a descent direction and then update the variable w
 \noindent Overall, this research successfully formulizes, solves the optimization problem mathematically, and goes further to implement the algorithms to solve the problem programmatically. In addition, the author compares the implementation with other benchmark algorithms, showing that it results in a greater P\&L and Sharpe ratio.
 
 \chapter{Supporting Tables}
+\section{Exerpt of the liquidity\_pools Table}
 \begin{table}[!ht]
     \centering
     \begin{tabular}{|p{7em}|p{4em}|p{4em}|p{10em}|p{\linewidth / 6}|p{4em}|}
@@ -225,3 +226,25 @@ The first step is to generate a descent direction and then update the variable w
 
 \chapter{Supporting Algorithms}
 
+\section{Gas Price Collection}
+\begin{algorithm}
+    \caption{Retrieval of hourly gas prices where $min\_time$ \& $max\_time$ are arguments}\label{alg_gas_price_col}
+    \begin{algorithmic}
+        \State $rows\_set \leftarrow \{\}$
+        \For{$timestamp$ from $min\_time$ to $max\_time + (60 \times 60), step\_size = (60 \times 60)$}
+            \State $found\_result \leftarrow False$
+            \State $window\_size\_in\_minutes \leftarrow 5$
+            \While{$not\ found\_result$}
+                \State $transaction\_data \leftarrow$ GraphQL Query with arguments: $\{``min\_time": timestamp - (60 * window\_size\_in\_minutes), ``max\_time": timestamp + (60 * window\_size\_in\_minutes)\}$
+                \If{$transaction\_data != 0$}
+                    \State $transaction\_data\_sorted = sorted(transaction\_data, key=lambda\ x:abs(timestamp - int(x['timestamp'])))$
+                    \State $rows\_set.update({timestamp: (timestamp, transaction\_data\_sorted[0]['gasPrice'])})$
+                    \State $found\_result \leftarrow True$
+                \Else
+                    \State $window\_size\_in\_minutes \leftarrow window\_size\_in\_minutes + 5$
+                \EndIf
+            \EndWhile
+            \State insert $rows\_set[timestamp]$ into \texttt{gas\_prices} table
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}

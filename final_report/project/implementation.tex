@@ -63,7 +63,7 @@ query ($symbol: String!, $prev_max_time: Int!) {
 \vspace{5mm}
 During the table initialization process, requests are made to both the V2 and V3 GraphQL endpoints. However, when updating the table, only the V3 endpoint is utilized for sending requests. The data is stored in tables of the form \textit{<symbol>}\_borrowing\_rates, where \textit{<symbol>} are all of the tokens that are present in the liquidity pools that are of interest.
 \\[3mm]
-To collect the gas price history, the transaction history is queried at each hour since Uniswap migrated to V3. This is because querying in the same as the pricing data and borrowing rate history is too exhaustive as transactions occur every second. Therefore, it is more efficient to query at each hour with a window to retrieve the gas price at the closest hour as follows:
+To collect the gas price history, the transaction history is queried at each hour since Uniswap migrated to V3. This is because querying in the same as the pricing data and borrowing rate history is too exhaustive as transactions occur every second. Therefore, it is more efficient to query at each hour with a window to retrieve the gas price at the closest hour as follows. Algorithm \ref{alg_gas_price_col} in the Appendix shows the pseudocode gas price at each hour is queried. 
 \vspace{5mm}
 \begin{lstlisting}
 query ($min_time: Int!, $max_time: Int!) {
@@ -74,31 +74,6 @@ query ($min_time: Int!, $max_time: Int!) {
     }
 }
 \end{lstlisting}
-\vspace{5mm}
-The following pseudocode shows how to fetch the gas price at each hour, Algorithm \ref{alg_gas_price_col}:
-
-\begin{algorithm}
-    \caption{Retrieval of hourly gas prices where $min\_time$ \& $max\_time$ are arguments}\label{alg_gas_price_col}
-    \begin{algorithmic}
-        \State $rows\_set \leftarrow \{\}$
-        \For{$timestamp$ from $min\_time$ to $max\_time + (60 \times 60), step\_size = (60 \times 60)$}
-            \State $found\_result \leftarrow False$
-            \State $window\_size\_in\_minutes \leftarrow 5$
-            \While{$not\ found\_result$}
-                \State $transaction\_data \leftarrow$ GraphQL Query with arguments: $\{``min\_time": timestamp - (60 * window\_size\_in\_minutes), ``max\_time": timestamp + (60 * window\_size\_in\_minutes)\}$
-                \If{$transaction\_data != 0$}
-                    \State $transaction\_data\_sorted = sorted(transaction\_data, key=lambda\ x:abs(timestamp - int(x['timestamp'])))$
-                    \State $rows\_set.update({timestamp: (timestamp, transaction\_data\_sorted[0]['gasPrice'])})$
-                    \State $found\_result \leftarrow True$
-                \Else
-                    \State $window\_size\_in\_minutes \leftarrow window\_size\_in\_minutes + 5$
-                \EndIf
-            \EndWhile
-            \State insert $rows\_set[timestamp]$ into \texttt{gas\_prices} table
-        \EndFor
-    \end{algorithmic}
-\end{algorithm}
-
 \subsection{Types of Orders and Execution}
 There are numerous order types that the backtesting supports due to measures to enusre a positive balance and avoid liquidation. The types of orders are; \texttt{BUY\ ETH}, \texttt{WITHDRAW}, \texttt{DEPOSIT}, \texttt{SWAP}, \texttt{OPEN\ BUY}, \texttt{CLOSE\ BUY}, \texttt{OPEN\ SELL}, \texttt{CLOSE\ SELL}. The precedures of each are outlined below.
 
