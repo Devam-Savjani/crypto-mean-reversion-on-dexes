@@ -1,5 +1,5 @@
 \chapter{Evaluation}
-The design of each strategy and the backtesting system allow for extensive parameterization, providing multiple axes for analysis. Parameters that can be adjusted are at what number of standard deviations away from the mean spread should a threshold set and a signal to be generated, how the trades are executed, limits on how much gas price should be when executing a trade, and also the volume of the initial investment. These are all factors that can effect the returns of the trading strategy. In the following sections, we will examine the performance of the strategy by varying these parameters, providing valuable insights into their influence on trading outcomes. For the purpose of data visualisation we denote the liquidity pool pairs by their index:
+The design of each strategy and the backtesting system allow for extensive parameterization, providing multiple axes for analysis. Parameters that can be adjusted are at what number of standard deviations away from the mean spread should a threshold set and a signal to be generated, how the trades are executed, limits on how much gas price should be when executing a trade, and also the volume of the initial investment. These are all factors that can effect the returns of the trading strategy. In the following sections, we will examine the performance of the strategy by varying these parameters, providing valuable insights into their influence on trading outcomes. For the purpose of data visualisation we denote the liquidity pool pairs by their index, see \ref{tab:pool-labels}.
 \begin{table}[!ht]
     \centering
     \begin{adjustwidth}{-0.5in}{-0.9in}
@@ -14,7 +14,7 @@ The design of each strategy and the backtesting system allow for extensive param
             \truncate{20em}{USDC\_WETH\_0xe0554a476a092703abdb3ef35c80e0d76d32939f} & \truncate{20em}{WETH\_USDT\_0xc5af84701f98fa483ece78af83f11b6c38aca71d} & 6\\\hline
         \end{tabular}
     \end{adjustwidth}
-    \caption{Liquidity pool pairs and their corresponding labels}
+    \caption{Liquidity pool pairs and their corresponding labels \label{tab:pool-labels}}
 \end{table}
 \vspace{-4ex}
 \section{Trading System}
