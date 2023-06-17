@@ -30,7 +30,7 @@ The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} a
     \item The first step is to call \texttt{new\_tick} which updates the thresholds
     \item Second, is to check whether a position is already held;
     \begin{enumerate}
-        \item If a position IS held, the first is to check if the spread is between the thresholds and if the gas price is below that the specified limit, the positions are closed. Otherwise, the loan to value health factor is calculated, if it may cause liquidation, additional collateral is deposited in Aave.
+        \item If a position IS held, the first is to check if the spread is between the thresholds and if the gas price is below that the specified limit, the positions are closed. However, before this, a precautionary check is made to ensure the balance of any token does not go below 0, if it does, a swap order is placed before the closing of the positions such than the balance of each token remains positive. Otherwise, the loan to value health factor is calculated, if it may cause liquidation, additional collateral is deposited in Aave.
         \item However, if a position is NOT held and the gas price is below that the specified limit, there are 3 cases. \begin{enumerate}
             \item $spread > upper\_threshold$ - Buy pair 2 and sell pair 1
             \item $spread > lower\_threshold$ - Buy pair 1 and sell pair 2
@@ -66,8 +66,7 @@ Therefore, as all terms in the objective function are positive therefore, the mi
 \noindent Thus the resulting values of $x$ and $y$ represent the solution that minimizes the problem while maximizing the tradable volume. The case above shows that $x$ units of pair0 can be bought and thus $y$ units of pair1 must be sold. Similarly, if pair0 is sold and pair1 is bought, the maximum volumes are determined by $x = \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$ and $y = \frac{n}{k} \frac{Z}{\frac{p_0}{LTV} + \frac{n}{k}p_1}$.
 
 \section{Constant Hedge Ratio Strategy}
-In the most simplistic mean reversion strategy, the approach relies on a given historical dataset, assuming that the hedge ratio between the paired assets remains consistent over the long term. To determine this hedge ratio, the Ordinary Least Squares (OLS) regression method is employed. In Python, the calculation can be carried out using the following steps:
-\vspace{5mm}
+In the most simplistic mean reversion strategy, the approach relies on a given historical dataset, assuming that the hedge ratio between the paired assets remains consistent over the long term. To determine this hedge ratio, the Ordinary Least Squares (OLS) regression method is employed.
 \begin{lstlisting}[language=Python]
 model = sm.OLS(history_p1, sm.add_constant(history_p2))
 results = model.fit()
@@ -82,9 +81,8 @@ In Figure \ref{fig:f1}, the observed trend reveals that the gradient, representi
     \caption{Conducting OLS to obtain the Hedge Ratio \label{fig:f1}}
 \end{figure}
 
-\section{Sliding Window Strategy}
+\section{Sliding Window OLS Strategy}
 As mentioned earlier, the hedge ratio plays a crucial role in minimizing risk and achieving a market-neutral position in trading strategies. However, employing a static hedge ratio may prove suboptimal since market conditions and the correlation between paired assets can evolve over time. To tackle this challenge, a dynamic approach is adopted using a sliding window approach. In this approach, the hedge ratio is continuously updated at each tick by considering the most recent data. The length of the data window used for the calculation is determined by the value specified in the \texttt{window\_size} argument. By incorporating the sliding window mechanism, the hedge ratio remains adaptive to the changing market dynamics, providing a more accurate and responsive estimation for effective risk management and trading decisions. Therefore, the following function is ran every price tick,
-\vspace{5mm}
 \begin{lstlisting}[language=Python]
 def update_hedge_ratio(self):
     p1, p2 = self.history_p1[-window_size:], self.history_p2[-window_size:]
@@ -93,9 +91,8 @@ def update_hedge_ratio(self):
     self.hedge_ratio = results.params[1]
 \end{lstlisting}
 
-\section{Lagged Strategy}
+\section{Lagged OLS Strategy}
 A lagged strategy was also a implemented as an extension of the sliding window strategy. In the context of the sliding window strategy, the hedge ratio is updated using the most recent data within a specified window size. However, due to potential delays or lags in the synchronization of liquidity pools, the instantaneous prices of the assets may not fully reflect their actual relationship. Therefore, this approach aims to account for potential lags in the synchronization of liquidity pools. The lagged strategy extends the existing sliding window approach by using \texttt{sm.tsa.lagmat} function to perform the lag, which is then used to perform OLS.
-\vspace{5mm}
 \begin{lstlisting}[language=Python]
 def update_hedge_ratio(self):
     maxlag = min(self.lag, min(self.window_size_in_hours, len(self.history_p1))-1)
@@ -106,22 +103,20 @@ def update_hedge_ratio(self):
     self.hedge_ratio = results.params[1]
 \end{lstlisting}
 
-\section{Granger Causality Test}
+\section{Unrestricted Model from the Granger Causality Test}
 Similarly, to account for lag and causality, a strategy that was employed was using the Granger Causality Test. The Granger Causality Test is a statistical hypothesis test that assesses the predictive value of one time series in forecasting another. Part of the test the results provide insights into the relationship between the variables and help determine the presence of Granger causality in the form of an OLS regression for both the restricted and unrestricted models. The restricted model is a regression model that includes only the lagged values of the dependent variable whereas the unrestricted model includes both the lagged values of the dependent variable and the potentially causal variable. The restricted model's regression parameters are used to calculate the hedge ratio.
-\vspace{5mm}
 \begin{lstlisting}[language=Python]
 def update_hedge_ratio(self):
     p1, p2 = self.history_p1, self.history_p2
     data = pd.DataFrame({'Asset1': p1, 'Asset2': p2})
     granger_results = statsmodels.tsa.stattools.grangercausalitytests(data, maxlag=[1], verbose=False)
-    self.hedge_ratio = granger_results[1][1][0].params[0]
+    self.hedge_ratio = granger_results[1][1][1].params[0]
 \end{lstlisting}
 
 \section{Kalman Filter Strategy}
 Another method that is often used to ensure market-neutral positions is the use of Kalman Filters as a dynamic tool to update and adapt the hedge ratio, taking into account the changing market conditions and the evolving relationship between the paired assets. This allows for a more responsive and adaptive approach to maintaining a market-neutral position. The Kalman Filter takes into consideration not only the current price data but also the historical information and the underlying dynamics of the assets. It provides a more robust and accurate estimation of the optimal hedge ratio, which aligns with the mean reversion strategy's objective of capturing potential price divergences and profiting from their eventual convergence.
 \\[5mm]
 The Kalman Filter works by iteratively updating and refining its estimate of the system state using a prediction step and an update step. For this an initial `guess' of the parameters that I use is the using the Ordinary Least Squares from the historical information provided. The remainder of the parameters that are selected can be seen below:
-\vspace{5mm}
 \begin{lstlisting}[language=Python]
 model = sm.OLS(price_history_2, sm.add_constant(price_history_1))
 initial_state = model.fit().params[::-1]
