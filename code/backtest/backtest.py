@@ -236,14 +236,14 @@ class Backtest():
                     'uniswap_fees': swap_fees
                 }, prices)
 
-            self.account_value_history.append(
-                self.get_account_value_in_WETH(prices))
-            self.times.append(timestamp)
+            # self.account_value_history.append(
+            #     self.get_account_value_in_WETH(prices))
+            # self.times.append(timestamp)
 
-            # if len([order[0] for order in signal if order[0] == 'OPEN']) > 0:
-            #     self.account_value_history.append(
-            #         self.get_account_value_in_WETH(prices))
-            #     self.times.append(timestamp)
+            if len([order[0] for order in signal if order[0] == 'OPEN']) > 0:
+                self.account_value_history.append(
+                    self.get_account_value_in_WETH(prices))
+                self.times.append(timestamp)
 
             for order in signal:
                 order_type = order[0]
@@ -442,8 +442,8 @@ bad_pairs = []
 start_timestamp = calendar.timegm(date.fromisoformat('2022-06-09').timetuple())
 start_timestamp = None
 
-betas = pd.DataFrame({}, columns=["Pool Pair", "Constant", "SW", "Lagged", "GC", "KF"])
-sharpe_ratios = pd.DataFrame({}, columns=["Pool Pair", "Constant", "SW", "Lagged", "GC", "KF"])
+betas = pd.DataFrame({}, columns=["Constant", "SW", "Lagged", "GC", "KF"])
+sharpe_ratios = pd.DataFrame({}, columns=["Constant", "SW", "Lagged", "GC", "KF"])
 returns = pd.DataFrame({}, columns=["Constant", "SW", "Lagged", "GC", "KF"])
 
 use_same_params = False
@@ -459,6 +459,8 @@ if use_same_params:
 
 results_for_table = []
 results_for_plot = []
+results_for_beta = []
+results_for_sr = []
 
 for idx, cointegrated_pair in enumerate(pairs):
     print(idx)
@@ -616,34 +618,34 @@ for idx, cointegrated_pair in enumerate(pairs):
         print(
             f"\033[90mGranger_Causality_Strategy\033[0m Total returns \033[91m{gc_return_percent}%\033[0m with {len(backtest_gc.trades)} trades")
 
-    apy_adj = ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365*24*60*60))
-    foo = [constant_return_percent, sw_return_percent, lagged_return_percent, gc_return_percent, kf_return_percent]
-    returns.loc[idx] = [((100 * (((r / 100) + 1)**(1 / apy_adj))) - 100) for r in foo]
+    # apy_adj = ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365*24*60*60))
+    # foo = [constant_return_percent, sw_return_percent, lagged_return_percent, gc_return_percent, kf_return_percent]
+    # returns.loc[idx] = [((100 * (((r / 100) + 1)**(1 / apy_adj))) - 100) for r in foo]
     # returns.loc[idx] = foo
 
     #### Prints for Tables
-    rounding_num = 2
-    constant_return_percent_str = f"\\textcolor{{{'green' if constant_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][0], rounding_num)}}}"
-    sw_return_percent_str = f"\\textcolor{{{'green' if sw_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][1], rounding_num)}}}"
-    lagged_return_percent_str = f"\\textcolor{{{'green' if lagged_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][2], rounding_num)}}}"
-    gc_return_percent_str = f"\\textcolor{{{'green' if gc_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][3], rounding_num)}}}"
-    kf_return_percent_str = f"\\textcolor{{{'green' if kf_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][4], rounding_num)}}}"
-    to_print = f"& {idx} & {constant_return_percent_str} & {len(backtest_constant_hr.trades)} & {sw_return_percent_str} & {len(backtest_sliding_window.trades)} & {lagged_return_percent_str} & {len(backtest_lagged.trades)} & {gc_return_percent_str} & {len(backtest_gc.trades)} & {kf_return_percent_str} & {len(backtest_kalman_filter.trades)}\\\\\\cline{{3-12}}"
+    # rounding_num = 2
+    # constant_return_percent_str = f"\\textcolor{{{'green' if constant_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][0], rounding_num)}}}"
+    # sw_return_percent_str = f"\\textcolor{{{'green' if sw_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][1], rounding_num)}}}"
+    # lagged_return_percent_str = f"\\textcolor{{{'green' if lagged_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][2], rounding_num)}}}"
+    # gc_return_percent_str = f"\\textcolor{{{'green' if gc_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][3], rounding_num)}}}"
+    # kf_return_percent_str = f"\\textcolor{{{'green' if kf_return_percent > 0 else 'red'}}}{{{round(returns.loc[idx][4], rounding_num)}}}"
+    # to_print = f"& {idx} & {constant_return_percent_str} & {len(backtest_constant_hr.trades)} & {sw_return_percent_str} & {len(backtest_sliding_window.trades)} & {lagged_return_percent_str} & {len(backtest_lagged.trades)} & {gc_return_percent_str} & {len(backtest_gc.trades)} & {kf_return_percent_str} & {len(backtest_kalman_filter.trades)}\\\\\\cline{{3-12}}"
 #     if idx == 6:
 #         to_print = to_print[:-11] + "hline\\hline"
 
 #     if idx == 3:
 #         to_print = f"{int(window_size_in_seconds / (24 * 60 * 60))} days " + to_print
 
-    results_for_table.append(to_print)
+    # results_for_table.append(to_print)
 #     results_for_plot.append(f'{int(window_size_in_seconds / (24 * 60 * 60))},{idx},{round(constant_return_percent, rounding_num)},{len(backtest_constant_hr.trades)},{round(sw_return_percent, rounding_num)},{len(backtest_sliding_window.trades)},{round(lagged_return_percent, rounding_num)},{len(backtest_lagged.trades)},{round(gc_return_percent, rounding_num)},{len(backtest_gc.trades)},{round(kf_return_percent, rounding_num)},{len(backtest_kalman_filter.trades)}')
 
     # print(*results_for_table,sep='\n')
     # print(*results_for_plot,sep='\n')
 
-    font_size = 13
+    # font_size = 13
 
-    #### Plot for Account History
+    # #### Plot for Account History
     # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_constant_hr.times]), backtest_constant_hr.account_value_history, label='Constant')
     # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_sliding_window.times]), backtest_sliding_window.account_value_history, label='Sliding Window')
     # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_lagged.times]), backtest_lagged.account_value_history, label='Lagged')
@@ -651,6 +653,7 @@ for idx, cointegrated_pair in enumerate(pairs):
     # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_kalman_filter.times]), backtest_kalman_filter.account_value_history, label='Kalman Filter')
     # plt.xlabel('Date', fontsize=font_size)
     # plt.ylabel('Account Value', fontsize=font_size)
+    # plt.title(f'Account Value over time when trading {cointegrated_pair[0]} and {cointegrated_pair[1]}')
     # plt.legend()
     # plt.show()
 
@@ -666,53 +669,59 @@ for idx, cointegrated_pair in enumerate(pairs):
     # plt.legend()
     # plt.show()
 
-    #### Calculate Betas
+    # #### Calculate Betas
     # market_price_label = 'token0_price'
     # market_return = table_to_df(command=f'SELECT period_start_unix, {market_price_label} FROM "USDC_WETH_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640";', path_to_config='../utils/database.ini')
 
     # merged = pd.merge(market_return, pd.DataFrame({'period_start_unix': backtest_constant_hr.times, 'value': backtest_constant_hr.account_value_history}), on="period_start_unix").dropna().set_index('period_start_unix')
-    # beta_constant = merged.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
+    # returns = merged.pct_change().dropna()
+    # beta_constant = returns.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
 
     # merged = pd.merge(market_return, pd.DataFrame({'period_start_unix': backtest_sliding_window.times, 'value': backtest_sliding_window.account_value_history}), on="period_start_unix").dropna().set_index('period_start_unix')
-    # beta_sw = merged.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
+    # returns = merged.pct_change().dropna()
+    # beta_sw = returns.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
 
     # merged = pd.merge(market_return, pd.DataFrame({'period_start_unix': backtest_lagged.times, 'value': backtest_lagged.account_value_history}), on="period_start_unix").dropna().set_index('period_start_unix')
-    # beta_lagged = merged.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
+    # returns = merged.pct_change().dropna()
+    # beta_lagged = returns.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
 
     # merged = pd.merge(market_return, pd.DataFrame({'period_start_unix': backtest_gc.times, 'value': backtest_gc.account_value_history}), on="period_start_unix").dropna().set_index('period_start_unix')
-    # beta_GC = merged.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
+    # returns = merged.pct_change().dropna()
+    # beta_GC = returns.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
 
     # merged = pd.merge(market_return, pd.DataFrame({'period_start_unix': backtest_kalman_filter.times, 'value': backtest_kalman_filter.account_value_history}), on="period_start_unix").dropna().set_index('period_start_unix')
-    # beta_KF = merged.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
+    # returns = merged.pct_change().dropna()
+    # beta_KF = returns.cov()[market_price_label]['value'] / market_return.var()[market_price_label]
 
     # round_num = 7
-    # to_print = f"{idx} & {round(beta_constant, 4)} & {round(beta_sw, round_num)} & {round(beta_lagged, round_num)} & {round(beta_GC, round_num)} & {round(beta_KF, round_num)}\\\\\\cline{{2-6}}"
+    # to_print = f"{idx} & {round(beta_constant, round_num)} & {round(beta_sw, round_num)} & {round(beta_lagged, round_num)} & {round(beta_GC, round_num)} & {round(beta_KF, round_num)}\\\\\\cline{{2-6}}"
+    # to_print = f"{idx} & {beta_constant:.5e} & {beta_sw:.5e} & {beta_lagged:.5e} & {beta_GC:.5e} & {beta_KF:.5e}\\\\\\cline{{2-6}}"
 
     # if idx == 6:
-    #     to_print = to_print[:-11] + "hline\\hline"
+    #     to_print = to_print[:-10] + "hline\\hline"
 
-    # results.append(to_print)
-    # betas.loc[idx] = [idx, beta_constant, beta_sw, beta_lagged, beta_GC, beta_KF]
+    # results_for_beta.append(to_print)
+    # print(to_print)
+    # betas.loc[idx] = [beta_constant, beta_sw, beta_lagged, beta_GC, beta_KF]
 
     # round_num = 7
     # interest_rate = (1.045 ** ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365 * 24*60*60))) - 1
 
-    # def calculate_sharpe_ratio(account_value_history):
-    #     account_value_history = np.array(account_value_history)
-    #     returns = account_value_history[1:] / np.roll(account_value_history, 1)[1:]
-    #     return (returns.mean() - interest_rate) / (returns).std()
-
+    # def calculate_sharpe_ratio(times, account_value_history, num_of_trades):
+    #     table = pd.DataFrame({'time': times, 'value': account_value_history})
+    #     return_p = table.pct_change()['value']
+    #     expected_return = (1 + (return_p.mean())) ** num_of_trades - 1
+    #     return (expected_return - interest_rate) / return_p.std()
 
     # sharpe_ratios.loc[idx] = [
-    #     idx,
-    #     calculate_sharpe_ratio(backtest_constant_hr.account_value_history),
-    #     calculate_sharpe_ratio(backtest_sliding_window.account_value_history),
-    #     calculate_sharpe_ratio(backtest_lagged.account_value_history),
-    #     calculate_sharpe_ratio(backtest_gc.account_value_history),
-    #     calculate_sharpe_ratio(backtest_kalman_filter.account_value_history)]
+    #     calculate_sharpe_ratio(backtest_constant_hr.times, backtest_constant_hr.account_value_history, len(backtest_constant_hr.trades)),
+    #     calculate_sharpe_ratio(backtest_sliding_window.times, backtest_sliding_window.account_value_history, len(backtest_sliding_window.trades)),
+    #     calculate_sharpe_ratio(backtest_lagged.times, backtest_lagged.account_value_history, len(backtest_lagged.trades)),
+    #     calculate_sharpe_ratio(backtest_gc.times, backtest_gc.account_value_history, len(backtest_gc.trades)),
+    #     calculate_sharpe_ratio(backtest_kalman_filter.times, backtest_kalman_filter.account_value_history, len(backtest_kalman_filter.trades))]
     
     # to_print = f"{idx} & {round(sharpe_ratios.iloc[idx]['Constant'], 4)} & {round(sharpe_ratios.iloc[idx]['SW'], round_num)} & {round(sharpe_ratios.iloc[idx]['Lagged'], round_num)} & {round(sharpe_ratios.iloc[idx]['GC'], round_num)} & {round(sharpe_ratios.iloc[idx]['KF'], round_num)}\\\\\\cline{{2-6}}"
-    # results.append(to_print)
+    # results_for_sr.append(to_print)
 
     # table = table_to_df(
     #     command=f"SELECT pool_address, token0, token1, feetier FROM liquidity_pools where volume_usd >= 10000000000 and (token0='WETH' OR token1='WETH');", path_to_config='../utils/database.ini')
@@ -768,16 +777,17 @@ for idx, cointegrated_pair in enumerate(pairs):
 
     # print(*backtest_mean_reversion.trades, sep='\n')
 
-print(*results_for_table,sep='\n')
+# print(*results_for_beta,sep='\n')
 # print(*results_for_plot,sep='\n')
 # betas.loc['average'] = betas.mean()
 # print(betas)
 
+# print(*results_for_sr,sep='\n')
 # sharpe_ratios.loc['avg'] = sharpe_ratios.mean()
 # print(sharpe_ratios)
 
-returns.loc['avg'] = returns.mean()
+# returns.loc['avg'] = returns.mean()
 # returns.loc['std'] = returns.std()
 # returns.loc['sharpe_ratio'] = (returns.mean() - 4.5) / returns.std()
 
-print(returns)
+# print(returns)
