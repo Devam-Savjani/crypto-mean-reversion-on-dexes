@@ -20,162 +20,40 @@ To store the necessary data for backtesting and trading, a PostgreSQL database i
     \includegraphics[width=0.8\textwidth]{project/Images/database_tables.png}
     \caption{Tables contained in the database \label{fig:database}}
 \end{figure}
+\\[3mm]
 The \texttt{liquidity\_pools} contains data about the liquidity pools that exist on Uniswap V3. After obtaining all of the data it is found that it possesses 12,182 liquidity pools. However, a substantial portion of these pools exhibit minimal or negligible trading volume. As a result, a criterion is established to selectively include only those liquidity pools that involve tokens supported by Aave and possess a trading volume exceeding \$10,000,000 (or \$10 million). This filtering condition ensures that the collected and stored data holds significance and relevance for research purposes, as these pools would allow for short selling.
 \\[3mm]
-Once these pools have been identified, pricing data about each pool that meets this condition is collected again using the Uniswap V3 subgraph. The following shows the GraphQL query:
-\vspace{5mm}
-\begin{lstlisting}
-query ($id: ID!, $prev_max_time: Int!) {
-    pool(id: $id) {
-        poolHourData(where: {periodStartUnix_gt: $prev_max_time}, orderBy: periodStartUnix, first: 1000) {
-            id
-            token0Price
-            token1Price
-            periodStartUnix
-            liquidity
-            feesUSD
-        }
-    }
-}
-\end{lstlisting}
-\vspace{5mm}
-This query returns an array of dictionaries containing the pre-specified pricing datapoints at a frequency of every hour. Due to the limitations imposed by the subgraph, the results are constrained to a maximum size of 1000 entries. To overcome this limitation and obtain the complete dataset, the query is executed iteratively. The previous maximum time, referred to as \texttt{prev\_max\_time}, is passed as an argument in subsequent queries to fetch the remaining data, i.e. \texttt{prev\_max\_time = hourlyData[-1]['periodStartUnix'] if len(hourlyData) > 0 else prev\_max\_time}. This data is stored in tables of the form \textit{<pool\_address>}\_\textit{<token0>}\_\textit{<token1>}.
+Once these pools have been identified, pricing data about each pool that meets this condition is collected again using the Uniswap V3 subgraph. The query returns an array of dictionaries containing the pre-specified pricing datapoints at a frequency of every hour. Due to the limitations imposed by the subgraph, the results are constrained to a maximum size of 1000 entries. To overcome this limitation and obtain the complete dataset, the query is executed iteratively. The previous maximum time, referred to as \texttt{prev\_max\_time}, is passed as an argument in subsequent queries to fetch the remaining data, i.e. \texttt{prev\_max\_time = hourlyData[-1]['periodStartUnix'] if len(hourlyData) > 0 else prev\_max\_time}. This data is stored in tables of the form \textit{<pool\_address>}\_\textit{<token0>}\_\textit{<token1>}.
 \\[3mm]
-In a similar manner, obtaining the interest rates for borrowing necessitates the utilization of two of Aave's subgraphs. This requirement arises due to Aave's migration to Version 3 in March 2022, resulting in a transitional period where both Uniswap V3 and Aave V2 were concurrently utilized. The schemas for the two are different, however for the data we require, the borrowing rate, loan-to-value and liquidity threshold, the schema is consistent and the same query can be used:
-\vspace{5mm}
-\begin{lstlisting}
-query ($symbol: String!, $prev_max_time: Int!) {
-    reserves(where: {symbol: $symbol}) {
-        id
-        symbol
-        lifetimeBorrows
-        baseLTVasCollateral
-        reserveLiquidationThreshold
-        borrowHistory(
-            where: {timestamp_gt: $prev_max_time}, first: 1000, orderBy: timestamp, orderDirection: asc) {
-            id
-            timestamp
-            borrowRate
-        }
-    }
-}
-\end{lstlisting}
-\vspace{5mm}
-During the table initialization process, requests are made to both the V2 and V3 GraphQL endpoints. However, when updating the table, only the V3 endpoint is utilized for sending requests. The data is stored in tables of the form \textit{<symbol>}\_borrowing\_rates, where \textit{<symbol>} are all of the tokens that are present in the liquidity pools that are of interest.
+In a similar manner, obtaining the interest rates for borrowing necessitates the utilization of two of Aave's subgraphs. This requirement arises due to Aave's migration to Version 3 in March 2022, resulting in a transitional period where both Uniswap V3 and Aave V2 were concurrently utilized. The schemas for the two are different, however for the data we require, the borrowing rate, loan-to-value and liquidity threshold, the schema is consistent and the same query can be used, this can be seen in Appendix \ref{app:lending-query}. During the table initialization process, requests are made to both the V2 and V3 GraphQL endpoints. However, when updating the table, only the V3 endpoint is utilized for sending requests. The data is stored in tables of the form \textit{<symbol>}\_borrowing\_rates, where \textit{<symbol>} are all of the tokens that are present in the liquidity pools that are of interest.
 \\[3mm]
 To collect the gas price history, the transaction history is queried at each hour since Uniswap migrated to V3. This is because querying in the same as the pricing data and borrowing rate history is too exhaustive as transactions occur every second. Therefore, it is more efficient to query at each hour with a window to retrieve the gas price at the closest hour as follows. Algorithm \ref{alg_gas_price_col} in the Appendix shows the pseudocode gas price at each hour is queried. 
-\vspace{5mm}
-\begin{lstlisting}
-query ($min_time: Int!, $max_time: Int!) {
-    transactions(where: {timestamp_gt: $min_time, timestamp_lt: $max_time}, first:1000, orderBy: timestamp, orderDirection: asc) {
-        id
-        timestamp
-        gasPrice
-    }
-}
-\end{lstlisting}
 \subsection{Types of Orders and Execution}
-There are numerous order types that the backtesting supports due to measures to enusre a positive balance and avoid liquidation. The types of orders are; \texttt{BUY\ ETH}, \texttt{WITHDRAW}, \texttt{DEPOSIT}, \texttt{SWAP}, \texttt{OPEN\ BUY}, \texttt{CLOSE\ BUY}, \texttt{OPEN\ SELL}, \texttt{CLOSE\ SELL}. The precedures of each are outlined below.
+There are numerous order types that the backtesting supports due to measures to enusre a positive balance and avoid liquidation. The types of orders are; \texttt{BUY\ ETH}, \texttt{WITHDRAW}, \texttt{DEPOSIT}, \texttt{SWAP}, \texttt{OPEN\ BUY}, \texttt{CLOSE\ BUY}, \texttt{OPEN\ SELL}, \texttt{CLOSE\ SELL}. The precedures of each are outlined below.  The code of the execution, excluding gas fees, of the order is outlined in Appendix \ref{sec:backtesting-execution-code}.
 
 \subsubsection{\texttt{BUY\ ETH}}
-The \texttt{BUY\ ETH} order is used to swap a percentage of the accounts balance from WETH to ETH. The arguments is an float between 0 and 1. The logic of the execution, excluding gas fees, of the order is outlined below.
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-amount_to_swap = self.account['WETH'] * order[1]
-self.account['WETH'] = self.account['WETH'] - amount_to_swap
-self.account['ETH'] = self.account['ETH'] + amount_to_swap
-\end{lstlisting}
+The \texttt{BUY\ ETH} order is used to swap a percentage of the accounts balance from WETH to ETH. The arguments is an float between 0 and 1.
 
 \subsubsection{\texttt{SWAP}}
-The \texttt{SWAP} order is to execute a simple swap for either token0 or token1 of the liquidity pool. This order is only used as a precautionary order, if the balance of the WETH balance gets too low. It takes 2 arguments, the first indicating whether it is swapping for token0 or token1 and the second parameter is a list of swaps, tuples containing with pool and the quantity, that would like to be swapped. As can be seen in the code excerpt below, the amount received in the account is multiplied by \texttt{(1 - swap\_fees[swap\_token])}, this is because Uniswap charges a percentage of the swap specified by \texttt{swap\_fees[swap\_token]}.
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-if is_for_token0:
-    for swap_for_token0 in swaps:
-        swap_token, swap_volume = swap_for_token0
-        self.account['WETH'] = self.account['WETH'] - (swap_volume * prices[f'P{swap_token[1]}'])
-        self.account[swap_token] = self.account[swap_token] + (swap_volume * (1 - swap_fees[swap_token]))
-else:
-    for swap_for_token1 in swaps:
-        swap_token, swap_volume = swap_for_token1
-        self.account[swap_token] = self.account[swap_token] - (swap_volume / prices[f'P{swap_token[1]}'])
-        self.account['WETH'] = self.account['WETH'] + (swap_volume * (1 - swap_fees[swap_token]))
-\end{lstlisting}
+The \texttt{SWAP} order is to execute a simple swap for either token0 or token1 of the liquidity pool. This order is only used as a precautionary order, if the balance of the WETH balance gets too low. It takes 2 arguments, the first indicating whether it is swapping for token0 or token1 and the second parameter is a list of swaps, tuples containing with pool and the quantity, that would like to be swapped. The amount received in the account is multiplied by \texttt{(1 - swap\_fees[swap\_token])}, this is because Uniswap charges a percentage of the swap specified by \texttt{swap\_fees[swap\_token]}.
 
 \subsubsection{\texttt{OPEN\ BUY}}
 Similar to the \texttt{SWAP} order, \texttt{OPEN\ BUY} opens a buy position. As mentioned above opening a buy order is simply swapping token1 for token0. The parameters of buying are the target token and the volume. 
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-self.account['WETH'] = self.account['WETH'] - (volume * buy_price)
-self.account[token] = self.account[token] + (volume * (1 - swap_fees[token]))
-\end{lstlisting}
 
 \subsubsection{\texttt{CLOSE\ BUY}}
 Closing a buy position is similar to opening a buy position, however, the swap is in the other direction, i.e. from token to WETH. The only argument is the id of the buy order. To account for Uniswap's fees, the volume that was received, after the initial swap, is calculated then this volume is swapped back to WETH.
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-buy_token, bought_price, buy_volume, buy_timestamp = self.open_positions['BUY'][buy_id]
-volume_bought = buy_volume * (1 - swap_fees[buy_token])
-self.account[buy_token] = self.account[buy_token] - volume_bought
-self.account['WETH'] = self.account['WETH'] + (prices[f'P{buy_token[1]}'] * (volume_bought * (1 - swap_fees[buy_token])))
-\end{lstlisting}
 
 \subsubsection{\texttt{OPEN\ SELL}}
 Opening a sell position involves borrowing a token and then swapping the token. The parameters of selling are the target token and the volume. It also consists of depositing the required amount to borrow the volume ordered, calculated by the value to loan ratio.
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-# Borrow token and Deposit collateral
-amount_to_move_to_collateral_WETH = ((volume * sell_price) / ltv_eth)
-self.account[token] = self.account[token] + volume
-self.account['WETH'] = self.account['WETH'] - amount_to_move_to_collateral_WETH
-self.account['collateral_WETH'] = self.account['collateral_WETH'] + amount_to_move_to_collateral_WETH
-
-# Swap borrowed tokens to WETH
-self.account[token] = self.account[token] - volume
-self.account['WETH'] = self.account['WETH'] + (volume * (1 - swap_fees[token]) * sell_price)
-\end{lstlisting}
 
 \subsubsection{\texttt{CLOSE\ SELL}}
 Closing a sell position is more complicated that as in requires to swap back from the token to WETH, repay the loan with interest and finally return collateral. Swapping back to the required amount of tokens is the first step. For this the variable Annual Yield Rates between the timestamp of the opening of the position and closing positon is used to calculate the amount of interest required to be paid as this is cumulated every second. Once the volume of tokens required to be returned is calculated, the equivelent amount of WETH plus accounting for Uniswap fees is swapped to obtain these tokens. Finally, the tokens are repayed and the collateral is returned.
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-sell_token, sold_price, sell_volume, sell_timestamp = self.open_positions['SELL'][sell_id]
-
-# Swap WETH back to Token
-volume_required_to_return = sell_volume
-previous_timestamp = sell_timestamp
-
-for apy_idx in apy[sell_token].index:
-    local_apy = apy[sell_token].loc[apy_idx]['borrow_rate']
-    number_of_seconds = apy[sell_token].loc[apy_idx]['timestamp'] - previous_timestamp
-    secondly_yield = (1 + local_apy)**(1 / (365*24*60*60))
-    volume_required_to_return *= secondly_yield ** number_of_seconds
-    previous_timestamp = apy[sell_token].loc[apy_idx]['timestamp']
-
-self.account['WETH'] = self.account['WETH'] - (sold_price * volume_required_to_return / (1 - swap_fees[sell_token])) 
-self.account[sell_token] = self.account[sell_token] + volume_required_to_return
-
-# Return Borrowed Tokens and Collatoral
-self.account[sell_token] = self.account[sell_token] - volume_required_to_return
-self.account['WETH'] = self.account['WETH'] + self.account['collateral_WETH']
-self.account['collateral_WETH'] = 0
-\end{lstlisting}
 
 \subsubsection{\texttt{WITHDRAW}}
 The \texttt{WITHDRAW} order's function is to withdraw some collateral that is stored in Aave. It is not used in the strategies however is implemented in case of developing further strategies that may require this functionality. The only parameter is the amount that would like to be withdrawn.
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-self.account['WETH'] = self.account['WETH'] + withdraw_amount
-self.account['collateral_WETH'] = self.account['collateral_WETH'] - withdraw_amount
-\end{lstlisting}
 
 \subsubsection{\texttt{DEPOSIT}}
 The \texttt{DEPOSIT} order's function is to deposit some additional collateral that is stored in Aave. This order is used when the collateral value not properly covering the loan value, hence avoiding liquidation. The only parameter is the amount that would like to be depositted. 
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-self.account['WETH'] = self.account['WETH'] - deposit_amount
-self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
-\end{lstlisting}
 
 \subsection{Gas Fees}
 The remaining fee that is yet to be discussed is gas fees of each order. To best approximate the gas fee it is paramount to have an approximation to how much gas is used in each. Therefore, the smart contract for trading was written and run on a forked Ethereum mainnet, to be able to accurately simulate the contracts behaviour, see Subsection \ref{sec:smart-contracts} to see the implementation of the smart contract. Using Hardhat, the gas usage of each function was tested and Figure \ref{fig:gasResult} shows the results. It can be seen that some functions have a tighter spread, between the maximum and minimum, compared to others therefore to better understand this, plots of using various parameters on the different functions provided a deeper insight into the cause of this, Figures \ref{fig:gasPlots1} and \ref{fig:gasPlots2}.
@@ -206,51 +84,27 @@ Furthermore, another feature that is interesting is the gas usage by swaps and t
 It can also be seen that combining the operations to open/close buy and sell positions consumes less gas compared to if were to be executed seperately. This also confirms the claims in Wang's paper, that batching the operations together is more effective than executing them seperately~\cite{wang_cyclic_2022}.
 \\[3mm]
 To implement this in the backtesting system, each order deducts some ETH where this quantity is calculated by how much gas is used by the order type multiplied by the gas price. For example, in the case of buying more ETH:
-\vspace{5mm}
 \begin{lstlisting}[language=Python]
 amount_to_swap = self.account['WETH'] * order[1]
 self.account['WETH'] = self.account['WETH'] - amount_to_swap
 self.account['ETH'] = self.account['ETH'] + amount_to_swap - (GAS_USED_BY_BUYING_ETH * gas_price_in_eth)
 \end{lstlisting}
 \vspace{5mm}
-\noindent However, deducting ETH for gas fees for open and close orders is done differently to better understand the impact of combining the operations on the returns of the strategies. Thus, instead of being deducted immediatly at each order, it is deducted after iterating through the signal:
-\vspace{5mm}
-\begin{lstlisting}[language=Python]
-if len([order[0] for order in signal if order[0] == 'OPEN']) == 2:
-    if strategy.should_batch_trade:
-        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION * gas_price_in_eth)
-    else:
-        self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_BORROW) * gas_price_in_eth)
-
-if len([order[0] for order in signal if order[0] == 'CLOSE']) == 2:
-    if strategy.should_batch_trade:
-        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION * gas_price_in_eth)
-    else:
-        self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth)
-
-\end{lstlisting}
-\vspace{5mm}
-Therefore, by passing a boolean to the strategy that indicates if the open or close positions should be batched, the necessary amount of fees is deducted.
+\noindent However, in order to analyze the impact of combining operations on strategy returns, the deduction of ETH for gas fees for both \texttt{OPEN} and \texttt{CLOSE} orders is handled differently. Instead of deducting the fees immediately upon each order, the deduction is performed after iterating through the trading signal. If the signal contains such orders, the necessary amount of gas fee is deducted based on whether the orders are specified, by the parameter \texttt{should\_batch\_trade}, to be batched or executed separately. The code for how this has been handled can be seen in Appendix \ref{app:deducting-gas-fee}.
 
 \subsection{Validating Balance Health}
 To maintain the integrity and effectiveness of the trading strategy, it is crucial to incorporate various checks and safeguards after each trade and at each timestep. One key aspect involves monitoring the balance of each token to ensure that it remains positive. After every order execution, the balances of the tokens involved are checked, and if any of them fall below zero, an exception is triggered.
-\vspace{5mm}
 \begin{lstlisting}[language=Python]
 if self.account['T1'] < negative_threshold:
     raise Exception('Account balace goes below 0 - T1')
-
 if self.account['T2'] < negative_threshold:
     raise Exception('Account balace goes below 0 - T2')
-
 if self.account['WETH'] < negative_threshold:
     raise Exception('Account balace goes below 0 - WETH')
-
 if self.account['ETH'] < negative_threshold:
     raise Exception('Account balace goes below 0 - ETH')
-\end{lstlisting}
-\vspace{5mm}    
+\end{lstlisting}   
 Furthermore, to simulate the potential liquidation of a sell position's loan, the loan-to-value ratio is calculated. This ratio serves as an indicator of the position's health and risk level. If the loan-to-value ratio breaches the predefined liquidation threshold, indicating that the position is approaching an unsustainable state, an exception is thrown.
-\vspace{5mm}
 \begin{lstlisting}[language=Python]
 sell_token, sold_price, sell_volume, _ = sell_trade
 current_token_price = prices[f'P{sell_token[1]}']
@@ -273,10 +127,9 @@ In order to be able to interact with uniswap and aave over ethereum, smart contr
 
 \subsubsection{Wrapping of ETH and Unwrapping WETH}
 This functionality are required as if the trader has only ETH in their account, thus by wrapping the ETH, they would be able to trade ETH in it's ERC-20 token, WETH. ERC-20 is a widely adopted technical standard utilized for the creation of interchangeable tokens on the Ethereum blockchain. It provides developers with the framework to design tokens that are compatible with various applications and services operating within the Ethereum ecosystem. These tokens are designed to represent a variety of assets, most importantly cryptocurrencies. The functions of these functionalities can be seen below, where \texttt{swapEthForWeth} wraps ETH and \texttt{swapWethForEth} unwraps WETH. The \texttt{swapEthForWeth} function first uses the \texttt{IWETH} interface, which is itself an ERC20 interface, to allow functions such as tranfer of ownership of the token, to deposit an amount of ETH in exchange for WETH, which is then transfered back to the address of the caller. The \texttt{swapWethForEth} function unwraps the WETH by first sending the specified volume of WETH from the caller to the smart contract, withdrawing the specified amount from the IERC20, which calls the \texttt{receive} function to enable recieving of ETH and once the ETH is withdrawn into the smart contract's account, it is transfered back to the caller.
-\begin{lstlisting}
+\begin{lstlisting}[language=Solidity]
 interface IWETH is IERC20 {
   function deposit() external payable;
-
   function withdraw(uint amount) external;
 }
 
@@ -300,17 +153,11 @@ receive() external payable {}
 \subsubsection{Swapping using a Uniswap Liquidity Pool}
 Swapping using a Uniswap liquidity pool is also another key functionality. This is done by using the \texttt{IUniswapV3Pool} interface to expose the liquidity pool's functions and calling swap on it using the necessary parameters. The parameters, in their respective order, are the address of the recipient of the swapped tokens, a boolean on whether the swap direction is from token0 to token1 or vice versa, the volume of the source token that would like to be swapped, an integer (sqrtPriceLimitX96) that manages how much slippage is acceptable, and finally abi encoded data that is used in the callback function. When calling \texttt{swap} function, the sqrtPriceLimitX96 parameter is set to ignore the effects of slippage and proceed with the swap. Finally, once the swap has taken place, Uniswap calls the callback function \texttt{uniswapV3SwapCallback} with transfers the swapped tokens to the caller of the function.
 
-\begin{lstlisting}
+\begin{lstlisting}[language=Solidity]
 function swapExactUsingPool(address poolAddress, bool zeroForOne, int256 amountIn) public returns (int256, int256) {
     IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
     return
-        pool.swap(
-            msg.sender,
-            zeroForOne,
-            amountIn,
-            zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
-            abi.encode(poolAddress, pool.token0(), pool.token1(), msg.sender)
-        );
+        pool.swap(msg.sender, zeroForOne, amountIn, zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1, abi.encode(poolAddress, pool.token0(), pool.token1(), msg.sender));
 }
 
 function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external override {
@@ -335,7 +182,7 @@ function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes c
 
 \subsubsection{Borrowing and Repaying Tokens using Aave}
 To allow for short selling, borrowing and repaying of tokens are required, therefore interacting with Aave in the smart contract is essential. The first step is to instantiate the lending pool using Aave's \texttt{PoolAddressesProvider}. When borrowing, some collateral is set aside in order to be able to borrow any number of tokens, thus the first step is to deposit this collateral into the lending pool and allow it to be used as collateral (Lines 1-8). Secondly, the specified token is borrowed from the lending pool using the variable interest rate, specified by the third argument in the \texttt{borrow} function, once received, the tokens are sent to the caller's address. The opposite methodology is true for the repayment of a loan, the tokens are transfered from the callers address to the smart contract's address which the sent back to the lending pool by the \texttt{repay} function and the collateral is withdrawn and automatically sent to the caller's address.
-\begin{lstlisting}
+\begin{lstlisting}[language=Solidity]
 IPool public immutable lendingPool = IPool(IPoolAddressesProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e).getPool());
 
 function borrowToken(address tokenAddress, uint256 borrowAmount, uint256 collatoralAmount) public {
@@ -361,31 +208,14 @@ function repayBorrowedToken(address tokenAddress, uint256 repayAmount, uint256 c
 \subsubsection{Opening and Closing of Trading Positions}
 In addition to these functions, it is know that batching transactions together is more efficient than having to execute them separately, therefore as the strategies being explored for this project require both a buying and selling trade each time, the functions \texttt{openBuySellPositions} and \texttt{closeBuySellPositions} have been implemented such that it follows the method mentioned in Subsection \ref{sec:buying-selling}.
 
-\begin{lstlisting}
-function openBuySellPositions(
-    address buyPoolAddress,
-    bool buyZeroForOne,
-    int256 buyAmount,
-    address sellTokenAddress,
-    uint256 sellAmount,
-    uint256 collatoralAmount,
-    address sellPoolAddress,
-    bool sellZeroForOne
-    ) external {
+\begin{lstlisting}[language=Solidity]
+function openBuySellPositions(address buyPoolAddress, bool buyZeroForOne, int256 buyAmount, address sellTokenAddress, uint256 sellAmount, uint256 collatoralAmount, address sellPoolAddress, bool sellZeroForOne) external {
         swapExactUsingPool(buyPoolAddress, buyZeroForOne, buyAmount);
         borrowToken(sellTokenAddress, sellAmount, collatoralAmount);
         swapExactUsingPool(sellPoolAddress, sellZeroForOne, int256(sellAmount));
 }
 
-function closeBuySellPositions(
-    address buyPoolAddress,
-    bool buyZeroForOne,
-    int256 buyAmount,
-    address sellTokenAddress,
-    uint256 sellAmount,
-    uint256 collatoralAmount,
-    address sellPoolAddress,
-    bool sellZeroForOne
+function closeBuySellPositions(address buyPoolAddress, bool buyZeroForOne, int256 buyAmount, address sellTokenAddress, uint256 sellAmount, uint256 collatoralAmount, address sellPoolAddress, bool sellZeroForOne
     ) external {
         swapExactUsingPool(buyPoolAddress, buyZeroForOne, buyAmount);
         swapExactUsingPool(sellPoolAddress, sellZeroForOne, int256(sellAmount));
@@ -397,39 +227,7 @@ function closeBuySellPositions(
 Storing the state of the strategy is important as the strategies need to store and maintain it's history and vairables to ensure consistency when trading, therefore the state is stored as a dictionary in a pickle file. The State contains the liquidity pool pair that is being traded, the strategy instance, a dictionary of the open positions (initially empty) and the account balance. The state is updated after every exectution and is stored back into the pickle file.
 
 \subsection{Retreival of Data and Signal Generation}
-The frequency at which signals and data is collected is easily variable, however to ensure consistency, the current design has a frequency of every hour. This frequency is set in a Cron job. The Cron job runs a script is to collect the current price data and generate a signal. The data collected is retrieved from the Uniswap GraphQL endpoint:
-\begin{multicols}{2}
-\noindent Fetching Liquidity Pool Price data
-\begin{lstlisting}
-query ($id: ID!) {
-    pool(id: $id) {
-        token0 {
-            symbol
-        }
-        token1 {
-            symbol
-        }
-        token0Price
-        token1Price
-        liquidity
-    }
-}
-\end{lstlisting}
-\columnbreak
-\vspace*{3ex}
-Fetching Gas Price data
-\vspace*{-1ex}
-\begin{lstlisting}
-query {
-    transactions(first:1, orderBy: timestamp, orderDirection:desc) {
-        gasPrice
-        timestamp
-    }
-}
-\end{lstlisting}
-\end{multicols}
-
-\noindent The price data queries the liquidity pool returning it's current prices whereas the gas price data is retrieved from the most recent transaction on Uniswap, regardless of type. These data points are inserted into their corresponding tables in the database, and is also sent to the strategy to generate a signal, which is sent to the execution system for exectution.
+The frequency at which signals and data are collected is easily variable, however, to ensure consistency, the current design has a frequency of every hour. This frequency is set in a Cron job. The Cron job runs a script to collect the current price data and generate a signal. Using Uniswap's subgraph, 2 queries are sent to retrieve the necessary data. The first query queries the liquidity pool returning its current prices, the second, retrieves the most recent transaction, regardless of the type of transaction, to collect the cost of gas at the time. These data points are inserted into their corresponding tables in the database and are also sent to the strategy to generate a signal, which is sent to the execution system for execution. The GraphQL queries can be found in Appendix \ref{app:live-pool-price-query} and \ref{app:live-gas-query}.
 
 \subsection{Trade Execution}
 Once the signal has been received, it is sent to the trade exectution system. Once the signal is required to be actualized, the execution system breaks the signal into the different types of orders and executes them. For each type of order, its parameters are extracted, e.g. volume to buy, volume to sell, the target token and the prices in the case of opening a position. These parameters are then used to calculate the remaining paramters that are required to call the corresponding smart contract function, e.g. the swap direction's zeroForOne. Finally, once all of the necessary function parameters has been defined, the order is executed on the blockchain by performing 4 steps. The first is calling the smart contract function, signing the transaction, sending the transaction and waiting for the transaction to complete.

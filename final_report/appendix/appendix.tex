@@ -248,3 +248,189 @@ The first step is to generate a descent direction and then update the variable w
         \EndFor
     \end{algorithmic}
 \end{algorithm}
+
+\chapter{Supporting Code Snippets}
+
+\section{Data Collection GraphQL Queries}
+
+\subsection{Uniswap Pool Historical Price Data Collection}
+
+\begin{lstlisting}[caption={GraphQL query to collect for pool pricing data \label{app:pool-query}},captionpos=b]
+query ($id: ID!, $prev_max_time: Int!) {
+    pool(id: $id) {
+        poolHourData(where: {periodStartUnix_gt: $prev_max_time}, orderBy: periodStartUnix, first: 1000) {
+            id
+            token0Price
+            token1Price
+            periodStartUnix
+            liquidity
+            feesUSD
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Uniswap Pool Live Price Data Collection \label{app:live-pool-price-query}}
+\begin{lstlisting}[caption={GraphQL query to collect for live pricing data },captionpos=b]
+query ($id: ID!) {
+    pool(id: $id) {
+        token0 {
+            symbol
+        }
+        token1 {
+            symbol
+        }
+        token0Price
+        token1Price
+        liquidity
+    }
+}
+\end{lstlisting}
+
+\subsection{Uniswap Historical Gas Price Data Collection}
+\begin{lstlisting}[caption={GraphQL query to collect for gas pricing data \label{app:gas-query}},captionpos=b]
+query ($min_time: Int!, $max_time: Int!) {
+    transactions(where: {timestamp_gt: $min_time, timestamp_lt: $max_time}, first:1000, orderBy: timestamp, orderDirection: asc) {
+        id
+        timestamp
+        gasPrice
+    }
+}
+\end{lstlisting}
+
+\subsection{Uniswap Live Gas Price Data Collection\label{app:live-gas-query}}
+\begin{lstlisting}[caption={GraphQL query to collect for live gas price data},captionpos=b]
+query {
+    transactions(first:1, orderBy: timestamp, orderDirection:desc) {
+        gasPrice
+        timestamp
+    }
+}
+\end{lstlisting}
+
+
+\subsection{Aave Historical Lending Pool Data Collection \label{app:lending-query}}
+\begin{lstlisting}[caption={GraphQL query to retrieve for lending pricing data},captionpos=b]
+query ($symbol: String!, $prev_max_time: Int!) {
+    reserves(where: {symbol: $symbol}) {
+        id
+        symbol
+        lifetimeBorrows
+        baseLTVasCollateral
+        reserveLiquidationThreshold
+        borrowHistory(
+            where: {timestamp_gt: $prev_max_time}, first: 1000, orderBy: timestamp, orderDirection: asc) {
+            id
+            timestamp
+            borrowRate
+        }
+    }
+}
+\end{lstlisting}
+
+\section{Backtesting Code Snippets}
+
+\subsection{Order Execution Code}
+\label{sec:backtesting-execution-code}
+
+\subsubsection{Buying ETH}
+\begin{lstlisting}[language=Python, caption={Execution code for Buying ETH},captionpos=b]
+amount_to_swap = self.account['WETH'] * order[1]
+self.account['WETH'] = self.account['WETH'] - amount_to_swap
+self.account['ETH'] = self.account['ETH'] + amount_to_swap
+\end{lstlisting}
+
+\subsubsection{Swapping Tokens}
+\begin{lstlisting}[language=Python, caption={Execution code for Swapping Tokens on a specified liquidity pool},captionpos=b]
+if is_for_token0:
+    for swap_for_token0 in swaps:
+        swap_token, swap_volume = swap_for_token0
+        self.account['WETH'] = self.account['WETH'] - (swap_volume * prices[f'P{swap_token[1]}'])
+        self.account[swap_token] = self.account[swap_token] + (swap_volume * (1 - swap_fees[swap_token]))
+else:
+    for swap_for_token1 in swaps:
+        swap_token, swap_volume = swap_for_token1
+        self.account[swap_token] = self.account[swap_token] - (swap_volume / prices[f'P{swap_token[1]}'])
+        self.account['WETH'] = self.account['WETH'] + (swap_volume * (1 - swap_fees[swap_token]))
+\end{lstlisting}
+
+\subsubsection{Opening a Buy Position}
+\begin{lstlisting}[language=Python, caption={Execution code for opening a buy positon},captionpos=b]
+self.account['WETH'] = self.account['WETH'] - (volume * buy_price)
+self.account[token] = self.account[token] + (volume * (1 - swap_fees[token]))
+\end{lstlisting}
+
+\subsubsection{Closing a Buy Position}
+\begin{lstlisting}[language=Python, caption={Execution code for closing a buy positon},captionpos=b]
+buy_token, bought_price, buy_volume, buy_timestamp = self.open_positions['BUY'][buy_id]
+volume_bought = buy_volume * (1 - swap_fees[buy_token])
+self.account[buy_token] = self.account[buy_token] - volume_bought
+self.account['WETH'] = self.account['WETH'] + (prices[f'P{buy_token[1]}'] * (volume_bought * (1 - swap_fees[buy_token])))
+\end{lstlisting}
+
+
+\subsubsection{Opening a Sell Position}
+\begin{lstlisting}[language=Python, caption={Execution code for opening a sell positon},captionpos=b]
+# Borrow token and Deposit collateral
+amount_to_move_to_collateral_WETH = ((volume * sell_price) / ltv_eth)
+self.account[token] = self.account[token] + volume
+self.account['WETH'] = self.account['WETH'] - amount_to_move_to_collateral_WETH
+self.account['collateral_WETH'] = self.account['collateral_WETH'] + amount_to_move_to_collateral_WETH
+
+# Swap borrowed tokens to WETH
+self.account[token] = self.account[token] - volume
+self.account['WETH'] = self.account['WETH'] + (volume * (1 - swap_fees[token]) * sell_price)
+\end{lstlisting}
+
+
+\subsubsection{Closing a Sell Position}
+\begin{lstlisting}[language=Python, caption={Execution code for closing a sell positon},captionpos=b]
+sell_token, sold_price, sell_volume, sell_timestamp = self.open_positions['SELL'][sell_id]
+
+# Swap WETH back to Token
+volume_required_to_return = sell_volume
+previous_timestamp = sell_timestamp
+
+for apy_idx in apy[sell_token].index:
+    local_apy = apy[sell_token].loc[apy_idx]['borrow_rate']
+    number_of_seconds = apy[sell_token].loc[apy_idx]['timestamp'] - previous_timestamp
+    secondly_yield = (1 + local_apy)**(1 / (365*24*60*60))
+    volume_required_to_return *= secondly_yield ** number_of_seconds
+    previous_timestamp = apy[sell_token].loc[apy_idx]['timestamp']
+
+self.account['WETH'] = self.account['WETH'] - (sold_price * volume_required_to_return / (1 - swap_fees[sell_token])) 
+self.account[sell_token] = self.account[sell_token] + volume_required_to_return
+
+# Return Borrowed Tokens and Collatoral
+self.account[sell_token] = self.account[sell_token] - volume_required_to_return
+self.account['WETH'] = self.account['WETH'] + self.account['collateral_WETH']
+self.account['collateral_WETH'] = 0
+\end{lstlisting}
+
+\subsubsection{Withdrawing Collatoral}
+\begin{lstlisting}[language=Python, caption={Execution code for withdrawing a selected amount of collateral},captionpos=b]
+self.account['WETH'] = self.account['WETH'] + withdraw_amount
+self.account['collateral_WETH'] = self.account['collateral_WETH'] - withdraw_amount
+\end{lstlisting}
+
+\subsubsection{Depositing Additional Collatoral}
+\begin{lstlisting}[language=Python, caption={Execution code for depositing a selected amount of collateral},captionpos=b]
+self.account['WETH'] = self.account['WETH'] - deposit_amount
+self.account['collateral_WETH'] = self.account['collateral_WETH'] + deposit_amount
+\end{lstlisting}
+
+\subsubsection{Deducting Gas Fees on \texttt{OPEN} and \texttt{CLOSE} Orders \label{app:deducting-gas-fee}}
+\begin{lstlisting}[language=Python, caption={Execution code for deducting gas fees on \texttt{OPEN} and \texttt{CLOSE} orders},captionpos=b]
+if len([order[0] for order in signal if order[0] == 'OPEN']) == 2:
+    if strategy.should_batch_trade:
+        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_OPEN_BUY_AND_SELL_POSITION * gas_price_in_eth)
+    else:
+        self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_BORROW) * gas_price_in_eth)
+
+if len([order[0] for order in signal if order[0] == 'CLOSE']) == 2:
+    if strategy.should_batch_trade:
+        self.account['ETH'] = self.account['ETH'] - (GAS_USED_BY_CLOSE_BUY_AND_SELL_POSITION * gas_price_in_eth)
+    else:
+        self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth)
+
+\end{lstlisting}
