@@ -29,7 +29,7 @@ Similarly, obtaining the interest rates for borrowing necessitates the utilisati
 \\[3mm]
 The transaction history is queried at each hour to collect the gas price history since Uniswap migrated to V3. This is because querying in the same as the pricing data and borrowing rate history is too exhaustive as transactions occur every second. Therefore, it is more efficient to query at each hour with a window to retrieve the gas price at the closest hour as follows. Algorithm \ref{alg_gas_price_col} in the Appendix shows the pseudocode gas price at each hour is queried. 
 \subsection{Types of Orders and Execution}
-There are numerous order types that the backtesting supports due to measures to ensure a positive balance and avoid liquidation. The types of orders are; \texttt{BUY\ ETH}, \texttt{WITHDRAW}, \texttt{DEPOSIT}, \texttt{SWAP}, \texttt{OPEN\ BUY}, \texttt{CLOSE\ BUY}, \texttt{OPEN\ SELL}, \texttt{CLOSE\ SELL}. The procedures of the execution each order type are outlined below. The code of the execution, excluding gas fees, of the order is outlined in Appendix \ref{sec:backtesting-execution-code}.
+There are numerous order types that the backtesting supports due to measures to ensure a positive balance and avoid liquidation. The types of orders are; \texttt{BUY\ ETH}, \texttt{WITHDRAW}, \texttt{DEPOSIT}, \texttt{SWAP}, \texttt{OPEN\ BUY}, \texttt{CLOSE\ BUY}, \texttt{OPEN\ SELL}, \texttt{CLOSE\ SELL}. The procedures for the execution of each order type are outlined below. The code of the execution, excluding gas fees, of the order is outlined in Appendix \ref{sec:backtesting-execution-code}.
 \vspace{-3mm}
 \paragraph{\texttt{BUY\ ETH}}
 The \texttt{BUY\ ETH} order is used to swap a percentage of the accounts balance of WETH to ETH. The argument is a float between 0 and 1.
@@ -238,7 +238,7 @@ Storing the state of the strategy is essential as the strategies need to store a
 The frequency at which signals and data are collected is easily variable; however, the current design has a frequency of every hour to ensure consistency. This frequency is set in a Cron job. The Cron job runs a script to collect the current price data and generate a signal. Using Uniswap's subgraph, two queries are sent to retrieve the necessary data. The first query queries the liquidity pool returning its current prices, and the second, retrieves the most recent transaction, regardless of the type of transaction, to collect the cost of gas at the time. These data points are inserted into their corresponding tables in the database. They are also sent to the strategy to generate a signal, which is sent to the execution system for execution. The GraphQL queries are in Appendix \ref{app:live-pool-price-query} and \ref{app:live-gas-query}.
 
 \subsection{Trade Execution}
-Once the signal has been received, it is sent to the trade execution system. Once the signal is required to be actualized, the execution system breaks the signal into different types of orders and executes them. For each type of order in signal, its parameters are extracted, e.g. volume to buy, volume to sell, the target token and the prices when opening a position. These parameters are then used to calculate the remaining parameters required to call the corresponding smart contract function, e.g. the swap direction's zeroForOne. Finally, once all the necessary function parameters have been defined, the order is executed on the blockchain by performing four steps. The first is calling the smart contract function, signing the transaction, sending the transaction and waiting for the transaction to complete. After all of the orders have been executed, the new balances of each token along with the updated \texttt{open\_positions} is returned to then be stored as the new state.
+Once the signal has been received, it is sent to the trade execution system. Once the signal is required to be actualised, the execution system breaks the signal into different types of orders and executes them. For each type of order in signal, its parameters are extracted, e.g. volume to buy, volume to sell, the target token and the prices when opening a position. These parameters are then used to calculate the remaining parameters required to call the corresponding smart contract function, e.g. the swap direction's zeroForOne. Finally, once all the necessary function parameters have been defined, the order is executed on the blockchain by performing four steps. The first is calling the smart contract function, signing the transaction, sending the transaction and waiting for the transaction to complete. After all of the orders have been executed, the new balances of each token, along with the updated \texttt{open\_positions}, are returned to then be stored as the new state.
 \begin{figure}[htb!]
 \begin{adjustwidth}{-0.5in}{-0.5in}
 \begin{minipage}{\linewidth}
@@ -250,7 +250,7 @@ call_function = contract.functions.<Smart Contract Function Name>(<Function Para
 signed_tx = web3.eth.account.sign_transaction(call_function, private_key=private_key)
 # Send transaction
 send_tx = web3.eth.send_raw_transaction(signed_tx.rawTransaction)
-# Wait for transaction receipt
+# Wait for the transaction receipt
 tx_receipt = web3.eth.wait_for_transaction_receipt(send_tx)
 \end{lstlisting}
 \end{minipage}
