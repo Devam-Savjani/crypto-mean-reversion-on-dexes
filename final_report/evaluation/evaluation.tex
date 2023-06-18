@@ -159,7 +159,7 @@ A threshold on the gas price is also set to ensure positions that have a high tr
     \caption{Histogram Plot of Gas Prices in ETH}
     \label{fig:GasPriceHistogram}
 \end{figure}
-
+\\[3mm]
 \noindent Therefore, our investigation  consists of varying this threshold to see its effects on the returns of each strategy. Using batched transactions and the same parameters used in the aboce experiment, the thresholds are set to the $60^{th}, 70^{th},80^{th},90^{th},100^{th}$ quantiles. Table \ref{tab:VaryGasPriceThresholds} displays the results obtained by varying these thresholds. It can be seen that by filtering more costly opportunities, expectedly reduces the number of actionable, however the higher thresholds also show that these opportunities are still just as if not more profitable. In addition, to this Figure \ref{fig:VaryGasPriceThresholds}, shows that a low threshold benefits constant hedge ratio strategy most as with the low threshold, it has a light profit and as the threshold increases the return using the strategy decreases. Whereas, the returns are hindered with a lower threshold as many profitable opportunities are missed due to the overly low threshold, resulting in a reduction in the overall profitability of the trading strategy. The figure also shows how setting the threshold after the $90^{th}$ percentile does little to no effect in the return, giving a slight positive impact on the Lagged strategy and a slight negative impact on the the remaining. This is likely due to there only a small amounts of arbitrage opportunities to be present in such times when the gas price is high, thus having little impact. It is also interesting to see that the Lagged and the Kalman Filter strategies perform better by setting the threshold to the $90^{th}$ percentile in comparison to the $80^{th}$ percentile, whereas the other strategies perform worse.
 \\[3mm]
 Overall, the analysis of varying gas price thresholds reveals that adjusting the threshold level has a direct impact on the number of actionable opportunities and the resulting returns. Higher thresholds filter out less favorable opportunities, while still maintaining profitability. However, it is crucial to strike a balance and avoid setting the threshold too low, as this may lead to missed profitable opportunities. Hence, to get the best balance the threshold is set to the $90^{th}$ percentile.
@@ -394,9 +394,9 @@ Overall, given the experiments conducted the optimal paramters for each strategy
     \caption{Optimal Parameters for each strategy \label{tab:OptimParams}}
 \end{table}
 
-By running the backtesting system from 14th January 2022 to 9th June 2023 with an initial investment of 100ETH, we can see in Table \ref{tab:FinalResults} the Kalman Filter outperforms all of the other strategies in all liquidity pool pairs except pair 6. The Granger Causality strategy has also performed well, whereas the Lagged strategy returned mediocre a return, with the Constant and the Sliding Window strategies strategy performing similarly, both resulting in around 20\% APY.
-
-\begin{table}[!htb]
+\noindent By running the backtesting system from 14th January 2022 to 9th June 2023 with an initial investment of 100ETH, we can see in Table \ref{tab:FinalResults} the Kalman Filter outperforms all of the other strategies in all liquidity pool pairs except pair 6. The Granger Causality strategy has also performed well, whereas the Lagged strategy returned mediocre a return, with the Constant and the Sliding Window strategies strategy performing similarly, both resulting in around 20\% APY.
+\\[3mm]
+\begin{table}[H]
     \centering
     \begin{adjustwidth}{-0.8in}{-0.9in}
         \begin{tabular}{|p{4em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|p{3em}|}\hline
@@ -416,7 +416,7 @@ By running the backtesting system from 14th January 2022 to 9th June 2023 with a
     \caption{Returns of each strategy with their optimal parameters \label{tab:FinalResults}}.
 \end{table}
 
-In addition to this, Figure \ref{fig:ValueHistory} shows the account value over time of each of the strategies, it is easy the see that the account values seem to follow a trend however, the gradients of the return are less drastic in some strategies i.e. the Kalman Filter. It is also notable that the number of profitable trades and decreased since the beginning of 2023, with the Kalman Filter strategy taking a large loss in January of this year, 2023.
+\noindent In addition to this, Figure \ref{fig:ValueHistory} shows the account value over time of each of the strategies, it is easy the see that the account values seem to follow a trend however, the gradients of the return are less drastic in some strategies i.e. the Kalman Filter. It is also notable that the number of profitable trades and decreased since the beginning of 2023, with the Kalman Filter strategy taking a large loss in January of this year, 2023.
 
 \begin{figure}[H]
     \centering
@@ -425,7 +425,7 @@ In addition to this, Figure \ref{fig:ValueHistory} shows the account value over 
     \label{fig:ValueHistory}
 \end{figure}
 
-Another valuable insight can be seen in Figure \ref{fig:HedgeRatioPerStrat} where the evolution of the hedge ratio is plotted for each strategy. It can be seen that the sliding window and the granger causality strategies' hedge ratio is fairly consistent in comparison to the lagged strategy's hedge ratio. However, the Kalman Filter calculates the Hedge Ratio slightly lower and also more constant with only minor deviations, as can be seen in Figure \ref{fig:evolving_hedge_ratio_kf}. This indicates a more persistent relationship between the paired assets. The minor deviations observed in the hedge ratio can be attributed to temporary fluctuations in market dynamics or noise in the data.
+\noindent Another valuable insight can be seen in Figure \ref{fig:HedgeRatioPerStrat} where the evolution of the hedge ratio is plotted for each strategy. It can be seen that the sliding window and the granger causality strategies' hedge ratio is fairly consistent in comparison to the lagged strategy's hedge ratio. However, the Kalman Filter calculates the Hedge Ratio slightly lower and also more constant with only minor deviations, as can be seen in Figure \ref{fig:evolving_hedge_ratio_kf}. This indicates a more persistent relationship between the paired assets. The minor deviations observed in the hedge ratio can be attributed to temporary fluctuations in market dynamics or noise in the data.
 
 \begin{figure}[H]
     \centering
@@ -441,7 +441,7 @@ Therefore, to analyse the $\beta$ of each strategy, the conversion from WETH to 
 \\[3mm]
 The comparison of account values and the evolution of ETH price over time are depicted in Figure \ref{fig:beta-vis}. The figure illustrates that there is a limited correlation between the returns of the trading strategy and the price of ETH. While the returns of the strategy do not closely follow the exact movements in the ETH price, it is evident that significant price fluctuations in ETH do have an impact on the strategy's performance. This observation suggests that the trading strategy's returns are influenced, to some extent, by the general trends and movements in the price of ETH. However, it is important to note that the relationship is not entirely linear or directly proportional. Analyzing the correlation between the strategy's returns and the price of ETH provides valuable insights into the dynamics of the trading strategy and its sensitivity to market movements. By understanding the impact of ETH price changes on the strategy's performance, traders and investors can make informed decisions and potentially adjust their strategies to optimize their returns and manage risks effectively. It can also be seen that the Constant, Sliding Window and Lagged strategies are less effected by the market compared to the Granger Causality and Kalman Filter strategies.
 
-\begin{table}[!htb]
+\begin{table}[H]
     \centering
     \begin{adjustwidth}{-0.8in}{-0.9in}
         \begin{tabular}{|p{5em}|p{7em}|p{7em}|p{7em}|p{8em}|p{7em}|}\hline
@@ -474,7 +474,7 @@ Another metric that is commonly used in finance is the Sharpe Ratio, the reason 
 \\[3mm]
 To calculate each of the strategies Sharpe Ratios, the Bank of England's interest rate of 4.5\%~\cite{boe_interest}. Table \ref{tab:sharpes} displays the sharpe ratios of each strategy, we see that the Constant Strategy exhibits the highest hedge ratio, followed by the Lagged and Granger Causality strategies, while the Sliding Window and Kalman Filter strategies have the lowest Sharpe ratios. This discrepancy can be attributed to the Kalman Filter strategy having a higher variance, indicating a greater level of risk compared to the Sliding Window, Lagged, and Granger Causality strategies. According to Forbes, a Sharpe ratio $>1$ is considerer to be `good' as it suggests that the investment or strategy has generated a return that is more than one unit of risk. Overall, all strategies yield desirable Sharpe ratios, indicating favourable risk-adjusted returns.
 
-\begin{table}[!htb]
+\begin{table}[H]
     \centering
         \begin{tabular}{|p{7em}|p{7em}|p{7em}|p{7em}|}\hline
             Strategy & Volatility & Average Return & Sharpe Ratio \\\hline

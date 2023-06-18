@@ -434,3 +434,58 @@ if len([order[0] for order in signal if order[0] == 'CLOSE']) == 2:
         self.account['ETH'] = self.account['ETH'] - ((GAS_USED_BY_SWAP + GAS_USED_BY_SWAP + GAS_USED_BY_REPAY) * gas_price_in_eth)
 
 \end{lstlisting}
+
+
+\subsection{Strategy Hedge Ratio Calculation Code \label{app:strats-hr-calcs}}
+
+\subsubsection{Constant Strategy}
+\begin{lstlisting}[language=Python, caption={Calculation of the hedge ratio of the Constant Strategy},captionpos=b]
+model = sm.OLS(history_p1, sm.add_constant(history_p2))
+results = model.fit()
+# Gradient of the OLS i.e. X = results.params[0] + results.params[1] * 'p2_token1_price'
+hedge_ratio = params[1]
+\end{lstlisting}
+
+\subsubsection{Sliding Window Strategy}
+\begin{lstlisting}[language=Python, caption={Calculation of the hedge ratio in \texttt{update\_hedge\_ratio} of the Sliding Window Strategy},captionpos=b]
+def update_hedge_ratio(self):
+    p1, p2 = self.history_p1[-window_size:], self.history_p2[-window_size:]
+    model = sm.OLS(p2, sm.add_constant(p1))
+    results = model.fit()
+    self.hedge_ratio = results.params[1]
+\end{lstlisting}
+
+\subsubsection{Lagged Strategy}
+\begin{lstlisting}[language=Python, caption={Calculation of the hedge ratio in \texttt{update\_hedge\_ratio} of the Lagged Strategy},captionpos=b]
+def update_hedge_ratio(self):
+    maxlag = min(self.lag, min(self.window_size_in_hours, len(self.history_p1))-1)
+    p1, p2 = self.history_p1[-(self.window_size_in_hours+maxlag):], self.history_p2[-self.window_size_in_hours:]
+    lagged_p1 = sm.tsa.lagmat(p1, maxlag=maxlag)[-self.window_size_in_hours:]
+    model = sm.OLS(p2, sm.add_constant(lagged_p1))
+    results = model.fit()
+    self.hedge_ratio = results.params[1]
+\end{lstlisting}
+
+\subsubsection{Granger Causality Test Strategy}
+\begin{lstlisting}[language=Python, caption={Calculation of the hedge ratio in \texttt{update\_hedge\_ratio} of the Granger Causality Test Strategy},captionpos=b]
+def update_hedge_ratio(self):
+    p1, p2 = self.history_p1, self.history_p2
+    data = pd.DataFrame({'Asset1': p1, 'Asset2': p2})
+    granger_results = statsmodels.tsa.stattools.grangercausalitytests(data, maxlag=[1], verbose=False)
+    self.hedge_ratio = granger_results[1][1][1].params[0]
+\end{lstlisting}
+
+
+\subsubsection{Kalman Filter Strategy}
+\begin{lstlisting}[language=Python, caption={Calculation of the hedge ratio in \texttt{update\_hedge\_ratio} of the Kalman Filter Strategy},captionpos=b]
+def update_hedge_ratio(self):
+    x, y = self.history_p2[-1], self.history_p1[-1]
+    state_means_stepwise, state_covs_stepwise = self.kf.filter_update(
+        filtered_state_mean=self.means_trace[-1],
+        filtered_state_covariance=self.covs_trace[-1],
+        observation=x,
+        observation_matrix=np.array([[y, 1]]))
+
+    self.means_trace.append(state_means_stepwise)
+    self.covs_trace.append(state_covs_stepwise)
+\end{lstlisting}

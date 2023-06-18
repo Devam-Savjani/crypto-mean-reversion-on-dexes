@@ -4,7 +4,6 @@ As previously mentioned, the strategy I employ is the mean reversion trading str
 
 \section{Abstract Strategy}
 The implementation of the generalization of these strategies is intricate and designed to be scalable and highly customizable with various parameters. Additionally, since the trading strategies being investigated are based on mean reversion, an abstract strategy is created to allow for quick exploration and research into different approaches and the impact of hedge ratio calculations on returns. This abstract strategy encompasses the core logic of generating trading signals, determining optimal trade timing and volumes, and transmitting them to the live or backtesting system. The strategy-specific classes contain operations that calculate the hedge ratio and establish the thresholds that trigger the generation of trading signals. Below shows the functions that the abstract strategy possesses.
-\vspace{5mm}
 \begin{lstlisting}[language=Python]
 class Abstract_Strategy():
     def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, strategy_name, gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment):
@@ -23,9 +22,8 @@ class Abstract_Strategy():
         ...
 
 \end{lstlisting}
-\vspace{5mm}
 
-The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} and \texttt{generate\_signal} are all inheritted by each strategy and \texttt{recalculate\_thresholds} is implemented in each instance of the strategy. \texttt{\_\_init\_\_,\ initialise\_historical\_data} are self explanatory. \texttt{new\_tick} is called in \texttt{generate\_signal} to update the strategy's knowledge of historical prices, this function also triggers a call to \texttt{recalculate\_thresholds} which re-calculates the hedge ratio and determines the thresholds at which an arbitrage opportunity becomes apparent. \texttt{generate\_signal} is the function that is called by the trading system at each price update, it first invokes \texttt{new\_tick} which in turn updates the thresholds, finally the updated hedge ratio and thresholds are used in the process of generating a signal. The steps of \texttt{generate\_signal} are outlined below:
+\noindent The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} and \texttt{generate\_signal} are all inheritted by each strategy and \texttt{recalculate\_thresholds} is implemented in each instance of the strategy. \texttt{\_\_init\_\_,\ initialise\_historical\_data} are self explanatory. \texttt{new\_tick} is called in \texttt{generate\_signal} to update the strategy's knowledge of historical prices, this function also triggers a call to \texttt{recalculate\_thresholds} which re-calculates the hedge ratio and determines the thresholds at which an arbitrage opportunity becomes apparent. \texttt{generate\_signal} is the function that is called by the trading system at each price update, it first invokes \texttt{new\_tick} which in turn updates the thresholds, finally the updated hedge ratio and thresholds are used in the process of generating a signal. The steps of \texttt{generate\_signal} are outlined below:
 \begin{enumerate}
     \item The first step is to call \texttt{new\_tick} which updates the thresholds
     \item Second, is to check whether a position is already held;
@@ -40,6 +38,7 @@ The functions \texttt{\_\_init\_\_,\ initialise\_historical\_data,\ new\_tick} a
     \end{enumerate}
     In addition, prior to opening or closing a position, a preliminary check is conducted to ensure that the ETH balance remains positive. If the anticipated balance after executing the orders indicates a potential shortfall, an order to \texttt{BUY\ ETH} is automatically initiated. This precautionary measure ensures that the strategy maintains a positive ETH balance and avoids entering into positions that could lead to negative balances.
 \end{enumerate}
+Refer to Appendix \ref{app:strats-hr-calcs} to see the implementations of calculating the hedge ratios of each strategy.
 
 \subsection{Volume of Trades}
 A major part of the strategy is at which volumes to trade, therefore in order to be able to trade the maximum amount a minimization problem must be solved. However, before delving into thie problem it is important to highlight the influence of the hedge ratio of the trading volumes. If the hedge ratio is positive, for every unit of pair0 traded, \texttt{hedge\_ratio} units of pair1 should be traded. However, the inverse is true if the hedge ratio is negative, for every \texttt{-hedge\_ratio} units of pair0 traded, 1 unit of pair1 should be traded.
@@ -67,13 +66,7 @@ Therefore, as all terms in the objective function are positive therefore, the mi
 
 \section{Constant Hedge Ratio Strategy}
 In the most simplistic mean reversion strategy, the approach relies on a given historical dataset, assuming that the hedge ratio between the paired assets remains consistent over the long term. To determine this hedge ratio, the Ordinary Least Squares (OLS) regression method is employed.
-\begin{lstlisting}[language=Python]
-model = sm.OLS(history_p1, sm.add_constant(history_p2))
-results = model.fit()
-# Gradient of the OLS i.e. X = results.params[0] + results.params[1] * 'p2_token1_price'
-hedge_ratio = params[1]
-\end{lstlisting}
-\vspace{5mm}
+\\[3mm]
 In Figure \ref{fig:f1}, the observed trend reveals that the gradient, representing the rate of change, exhibits a proximity to the value of 1. This indicates a relatively balanced relationship between the prices of each pair. However, it is important to note that as time progresses, any fluctuations or deviations from the exact value of 1 are minimal and have a negligible impact on the overall trend. The stability of the gradient over time suggests a consistent and relatively stable relationship between the liquidity pools, reinforcing the notion that their interdependence remains relatively constant.
 \begin{figure}[!htb]
     \centering
@@ -82,38 +75,15 @@ In Figure \ref{fig:f1}, the observed trend reveals that the gradient, representi
 \end{figure}
 
 \section{Sliding Window OLS Strategy}
-As mentioned earlier, the hedge ratio plays a crucial role in minimizing risk and achieving a market-neutral position in trading strategies. However, employing a static hedge ratio may prove suboptimal since market conditions and the correlation between paired assets can evolve over time. To tackle this challenge, a dynamic approach is adopted using a sliding window approach. In this approach, the hedge ratio is continuously updated at each tick by considering the most recent data. The length of the data window used for the calculation is determined by the value specified in the \texttt{window\_size} argument. By incorporating the sliding window mechanism, the hedge ratio remains adaptive to the changing market dynamics, providing a more accurate and responsive estimation for effective risk management and trading decisions. Therefore, the following function is ran every price tick,
-\begin{lstlisting}[language=Python]
-def update_hedge_ratio(self):
-    p1, p2 = self.history_p1[-window_size:], self.history_p2[-window_size:]
-    model = sm.OLS(p2, sm.add_constant(p1))
-    results = model.fit()
-    self.hedge_ratio = results.params[1]
-\end{lstlisting}
+As mentioned earlier, the hedge ratio plays a crucial role in minimizing risk and achieving a market-neutral position in trading strategies. However, employing a static hedge ratio may prove suboptimal since market conditions and the correlation between paired assets can evolve over time. To tackle this challenge, a dynamic approach is adopted using a sliding window approach. In this approach, the hedge ratio is continuously updated at each tick by considering the most recent data. The length of the data window used for the calculation is determined by the value specified in the \texttt{window\_size} argument. By incorporating the sliding window mechanism, the hedge ratio remains adaptive to the changing market dynamics, providing a more accurate and responsive estimation for effective risk management and trading decisions.
 
 \section{Lagged OLS Strategy}
 A lagged strategy was also a implemented as an extension of the sliding window strategy. In the context of the sliding window strategy, the hedge ratio is updated using the most recent data within a specified window size. However, due to potential delays or lags in the synchronization of liquidity pools, the instantaneous prices of the assets may not fully reflect their actual relationship. Therefore, this approach aims to account for potential lags in the synchronization of liquidity pools. The lagged strategy extends the existing sliding window approach by using \texttt{sm.tsa.lagmat} function to perform the lag, which is then used to perform OLS.
-\begin{lstlisting}[language=Python]
-def update_hedge_ratio(self):
-    maxlag = min(self.lag, min(self.window_size_in_hours, len(self.history_p1))-1)
-    p1, p2 = self.history_p1[-(self.window_size_in_hours+maxlag):], self.history_p2[-self.window_size_in_hours:]
-    lagged_p1 = sm.tsa.lagmat(p1, maxlag=maxlag)[-self.window_size_in_hours:]
-    model = sm.OLS(p2, sm.add_constant(lagged_p1))
-    results = model.fit()
-    self.hedge_ratio = results.params[1]
-\end{lstlisting}
 
 \section{Unrestricted Model from the Granger Causality Test}
 Similarly, to account for lag and causality, a strategy that was employed was using the Granger Causality Test. The Granger Causality Test is a statistical hypothesis test that assesses the predictive value of one time series in forecasting another. The Granger causality test is based on the idea that if variable X is causing variable Y, then the past values of X should contain information that helps predict the future values of Y, beyond what can be predicted by using only the past values of Y itself. The test involves fitting two regression models: the restricted model and the unrestricted model. In the restricted model, only the past values of the dependent variable are used as predictors. In the unrestricted model, both the past values of the dependent variable and the potentially causal variable are included as predictors. By comparing the performance of these two models, the test determines whether the inclusion of the potentially causal variable improves the predictive power.
 \\[3mm]
 In order to estimate the hedge ratio, the unrestricted model's regression parameters are used as it captures the potential influence of the potentially causal variable on the dependent variable, beyond what can be explained by the lagged values of the dependent variable alone.
-\begin{lstlisting}[language=Python]
-def update_hedge_ratio(self):
-    p1, p2 = self.history_p1, self.history_p2
-    data = pd.DataFrame({'Asset1': p1, 'Asset2': p2})
-    granger_results = statsmodels.tsa.stattools.grangercausalitytests(data, maxlag=[1], verbose=False)
-    self.hedge_ratio = granger_results[1][1][1].params[0]
-\end{lstlisting}
 
 \section{Kalman Filter Strategy}
 Another method that is often used to ensure market-neutral positions is the use of Kalman Filters as a dynamic tool to update and adapt the hedge ratio, taking into account the changing market conditions and the evolving relationship between the paired assets. This allows for a more responsive and adaptive approach to maintaining a market-neutral position. The Kalman Filter takes into consideration not only the current price data but also the historical information and the underlying dynamics of the assets. It provides a more robust and accurate estimation of the optimal hedge ratio, which aligns with the mean reversion strategy's objective of capturing potential price divergences and profiting from their eventual convergence.
@@ -131,7 +101,6 @@ kf = KalmanFilter(
     transition_covariance=1e-5 * np.eye(2)
     )
 \end{lstlisting}
-\vspace{5mm}
 
 \noindent Below describes the reasoning behind the choices of parameters:
 \begin{itemize}
@@ -142,7 +111,7 @@ kf = KalmanFilter(
     \item \texttt{transition\_covariance} - Finally the transition\_covariance specifies the covariance matrix of the process noise. It represents the uncertainty or variability in the state transition, hence it is set to be very small, $\begin{bmatrix} 10^{-5} & 0\\ 0 & 10^{-5} \end{bmatrix}$.
 \end{itemize}
 
-Figures \ref{fig:evolving_hedge_ratio_kf} and \ref{fig:ratios_kf} provide visual representations of the hedge ratio's evolution over time. These figures illustrate that the hedge ratio, while exhibiting subtle variations, does indeed change over the observed period. One notable event is the significant rise that occurs at the timestamp 1.655e9 or June 2022. This particular shift in the hedge ratio is likely attributed to the migration from the Proof of Work (PoW) consensus mechanism to the Proof of Stake (PoS) consensus mechanism on the Ethereum network.
+\noindent Figures \ref{fig:evolving_hedge_ratio_kf} and \ref{fig:ratios_kf} provide visual representations of the hedge ratio's evolution over time. These figures illustrate that the hedge ratio, while exhibiting subtle variations, does indeed change over the observed period. One notable event is the significant rise that occurs at the timestamp 1.655e9 or June 2022. This particular shift in the hedge ratio is likely attributed to the migration from the Proof of Work (PoW) consensus mechanism to the Proof of Stake (PoS) consensus mechanism on the Ethereum network.
 \\[3mm]
 During the transition from PoW to PoS, there are fundamental changes in how the Ethereum network reaches consensus and validates transactions. This change in consensus mechanism can impact various aspects of the network, including the dynamics of the hedge ratio. It is plausible that the observed drop in the hedge ratio during the migration period reflects the adjustments and reconfiguration of the underlying mechanisms in response to the shift to PoS.
 
@@ -151,10 +120,10 @@ During the transition from PoW to PoS, there are fundamental changes in how the 
     \includegraphics[width=\textwidth]{project/Images/Evolving_hedge_ratio_kf.png}
     \caption{Plot of how the Hedge Ratio using the Kalman Filter \label{fig:evolving_hedge_ratio_kf}}
 \end{figure}
-
+\vspace{-0.7cm}
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=\textwidth]{project/Images/plots_1.png}
+    \includegraphics[width=0.7\textwidth]{project/Images/plots_1.png}
     \caption{The plot shows the Kalman Filter estimating the regression line over time, \label{fig:ratios_kf}}
 \end{figure}
 
