@@ -1,6 +1,6 @@
 \chapter{Trading Strategies}
 \label{sec:strats}
-As previously mentioned, the strategies employed are variations of the mean reversion trading strategy. The basic concept of a mean reversion strategy identifies two closely related assets, typically referred to as a pair, and takes advantage of deviations from their historical price relationship. This works by initially identifying a pair of assets that have a historically stable relationship, as seen in Section \ref{sec:liquidity-pools}. Then as prices change, the spread between the prices is calculated, and if the spread has deviated from the historical mean spread, the strategy should buy the undervalued asset and sell the other. The positions are then closed once the spread reverts back to its historical mean.
+As previously mentioned, the strategies employed are variations of the mean reversion trading strategy. The basic concept of a mean reversion strategy identifies two closely related assets, typically referred to as a pair, and takes advantage of deviations from their historical price relationship. This works by initially identifying a pair of assets that have a historically stable relationship, as seen in Section \ref{sec:liquidity-pools}. Then as prices change, the spread between the prices is calculated, and if the spread has deviated from the historical mean spread, the strategy should buy the undervalued asset and short sell the other. The positions are then closed once the spread reverts back to its historical mean.
 
 \section{Abstract Strategy}
 The implementation of the generalization of these strategies is intricate and designed to be scalable and highly customizable with various parameters. Additionally, since the trading strategies being investigated are based on mean reversion, an abstract strategy is created to allow for quick exploration and research into different approaches and the impact of hedge ratio calculations on returns. This abstract strategy encompasses the core logic of generating trading signals, determining optimal trade timing and volumes, and transmitting them to the live or backtesting system. The strategy-specific classes contain operations that calculate the hedge ratio and establish the thresholds that trigger the generation of trading signals. Below shows the functions that the abstract strategy possesses.
@@ -30,8 +30,8 @@ class Abstract_Strategy():
     \begin{enumerate}
         \item If a position IS held, the first is to check if the spread is between the thresholds, and if the gas price is below the specified limit, the positions are closed. However, before this, a precautionary check is made to ensure the balance of any token does not go below 0; if it does, a swap order is placed before the closing of the positions such that the balance of each token remains positive. Otherwise, the loan-to-value health factor is calculated; if it may cause liquidation, additional collateral is deposited in Aave.
         \item However, if a position is NOT held and the gas price is below the specified limit, there are 3 cases. \begin{enumerate}
-            \item $spread > upper\_threshold$ - Buy pair 2 and sell pair 1
-            \item $spread > lower\_threshold$ - Buy pair 1 and sell pair 2
+            \item $spread > upper\_threshold$ - Buy pair 2 and short sell pair 1
+            \item $spread > lower\_threshold$ - Buy pair 1 and short sell pair 2
             \item No trade
         \end{enumerate}
         Furthermore, if a trade is ordered, it is also checked; if the WETH balance falls below the rebalance threshold, the additional tokens are converted back to WETH.
@@ -118,12 +118,12 @@ During the transition from PoW to PoS, there are fundamental changes in how the 
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=\textwidth]{project/Images/Evolving_hedge_ratio_kf.png}
-    \caption{Plot of how the Hedge Ratio using the Kalman Filter \label{fig:evolving_hedge_ratio_kf}}
+    \caption{Plot of how the Hedge Ratio evolves using the Kalman Filter \label{fig:evolving_hedge_ratio_kf}}
 \end{figure}
 \vspace{-0.7cm}
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.7\textwidth]{project/Images/plots_1.png}
-    \caption{The plot shows the Kalman Filter estimating the regression line over time, \label{fig:ratios_kf}}
+    \caption{The plot shows the Kalman Filter estimating the regression line over time\label{fig:ratios_kf}}
 \end{figure}
 

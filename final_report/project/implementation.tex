@@ -56,24 +56,24 @@ The \texttt{WITHDRAW} order's function is to withdraw some collateral stored in 
 The \texttt{DEPOSIT} order's function is to deposit some additional collateral stored in Aave. This order is used when the collateral value not properly covering the loan value, hence avoiding liquidation. The only parameter is the amount that would like to be deposited. 
 
 \subsection{Gas Fees}
-The remaining fee yet to be discussed is the gas fee for each order. To best approximate the gas fee, it is paramount to have an approximation of how much gas is used in each. Therefore, the smart contract for trading was written and run on a forked Ethereum mainnet to accurately simulate the contracts behaviour; see Subsection \ref{sec:smart-contracts} to see the implementation of the smart contract. Using Hardhat, the gas usage of each function was tested, and Figure \ref{fig:gasResult} shows the results. It can be seen that some functions have a tighter spread, between the maximum and minimum, compared to others; therefore, to better understand this, plots using various parameters on the different functions provided a deeper insight into the cause of this, Figures \ref{fig:gasPlots1} and \ref{fig:gasPlots2}.
+To best approximate the gas fee, it is paramount to have an approximation of how much gas is used in each. Therefore, the smart contract for trading was written and run on a forked Ethereum mainnet to accurately simulate the contracts behaviour; see Subsection \ref{sec:smart-contracts} to see the implementation of the smart contract. Using Hardhat, the gas usage of each function was tested, and Figure \ref{fig:gasResult} shows the results. It can be seen that some functions have a tighter spread, between the maximum and minimum, compared to others; therefore, to better understand this, plots using various parameters on the different functions provided a deeper insight into the cause of this, Figures \ref{fig:gasPlots1} and \ref{fig:gasPlots2}.
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.9\textwidth]{project/Images/gas_fee_results.png}
     \caption{Results from running smart contract functions \label{fig:gasResult}}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[htb!]
     \centering
-    \includegraphics[width=0.9\textwidth]{project/Images/SwapFeesPlot.png}\\
-    \includegraphics[width=0.9\textwidth]{project/Images/BorrowFees2.png}
+    \includegraphics[width=0.75\textwidth]{project/Images/SwapFeesPlot.png}\\
+    \includegraphics[width=0.75\textwidth]{project/Images/BorrowFees2.png}
     \caption{Gas Usage Plots of Gas Used by Swapping (Top) and Borrowing (Bottom) \label{fig:gasPlots1}}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[htb!]
     \centering
-    \includegraphics[width=0.9\textwidth]{project/Images/RepayFees2.png}\\
-    \includegraphics[width=0.9\textwidth]{project/Images/depositFeesPlot2.png}
+    \includegraphics[width=0.75\textwidth]{project/Images/RepayFees2.png}\\
+    \includegraphics[width=0.75\textwidth]{project/Images/depositFeesPlot2.png}
     \caption{Gas Usage Plots of Gas Used by Repaying Borrowed Tokens (Top) and Depositing additional tokens (Bottom) \label{fig:gasPlots2}}
 \end{figure}
 
@@ -121,10 +121,10 @@ A similar approach is required to run the strategies live; however, the executio
 
 \subsection{Smart Contracts}
 \label{sec:smart-contracts}
-In order to be able to interact with Uniswap and Aave over Ethereum, smart contracts are written, which are then deployed on the blockchain network. Functions that the smart contract possesses can then be executed by anyone who knows the contract's address on the network. Smart contracts are programmable protocols written in Solidity, a high-level programming language designed for creating and executing smart contracts on Ethereum. For trading using the mentioned strategies, a few the following functionalities are required to be implemented; wrapping ETH for WETH, unwrapping WETH, swapping token A for token B using a given liquidity pool and finally, borrowing and repaying some of token A using WETH as collateral. The first two functions are required if the trader has only ETH in their account; thus, by wrapping the ETH, they can trade ETH as an ERC-20 token.
+In order to be able to interact with Uniswap and Aave over Ethereum, smart contracts are written, which are then deployed on the blockchain network. Functions that the smart contract possesses can then be executed by anyone who knows the contract's address on the network. Smart contracts are programmable protocols written in Solidity, a high-level programming language designed for creating and executing smart contracts on Ethereum. For trading using the mentioned strategies, a few the following functionalities are required to be implemented; wrapping ETH for WETH, unwrapping WETH, swapping token A for token B using a given liquidity pool and finally, borrowing and repaying some of token A using WETH as collateral. The first two functions are required if the trader has only ETH in their account; thus, by wrapping the ETH, they can trade ETH as an ERC-20 token. ERC-20 is a widely adopted technical standard to create interchangeable Ethereum blockchain tokens. It provides developers with the framework to design tokens compatible with various applications and services operating within the Ethereum ecosystem. These tokens are designed to represent a variety of assets, most importantly cryptocurrencies.
 
 \subsubsection{Wrapping of ETH and Unwrapping WETH}
-This functionality is required if the trader has only ETH in their account; thus, by wrapping the ETH, they could trade ETH in its ERC-20 format, WETH. ERC-20 is a widely adopted technical standard to create interchangeable Ethereum blockchain tokens. It provides developers with the framework to design tokens compatible with various applications and services operating within the Ethereum ecosystem. These tokens are designed to represent a variety of assets, most importantly cryptocurrencies. The functions of these functionalities can be seen below, where \texttt{swapEthForWeth} wraps ETH and \texttt{swapWethForEth} unwraps WETH. The \texttt{swapEthForWeth} function first uses the \texttt{IWETH} interface, which is itself an ERC20 interface, to allow functions such as transfer of ownership of the token, to deposit an amount of ETH in exchange for WETH, which is then transferred back to the address of the caller. The \texttt{swapWethForEth} function unwraps the WETH by first sending the specified volume of WETH from the caller to the smart contract, withdrawing the specified amount from the IERC20, which calls the \texttt{receive} function to enable the receiving of ETH and once the ETH is withdrawn into the smart contract's account, it is transferred back to the caller. See Figure \ref{fig:sol-code-eth-weth}.
+This functionality is required if the trader has only ETH in their account; thus, by wrapping the ETH, they could trade ETH in its ERC-20 format, WETH. The functions of wrapping ETH and unwrapping WETH can be seen in Figure \ref{fig:sol-code-eth-weth}, where \texttt{swapEthForWeth} wraps ETH and \texttt{swapWethForEth} unwraps WETH. The \texttt{swapEthForWeth} function first uses the \texttt{IWETH} interface, which is itself an ERC20 interface, to allow functions such as transfer of ownership of the token, to deposit an amount of ETH in exchange for WETH, which is then transferred back to the address of the caller. The \texttt{swapWethForEth} function unwraps the WETH by first sending the specified volume of WETH from the caller to the smart contract, withdrawing the specified amount from the IERC20, which calls the \texttt{receive} function to enable the receiving of ETH and once the ETH is withdrawn into the smart contract's account, it is transferred back to the caller.
 
 \begin{figure}[htb!]
 \begin{adjustwidth}{-0.5in}{-0.5in}
@@ -158,7 +158,7 @@ receive() external payable {}
 \end{figure}
 
 \subsubsection{Swapping using a Uniswap Liquidity Pool}
-Swapping using a Uniswap liquidity pool is also another critical functionality. This is done by using the \texttt{IUniswapV3Pool} interface to expose the liquidity pool's functions and calling swap on it using the necessary parameters. The parameters, in their respective order, are the address of the recipient of the swapped tokens, a boolean on whether the swap direction is from token0 to token1 or vice versa, the volume of the source token that would like to be swapped, an integer (sqrtPriceLimitX96) that manages how much slippage is acceptable, and finally abi encoded data that is used in the callback function. When calling \texttt{swap} function, the sqrtPriceLimitX96 parameter is set to ignore the effects of slippage and proceed with the swap. Finally, once the swap has taken place, Uniswap calls the callback function \texttt{uniswapV3SwapCallback}, with transfers the swapped tokens to the caller of the function. See Figure \ref{fig:sol-code-swap}.
+Swapping using a Uniswap liquidity pool is also another critical functionality. This is done by using the \texttt{IUniswapV3Pool} interface to expose the liquidity pool's functions and calling swap on it using the necessary parameters. The parameters, in their respective order, are the address of the recipient of the swapped tokens, a boolean on whether the swap direction is from token0 to token1 or vice versa, the volume of the source token that would like to be swapped, an integer (sqrtPriceLimitX96) that manages how much slippage is acceptable, and finally the ABI encoded data that is required in the callback function. When calling \texttt{swap} function, the sqrtPriceLimitX96 parameter is set to ignore the effects of slippage and proceed with the swap. Finally, once the swap has taken place, Uniswap calls the callback function \texttt{uniswapV3SwapCallback}, with transfers the swapped tokens to the caller of the function. See Figure \ref{fig:sol-code-swap}.
 
 \begin{figure}[htb!]
 \begin{adjustwidth}{-0.5in}{-0.5in}
