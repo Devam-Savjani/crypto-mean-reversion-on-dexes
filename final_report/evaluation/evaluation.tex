@@ -379,6 +379,15 @@ It is also interesting to see that in this period of trading, the Kalman Filter 
 
 \section{Liquidity Pool Pairs Selection}
 The choice of liquidity pools have a direct impact on the returns. Immediately, by looking at Section \ref{sec:strat-param}, the selection of liquidity have proven to be successful. However, we could investigate into why these pairs performed particularly well. The main limitation of the pools that could be investigated was that Aave must support both tokens in the liquidity pools and as majority of the token that Aave supports are stablecoins. Therefore, by looking at Table \ref{tab:coin_pools}, it can quickly be seen that all liquidity pairs have some form of a stablecoin aimed to be pegged to the US Dollar. Furthermore, looking at the correlation matrix, Figure \ref{fig:correlationMatrix}, we can immediately see that the pairs associated with tokens pegged to the US Dollar, such as USDT, USDC, and DAI, exhibit the expected high correlation with each other. However, an exception is observed with pool 0xe0554a476a092703abdb3ef35c80e0d76d32939f, which exhibits a lower correlation with other liquidity pools containing these stablecoins. This lower correlation is highly likely due to Uniswap routing swaps via different liquidity pools, causing the price correlation to be lower. Consequently, this lower correlation opens up additional avenues for potential arbitrage opportunities within the pool.
+\\[3mm]
+Upon further investigation it can be seen that the liquidity pool 0xe0554a476a09... had a lot of volume being traded on around November 2022 through to March 2023, however since then the number of transactions have been limited likely increasing the probability for misprices, hence a greater chance of profit.
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{evaluation/Images/pool-txn-history.png}
+    \caption{Number of Token Transfer over time in 0xe0554a476a092703abdb3ef35c80e0d76d32939f~\cite{etherscan-pool}}
+    \label{fig:pool-txn-history}
+\end{figure}
 
 \section{Evaluation of Strategies}
 Overall, given the experiments conducted, the optimal parameters for each strategy are different and thus, to evaluate each strategy, Table \ref{tab:OptimParams} displays the optimal parameters used for each strategy.
