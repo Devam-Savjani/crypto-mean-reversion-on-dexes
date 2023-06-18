@@ -28,6 +28,7 @@ Additionally, when executing swaps or trades, it is important to consider the im
 By addressing these aspects and refining the data granularity, and furthering the slippage considerations, the backtesting system can provide more precise and reliable results, leading to improved insights into the profitability and viability of the trading strategy under evaluation.
 
 \section{Strategy Parameters}
+\label{sec:strat-param}
 
 \subsection{Number of Standard Deviations away from the mean}
 Varying the standard deviation in a mean reversion pairs trading strategy can have a significant impact on the strategy's returns. When the number of standard deviations is set too high, it means that the spread between the pair's prices must deviate significantly from the mean before a signal is generated. In this case, the strategy may generate fewer trades, resulting in longer holding periods for positions; however, this tends to have a greater return per trade. On the other hand, setting a lower number of standard deviations makes the strategy more sensitive to smaller deviations from the mean. This increases the frequency of trade signals and potentially leads to more active trading. However, it also exposes the strategy to a higher risk of false signals or trading on noise in the price data. It can result in higher transaction costs and potentially lower returns due to increased trading activity, potentially resulting in losses. For the purpose of simplicity, $\#_{\sigma}$ denotes this parameter.
@@ -376,6 +377,8 @@ It is also interesting to see that in this period of trading, the Kalman Filter 
     \caption{Returns of various Window Sizes \label{tab:VaryWS}}.
 \end{table}
 
+\section{Liquidity Pool Pairs Selection}
+The choice of liquidity pools have a direct impact on the returns. Immediately, by looking at Section \ref{sec:strat-param}, the selection of liquidity have proven to be successful. However, we could investigate into why these pairs performed particularly well. The main limitation of the pools that could be investigated was that Aave must support both tokens in the liquidity pools and as majority of the token that Aave supports are stablecoins. Therefore, by looking at Table \ref{tab:coin_pools}, it can quickly be seen that all liquidity pairs have some form of a stablecoin aimed to be pegged to the US Dollar. Furthermore, looking at the correlation matrix, Figure \ref{fig:correlationMatrix}, we can immediately see that the pairs associated with tokens pegged to the US Dollar, such as USDT, USDC, and DAI, exhibit the expected high correlation with each other. However, an exception is observed with pool 0xe0554a476a092703abdb3ef35c80e0d76d32939f, which exhibits a lower correlation with other liquidity pools containing these stablecoins. This lower correlation is highly likely due to Uniswap routing swaps via different liquidity pools, causing the price correlation to be lower. Consequently, this lower correlation opens up additional avenues for potential arbitrage opportunities within the pool.
 
 \section{Evaluation of Strategies}
 Overall, given the experiments conducted, the optimal parameters for each strategy are different and thus, to evaluate each strategy, Table \ref{tab:OptimParams} displays the optimal parameters used for each strategy.
