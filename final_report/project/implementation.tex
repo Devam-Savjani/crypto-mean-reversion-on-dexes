@@ -29,30 +29,30 @@ Similarly, obtaining the interest rates for borrowing necessitates the utilisati
 \\[3mm]
 The transaction history is queried at each hour to collect the gas price history since Uniswap migrated to V3. This is because querying in the same as the pricing data and borrowing rate history is too exhaustive as transactions occur every second. Therefore, it is more efficient to query at each hour with a window to retrieve the gas price at the closest hour as follows. Algorithm \ref{alg_gas_price_col} in the Appendix shows the pseudocode gas price at each hour is queried. 
 \subsection{Types of Orders and Execution}
-There are numerous order types that the backtesting supports due to measures to ensure a positive balance and avoid liquidation. The types of orders are; \texttt{BUY\ ETH}, \texttt{WITHDRAW}, \texttt{DEPOSIT}, \texttt{SWAP}, \texttt{OPEN\ BUY}, \texttt{CLOSE\ BUY}, \texttt{OPEN\ SELL}, \texttt{CLOSE\ SELL}. The procedures of each are outlined below. The code of the execution, excluding gas fees, of the order is outlined in Appendix \ref{sec:backtesting-execution-code}.
-
-\subsubsection{\texttt{BUY\ ETH}}
+There are numerous order types that the backtesting supports due to measures to ensure a positive balance and avoid liquidation. The types of orders are; \texttt{BUY\ ETH}, \texttt{WITHDRAW}, \texttt{DEPOSIT}, \texttt{SWAP}, \texttt{OPEN\ BUY}, \texttt{CLOSE\ BUY}, \texttt{OPEN\ SELL}, \texttt{CLOSE\ SELL}. The procedures of the execution each order type are outlined below. The code of the execution, excluding gas fees, of the order is outlined in Appendix \ref{sec:backtesting-execution-code}.
+\vspace{-3mm}
+\paragraph{\texttt{BUY\ ETH}}
 The \texttt{BUY\ ETH} order is used to swap a percentage of the accounts balance of WETH to ETH. The argument is a float between 0 and 1.
-
-\subsubsection{\texttt{SWAP}}
+\vspace{-3mm}
+\paragraph{\texttt{SWAP}}
 The \texttt{SWAP} order is to execute a simple swap for either token0 or token1 of the liquidity pool. This order is only used as a precautionary order if the balance of the WETH balance gets too low. It takes two arguments, the first indicating whether it is swapping for token0 or token1, and the second parameter is a list of swaps, tuples containing with pool and the quantity that would like to be swapped. The amount received in the account is multiplied by \texttt{(1 - swap\_fees[swap\_token])}, this is because Uniswap charges a percentage of the swap specified by \texttt{swap\_fees[swap\_token]}.
-
-\subsubsection{\texttt{OPEN\ BUY}}
+\vspace{-3mm}
+\paragraph{\texttt{OPEN\ BUY}}
 Similar to the \texttt{SWAP} order, \texttt{OPEN\ BUY} opens a buy position. As mentioned above, opening a buy order is simply swapping token1 for token0. The parameters of buying are the target token and the volume. 
-
-\subsubsection{\texttt{CLOSE\ BUY}}
+\vspace{-3mm}
+\paragraph{\texttt{CLOSE\ BUY}}
 Closing a buy position is similar to opening a buy position; however, the swap is in the other direction, i.e. from token to WETH. The only argument is the id of the buy order. To account for Uniswap's fees, the volume received after the initial swap is calculated and then swapped back to WETH.
-
-\subsubsection{\texttt{OPEN\ SELL}}
+\vspace{-3mm}
+\paragraph{\texttt{OPEN\ SELL}}
 Opening a sell position involves borrowing a token and then swapping the token. The parameters of selling are the target token and the volume. It also consists of depositing the required amount to borrow the volume ordered, calculated by the value-to-loan ratio.
-
-\subsubsection{\texttt{CLOSE\ SELL}}
+\vspace{-3mm}
+\paragraph{\texttt{CLOSE\ SELL}}
 Closing a sell position is more complicated; it requires swapping back from the token to WETH, repaying the loan with interest and finally returning collateral. Swapping back to the required amount of tokens is the first step. For this, the variable Annual Yield Rates between the timestamp of the opening and the closing position are used to calculate the amount of interest required to be paid, as this is cumulated every second. Once the volume of tokens required to be returned is calculated, the equivalent amount of WETH plus accounting for Uniswap fees is swapped to obtain these tokens. Finally, the tokens are repaid, and the collateral is returned.
-
-\subsubsection{\texttt{WITHDRAW}}
+\vspace{-3mm}
+\paragraph{\texttt{WITHDRAW}}
 The \texttt{WITHDRAW} order's function is to withdraw some collateral stored in Aave. It is not used in the strategies however is implemented in case of developing further strategies that may require this functionality. The only parameter is the amount that would like to be withdrawn.
-
-\subsubsection{\texttt{DEPOSIT}}
+\vspace{-3mm}
+\paragraph{\texttt{DEPOSIT}}
 The \texttt{DEPOSIT} order's function is to deposit some additional collateral stored in Aave. This order is used when the collateral value not properly covering the loan value, hence avoiding liquidation. The only parameter is the amount that would like to be deposited. 
 
 \subsection{Gas Fees}
@@ -101,7 +101,7 @@ if self.account['WETH'] < negative_threshold:
     raise Exception('Account balace goes below 0 - WETH')
 if self.account['ETH'] < negative_threshold:
     raise Exception('Account balace goes below 0 - ETH')
-\end{lstlisting}   
+\end{lstlisting}
 Furthermore, the loan-to-value ratio is calculated to simulate the potential liquidation of a sell position's loan. This ratio serves as an indicator of the position's health and risk level. If the loan-to-value ratio breaches the predefined liquidation threshold, an exception is thrown, indicating that the position is approaching an unsustainable state.
 \begin{lstlisting}[language=Python]
 sell_token, sold_price, sell_volume, _ = sell_trade
@@ -124,7 +124,12 @@ A similar approach is required to run the strategies live; however, the executio
 In order to be able to interact with Uniswap and Aave over Ethereum, smart contracts are written, which are then deployed on the blockchain network. Functions that the smart contract possesses can then be executed by anyone who knows the contract's address on the network. Smart contracts are programmable protocols written in Solidity, a high-level programming language designed for creating and executing smart contracts on Ethereum. For trading using the mentioned strategies, a few the following functionalities are required to be implemented; wrapping ETH for WETH, unwrapping WETH, swapping token A for token B using a given liquidity pool and finally, borrowing and repaying some of token A using WETH as collateral. The first two functions are required if the trader has only ETH in their account; thus, by wrapping the ETH, they can trade ETH as an ERC-20 token.
 
 \subsubsection{Wrapping of ETH and Unwrapping WETH}
-This functionality is required if the trader has only ETH in their account; thus, by wrapping the ETH, they could trade ETH in its ERC-20 format, WETH. ERC-20 is a widely adopted technical standard to create interchangeable Ethereum blockchain tokens. It provides developers with the framework to design tokens compatible with various applications and services operating within the Ethereum ecosystem. These tokens are designed to represent a variety of assets, most importantly cryptocurrencies. The functions of these functionalities can be seen below, where \texttt{swapEthForWeth} wraps ETH and \texttt{swapWethForEth} unwraps WETH. The \texttt{swapEthForWeth} function first uses the \texttt{IWETH} interface, which is itself an ERC20 interface, to allow functions such as transfer of ownership of the token, to deposit an amount of ETH in exchange for WETH, which is then transferred back to the address of the caller. The \texttt{swapWethForEth} function unwraps the WETH by first sending the specified volume of WETH from the caller to the smart contract, withdrawing the specified amount from the IERC20, which calls the \texttt{receive} function to enable the receiving of ETH and once the ETH is withdrawn into the smart contract's account, it is transferred back to the caller.
+This functionality is required if the trader has only ETH in their account; thus, by wrapping the ETH, they could trade ETH in its ERC-20 format, WETH. ERC-20 is a widely adopted technical standard to create interchangeable Ethereum blockchain tokens. It provides developers with the framework to design tokens compatible with various applications and services operating within the Ethereum ecosystem. These tokens are designed to represent a variety of assets, most importantly cryptocurrencies. The functions of these functionalities can be seen below, where \texttt{swapEthForWeth} wraps ETH and \texttt{swapWethForEth} unwraps WETH. The \texttt{swapEthForWeth} function first uses the \texttt{IWETH} interface, which is itself an ERC20 interface, to allow functions such as transfer of ownership of the token, to deposit an amount of ETH in exchange for WETH, which is then transferred back to the address of the caller. The \texttt{swapWethForEth} function unwraps the WETH by first sending the specified volume of WETH from the caller to the smart contract, withdrawing the specified amount from the IERC20, which calls the \texttt{receive} function to enable the receiving of ETH and once the ETH is withdrawn into the smart contract's account, it is transferred back to the caller. See Figure \ref{fig:sol-code-eth-weth}.
+
+\begin{figure}[htb!]
+\begin{adjustwidth}{-0.5in}{-0.5in}
+\begin{minipage}{\linewidth}
+\centering
 \begin{lstlisting}[language=Solidity]
 interface IWETH is IERC20 {
   function deposit() external payable;
@@ -147,10 +152,18 @@ function swapWethForEth(uint256 amount) external payable {
 
 receive() external payable {}
 \end{lstlisting}
+\end{minipage}
+\end{adjustwidth}
+\caption{Solidity Code for Interchanging between ETH and WETH \label{fig:sol-code-eth-weth}}
+\end{figure}
 
 \subsubsection{Swapping using a Uniswap Liquidity Pool}
-Swapping using a Uniswap liquidity pool is also another critical functionality. This is done by using the \texttt{IUniswapV3Pool} interface to expose the liquidity pool's functions and calling swap on it using the necessary parameters. The parameters, in their respective order, are the address of the recipient of the swapped tokens, a boolean on whether the swap direction is from token0 to token1 or vice versa, the volume of the source token that would like to be swapped, an integer (sqrtPriceLimitX96) that manages how much slippage is acceptable, and finally abi encoded data that is used in the callback function. When calling \texttt{swap} function, the sqrtPriceLimitX96 parameter is set to ignore the effects of slippage and proceed with the swap. Finally, once the swap has taken place, Uniswap calls the callback function \texttt{uniswapV3SwapCallback}, with transfers the swapped tokens to the caller of the function.
+Swapping using a Uniswap liquidity pool is also another critical functionality. This is done by using the \texttt{IUniswapV3Pool} interface to expose the liquidity pool's functions and calling swap on it using the necessary parameters. The parameters, in their respective order, are the address of the recipient of the swapped tokens, a boolean on whether the swap direction is from token0 to token1 or vice versa, the volume of the source token that would like to be swapped, an integer (sqrtPriceLimitX96) that manages how much slippage is acceptable, and finally abi encoded data that is used in the callback function. When calling \texttt{swap} function, the sqrtPriceLimitX96 parameter is set to ignore the effects of slippage and proceed with the swap. Finally, once the swap has taken place, Uniswap calls the callback function \texttt{uniswapV3SwapCallback}, with transfers the swapped tokens to the caller of the function. See Figure \ref{fig:sol-code-swap}.
 
+\begin{figure}[htb!]
+\begin{adjustwidth}{-0.5in}{-0.5in}
+\begin{minipage}{\linewidth}
+\centering
 \begin{lstlisting}[language=Solidity]
 function swapExactUsingPool(address poolAddress, bool zeroForOne, int256 amountIn) public returns (int256, int256) {
     IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
@@ -177,9 +190,18 @@ function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes c
     }
 }
 \end{lstlisting}
+\end{minipage}
+\end{adjustwidth}
+\caption{Solidity Code for Swapping using Uniswap \label{fig:sol-code-swap}}
+\end{figure}
 
 \subsubsection{Borrowing and Repaying Tokens using Aave}
-To allow for short selling, borrowing and repaying tokens are required; therefore, interacting with Aave in the smart contract is essential. The first step is to instantiate the lending pool using Aave's \texttt{PoolAddressesProvider}. When borrowing, some collateral is set aside to be able to borrow any number of tokens; thus, the first step is to deposit this collateral into the lending pool and allow it to be used as collateral (Lines 1-8). Secondly, the specified token is borrowed from the lending pool using the variable interest rate specified by the third argument in the \texttt{borrow} function; once received, the tokens are sent to the caller's address. The opposite methodology is true for loan repayment; the tokens are transferred from the caller's address to the smart contract's address, which is then sent back to the lending pool by the \texttt{repay} function. The collateral is withdrawn and automatically sent to the caller's address.
+To allow for short selling, borrowing and repaying tokens are required; therefore, interacting with Aave in the smart contract is essential. The first step is to instantiate the lending pool using Aave's \texttt{PoolAddressesProvider}. When borrowing, some collateral is set aside to be able to borrow any number of tokens; thus, the first step is to deposit this collateral into the lending pool and allow it to be used as collateral (Lines 1-8). Secondly, the specified token is borrowed from the lending pool using the variable interest rate specified by the third argument in the \texttt{borrow} function; once received, the tokens are sent to the caller's address. The opposite methodology is true for loan repayment; the tokens are transferred from the caller's address to the smart contract's address, which is then sent back to the lending pool by the \texttt{repay} function. The collateral is withdrawn and automatically sent to the caller's address. See Figure \ref{fig:sol-code-aave}.
+
+\begin{figure}[htb!]
+\begin{adjustwidth}{-0.5in}{-0.5in}
+\begin{minipage}{\linewidth}
+\centering
 \begin{lstlisting}[language=Solidity]
 IPool public immutable lendingPool = IPool(IPoolAddressesProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e).getPool());
 
@@ -202,24 +224,12 @@ function repayBorrowedToken(address tokenAddress, uint256 repayAmount, uint256 c
     lendingPool.withdraw(wethAddress, collateralWithdrawAmount, msg.sender);
 }
 \end{lstlisting}
-
+\end{minipage}
+\end{adjustwidth}
+\caption{Solidity Code for Borrowing and Paying on Aave \label{fig:sol-code-aave}}
+\end{figure}
 \subsubsection{Opening and Closing of Trading Positions}
-In addition to these functions, it is known that batching transactions together is more efficient than having to execute them separately, therefore as the strategies being explored for this project require both a buying and selling trade each time, the functions \texttt{openBuySellPositions} and \texttt{closeBuySellPositions} have been implemented such that it follows the method mentioned in Subsection \ref{sec:buying-selling}.
-
-\begin{lstlisting}[language=Solidity]
-function openBuySellPositions(address buyPoolAddress, bool buyZeroForOne, int256 buyAmount, address sellTokenAddress, uint256 sellAmount, uint256 collatoralAmount, address sellPoolAddress, bool sellZeroForOne) external {
-        swapExactUsingPool(buyPoolAddress, buyZeroForOne, buyAmount);
-        borrowToken(sellTokenAddress, sellAmount, collatoralAmount);
-        swapExactUsingPool(sellPoolAddress, sellZeroForOne, int256(sellAmount));
-}
-
-function closeBuySellPositions(address buyPoolAddress, bool buyZeroForOne, int256 buyAmount, address sellTokenAddress, uint256 sellAmount, uint256 collatoralAmount, address sellPoolAddress, bool sellZeroForOne
-    ) external {
-        swapExactUsingPool(buyPoolAddress, buyZeroForOne, buyAmount);
-        swapExactUsingPool(sellPoolAddress, sellZeroForOne, int256(sellAmount));
-        repayBorrowedToken(sellTokenAddress, sellAmount, collatoralAmount);
-}
-\end{lstlisting}
+In addition to these functions, it is known that batching transactions together is more efficient than having to execute them separately, therefore as the strategies being explored for this project require both a buying and selling trade each time, the functions \texttt{openBuySellPositions} and \texttt{closeBuySellPositions} have been implemented such that it follows the method mentioned in Subsection \ref{sec:buying-selling}, combining the internal functions \texttt{swapExactUsingPool}, \texttt{borrowToken} and \texttt{repayBorrowedToken}. The full implementation can be found in Appendix \ref{fig:sol-code-open-close}.
 
 \subsection{State}
 Storing the state of the strategy is essential as the strategies need to store and maintain its history and variables to ensure consistency when trading; therefore, the state is stored as a dictionary in a pickle file. The state contains the liquidity pool pair being traded, the strategy instance, a dictionary of the open positions (initially empty) and the account balance. The state is updated after every execution and stored in the pickle file.
@@ -228,7 +238,11 @@ Storing the state of the strategy is essential as the strategies need to store a
 The frequency at which signals and data are collected is easily variable; however, the current design has a frequency of every hour to ensure consistency. This frequency is set in a Cron job. The Cron job runs a script to collect the current price data and generate a signal. Using Uniswap's subgraph, two queries are sent to retrieve the necessary data. The first query queries the liquidity pool returning its current prices, and the second, retrieves the most recent transaction, regardless of the type of transaction, to collect the cost of gas at the time. These data points are inserted into their corresponding tables in the database. They are also sent to the strategy to generate a signal, which is sent to the execution system for execution. The GraphQL queries are in Appendix \ref{app:live-pool-price-query} and \ref{app:live-gas-query}.
 
 \subsection{Trade Execution}
-Once the signal has been received, it is sent to the trade execution system. Once the signal is required to be actualized, the execution system breaks the signal into different types of orders and executes them. For each type of order in signal, its parameters are extracted, e.g. volume to buy, volume to sell, the target token and the prices when opening a position. These parameters are then used to calculate the remaining parameters required to call the corresponding smart contract function, e.g. the swap direction's zeroForOne. Finally, once all the necessary function parameters have been defined, the order is executed on the blockchain by performing four steps. The first is calling the smart contract function, signing the transaction, sending the transaction and waiting for the transaction to complete.
+Once the signal has been received, it is sent to the trade execution system. Once the signal is required to be actualized, the execution system breaks the signal into different types of orders and executes them. For each type of order in signal, its parameters are extracted, e.g. volume to buy, volume to sell, the target token and the prices when opening a position. These parameters are then used to calculate the remaining parameters required to call the corresponding smart contract function, e.g. the swap direction's zeroForOne. Finally, once all the necessary function parameters have been defined, the order is executed on the blockchain by performing four steps. The first is calling the smart contract function, signing the transaction, sending the transaction and waiting for the transaction to complete. After all of the orders have been executed, the new balances of each token along with the updated \texttt{open\_positions} is returned to then be stored as the new state.
+\begin{figure}[htb!]
+\begin{adjustwidth}{-0.5in}{-0.5in}
+\begin{minipage}{\linewidth}
+\centering
 \begin{lstlisting}[language=Python]
 # Call the order's corresponding function
 call_function = contract.functions.<Smart Contract Function Name>(<Function Paramters>).buildTransaction({"chainId": Chain_id, "from": caller, "nonce": nonce})
@@ -239,5 +253,6 @@ send_tx = web3.eth.send_raw_transaction(signed_tx.rawTransaction)
 # Wait for transaction receipt
 tx_receipt = web3.eth.wait_for_transaction_receipt(send_tx)
 \end{lstlisting}
-
-\noindent After all of the orders have been executed, the new balances of each token along with the updated \texttt{open\_positions} is returned to then be stored as the new state.
+\end{minipage}
+\end{adjustwidth}
+\end{figure}
