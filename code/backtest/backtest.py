@@ -669,6 +669,25 @@ for idx, cointegrated_pair in enumerate(pairs):
     # plt.legend()
     # plt.show()
 
+    # market_price_label = 'token0_price'
+
+    # pools = table_to_df(command="SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%_WETH_0x%';", path_to_config='../utils/database.ini')['tablename']
+
+    # market_return = table_to_df(command=f'SELECT period_start_unix, {market_price_label} FROM "USDC_WETH_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640" where period_start_unix >= {backtest_constant_hr.times[0]};', path_to_config='../utils/database.ini')
+    # fig, axs = plt.subplots(2, sharex=True,)
+    # fig.suptitle(f'Trading {cointegrated_pair[0]} and {cointegrated_pair[1]}')
+    
+    # axs[0].plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_constant_hr.times]), pd.DataFrame({'account': backtest_constant_hr.account_value_history})['account'], label='Constant')
+    # axs[0].plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_sliding_window.times]), pd.DataFrame({'account': backtest_sliding_window.account_value_history})['account'], label='Sliding Window')
+    # axs[0].plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_lagged.times]), pd.DataFrame({'account': backtest_lagged.account_value_history})['account'], label='Lagged')
+    # axs[0].plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_gc.times]), pd.DataFrame({'account': backtest_gc.account_value_history})['account'], label='Granger Causality')
+    # axs[0].plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_kalman_filter.times]), pd.DataFrame({'account': backtest_kalman_filter.account_value_history})['account'], label='Kalman Filter')
+    # axs[0].legend()
+    # axs[0].set_ylabel('Account Value in ETH')
+    # axs[1].plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in market_return['period_start_unix']]), market_return[market_price_label])
+    # axs[1].set_ylabel('Value of ETH in USD')
+    # plt.show()
+
     # #### Calculate Betas
     # market_price_label = 'token0_price'
     # market_return = table_to_df(command=f'SELECT period_start_unix, {market_price_label} FROM "USDC_WETH_0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640";', path_to_config='../utils/database.ini')
@@ -705,13 +724,15 @@ for idx, cointegrated_pair in enumerate(pairs):
     # betas.loc[idx] = [beta_constant, beta_sw, beta_lagged, beta_GC, beta_KF]
 
     # round_num = 7
-    # interest_rate = (1.045 ** ((backtest_constant_hr.times[-1] - backtest_constant_hr.times[0]) / (365 * 24*60*60))) - 1
 
     # def calculate_sharpe_ratio(times, account_value_history, num_of_trades):
+    #     interest_rate = (1.045 ** ((times[-1] - times[0]) / (365*24*60*60))) - 1
     #     table = pd.DataFrame({'time': times, 'value': account_value_history})
     #     return_p = table.pct_change()['value']
     #     expected_return = (1 + (return_p.mean())) ** num_of_trades - 1
-    #     return (expected_return - interest_rate) / return_p.std()
+    #     sr = (expected_return - interest_rate) / .std()
+    #     print(sr)
+    #     return sr
 
     # sharpe_ratios.loc[idx] = [
     #     calculate_sharpe_ratio(backtest_constant_hr.times, backtest_constant_hr.account_value_history, len(backtest_constant_hr.trades)),
@@ -747,10 +768,10 @@ for idx, cointegrated_pair in enumerate(pairs):
     # print(results.params)
 
     # cm = plt.get_cmap('jet')
-    # sc2 = plt.scatter(backtest_mean_reversion.history_p2, backtest_mean_reversion.history_p1, s=30, c=list(backtest_mean_reversion.history_times), cmap=cm, alpha=0.3,label='Price',edgecolor='k')
-    # sc = plt.scatter(backtest_mean_reversion.history_p2, backtest_mean_reversion.history_p1, s=30, c=list(backtest_mean_reversion.history_times), cmap=cm, alpha=1,label='Price',edgecolor='k').set_visible(False)
+    # sc2 = plt.scatter(backtest_constant_hr.history_p2, backtest_constant_hr.history_p1, s=30, c=list(backtest_constant_hr.history_times), cmap=cm, alpha=0.3,label='Price',edgecolor='k')
+    # sc = plt.scatter(backtest_constant_hr.history_p2, backtest_constant_hr.history_p1, s=30, c=list(backtest_constant_hr.history_times), cmap=cm, alpha=1,label='Price',edgecolor='k').set_visible(False)
     # cb = plt.colorbar(sc)
-    # plt.plot(backtest_kalman_filter.history_p2, results.params[1] * backtest_kalman_filter.history_p2 + results.params[0], alpha=.5, lw=2)
+    # plt.plot(backtest_constant_hr.history_p2, constant_hr_strategy.hedge_ratio * backtest_constant_hr.history_p2 + constant_hr_strategy.foo, alpha=.5, lw=2)
     # cb.ax.get_yaxis().labelpad = 20
 
     # font_size = 15
@@ -762,7 +783,7 @@ for idx, cointegrated_pair in enumerate(pairs):
     # state_means = kalman_filter_strategy.means_trace
     # font_size = 15
 
-    # add regression lines
+    # # add regression lines
     # step = int(len(state_means) / 10) # pick slope and intercept every 50 days
 
     # colors_l = np.linspace(0.1, 1, len(state_means[::step]))
@@ -773,6 +794,12 @@ for idx, cointegrated_pair in enumerate(pairs):
     # plt.ylabel(f'Price of {cointegrated_pair[0]}', fontsize=font_size)
     # plt.xlabel(f'Price of {cointegrated_pair[1]}', fontsize=font_size)
     # cb.set_label('UNIX Timestamp', rotation=270, fontsize=font_size)
+    # plt.show()
+
+    # plt.plot(pd.to_datetime([datetime.fromtimestamp(ts) for ts in backtest_kalman_filter.history_times[:len(kalman_filter_strategy.hedge_ratio_history)]]), kalman_filter_strategy.hedge_ratio_history)
+    # plt.xlabel('Date', fontsize=font_size)
+    # plt.ylabel('Hedge Ratio', fontsize=font_size)
+    # plt.title(f'How the Hedge Ratio evolves over time between {cointegrated_pair[0]} and {cointegrated_pair[1]}')
     # plt.show()
 
     # print(*backtest_mean_reversion.trades, sep='\n')
@@ -788,6 +815,6 @@ for idx, cointegrated_pair in enumerate(pairs):
 
 # returns.loc['avg'] = returns.mean()
 # returns.loc['std'] = returns.std()
-# returns.loc['sharpe_ratio'] = (returns.mean() - 4.5) / returns.std()
+# returns.loc['sharpe_ratio'] = (returns.mean() - 4.5) / (returns - 4.5).std()
 
 # print(returns)
