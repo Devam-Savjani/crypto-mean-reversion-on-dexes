@@ -8,8 +8,7 @@ from strategies.abstract_strategy import Abstract_Strategy
 class Kalman_Filter_Strategy(Abstract_Strategy):
     def __init__(self, number_of_sds_from_mean, window_size_in_seconds, percent_to_invest, gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment, should_batch_trade):
         super().__init__(number_of_sds_from_mean, window_size_in_seconds, percent_to_invest,
-                         'Kalman', gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment, should_batch_trade)
-        self.hedge_ratio_history = []
+                         'Kalman Filter', gas_price_threshold, rebalance_threshold_as_percent_of_initial_investment, should_batch_trade)
 
     def initialise_historical_data(self, history_p1, history_p2):
         super().initialise_historical_data(history_p1, history_p2)
@@ -84,4 +83,4 @@ class Kalman_Filter_Strategy(Abstract_Strategy):
         self.means_trace.append(state_means_stepwise)
         self.covs_trace.append(state_covs_stepwise)
         self.hedge_ratio = state_means_stepwise[0]
-        self.hedge_ratio_history.append(self.hedge_ratio)
+        self.intercept_history.append(state_means_stepwise[1])

@@ -86,8 +86,6 @@ def reinitialise_gas_price_data():
     drop_table(table_name)
     create_table(table_name, [('timestamp', 'BIGINT'), ('gas_price_wei', 'NUMERIC')])
     rows = get_block_data(table_name, min(df['min_timestamp']), int(time.time() - (time.time() % (60 * 60))))
-    # if len(rows) > 0:
-    #     insert_rows(table_name, rows)
 
 def refresh_gas_price_data():
     table_name = 'gas_prices'

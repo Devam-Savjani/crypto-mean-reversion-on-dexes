@@ -25,6 +25,9 @@ class Abstract_Strategy():
         self.upper_thresholds = []
         self.lower_thresholds = []
         self.has_initialised_historical_data = True
+        self.hedge_ratio_history = []
+        self.intercept_history = []
+        self.hedge_ratio_times = []
 
     def recalculate_thresholds(self, has_trade=False):
         raise NotImplementedError("recalculate_thresholds not implemented")
@@ -60,6 +63,8 @@ class Abstract_Strategy():
         price_of_pair2 = prices['P2']
 
         self.new_tick(price_of_pair1, price_of_pair2, has_trade)
+        self.hedge_ratio_history.append(self.hedge_ratio)
+        self.hedge_ratio_times.append(timestamp)
         spread = price_of_pair1 - self.hedge_ratio * price_of_pair2
         self.spreads.append(spread)
 

@@ -66,7 +66,7 @@ def update_pool_table(pool_prices):
     for table_name, data in pool_prices.items():
         rows = [(f'{table_name}-{data[0]}', int(data[0]),
                  data[1], data[2], data[3])]
-        # insert_rows(f'"{table_name}"', rows)
+        insert_rows(f'"{table_name}"', rows)
 
 
 def get_gas_price():
